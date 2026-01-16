@@ -1,41 +1,62 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# OS / Editor
 .DS_Store
-*.pem
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# debug
+# Env files
+.env
+.env.*
+!.env.example
+
+# Logs (generic)
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Next.js (web)
+web/node_modules/
+web/.next/
+web/out/
+web/.turbo/
+web/.vercel/
+web/dist/
 
-# vercel
-.vercel
+# Rails (api)
+api/log/*
+!api/log/.keep
+api/tmp/*
+!api/tmp/.keep
+api/tmp/pids/*
+!api/tmp/pids/.keep
+api/tmp/cache/*
+!api/tmp/cache/.keep
+api/tmp/sockets/*
+!api/tmp/sockets/.keep
+api/storage/*
+!api/storage/.keep
+api/public/assets
+api/.bundle
+api/vendor/bundle
+api/coverage/
+api/.byebug_history
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Rails credentials
+api/config/master.key
+api/config/credentials/*.key
+
+# Docker (local overrides)
+docker-compose.override.yml
+
+# DB (local data if作成する場合)
+db/data/
+db/.data/
+
+# Misc
+coverage/
+tmp/

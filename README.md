@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+```
+project-root/
+  docker-compose.yml
+  api/        # Rails API
+  db/         # DB関連（初期化SQLなど置き場）
+  web/        # Next.js（後で）
 
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Rails: APIモード（Rails 8系）
+DB: PostgreSQL
+web: Next.js
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+docker環境で開発を行う
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 開発環境のセットアップ（Docker）
 
-## Learn More
+- 前提: Docker / Docker Compose がインストール済み
+- ルートにある `.env` を使用（例）
 
-To learn more about Next.js, take a look at the following resources:
+```
+USERNAME=app
+PASSWORD=app
+DATABASE=app_development
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 起動手順
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. 初回ビルド＆起動（Rails API プロジェクトは初回起動時に自動生成されます）
 
-## Deploy on Vercel
+```
+docker compose up --build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. ブラウザで http://localhost:3001 にアクセス
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+メモ:
+- API コンテナは `api/Dockerfile` と `api/docker/entrypoint.sh` を使用します。
+- 初回起動時に `api/` 配下へ Rails API 雛形を生成し、`DATABASE_URL`（PostgreSQL）で `db:prepare` を実行します。
+- 以降の起動は `docker compose up` のみでOKです。
+- Gemはコンテナの `bundle` ボリュームに永続化されます。
+
+## 実施した対応（セットアップと修正）
+
+- `api/Dockerfile` を開発向けに整備
+  - ベース: `ruby:3.3-slim`
+  - 追加パッケージ: `build-essential`, `libpq-dev`, `libyaml-dev`, `pkg-config`, `postgresql-client` など
+  - 目的: `psych` ネイティブ拡張のビルド失敗（`yaml.h not found`）の解消
+- `api/docker/entrypoint.sh` を追加
+  - 初回起動時に Rails API を自動生成（`rails new --api`）
+  - `--skip-docker --skip-ci --skip-git` で Docker/Kamal 等の上書きを回避
+  - 起動前に `bundle install` と `rails db:prepare` を実行
+- `docker-compose.yml` を調整
+  - `bundle` ボリューム追加（Gem を永続化）
+  - `RAILS_LOG_TO_STDOUT` 追加
+
+## 再ビルド・再起動手順（エラー解消後）
+
+1. コンテナ停止
+```
+docker compose down
+```
+
+2. API イメージをキャッシュ無効で再ビルド
+```
+docker compose build --no-cache api
+```
+
+3. 起動
+```
+docker compose up
+```
+
+4. 動作確認
+- http://localhost:3001 にアクセス
+
+## トラブルシューティング
+
+- `psych` のビルドエラー（yaml.h not found）
+  - 原因: `libyaml-dev`/`pkg-config` 不足
+  - 対応: 上記 Dockerfile のパッケージ追加済み。再ビルド手順を実行
+
+- 依然として bundler 周りでこける場合（Gem キャッシュ破損等）
+```
+docker compose down
+docker volume rm community-hub_bundle
+docker compose build --no-cache api
+docker compose up
+```
