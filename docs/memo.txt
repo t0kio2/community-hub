@@ -1,0 +1,45 @@
+まずはusersから始めよう
+
+以下のステップで進める
+1. users テーブルを作る (migration)
+2. Userモデルを作る
+3. UsersController を作る (index, show, create, update, delete)
+4. routes を設定する
+5. curl でAPI確認
+6. バリデーション、エラーハンドリング
+7. 認証 (Devise + JWT)
+
+[STEP1]
+
+ER図に基づいて、以下のようにマイグレーションを作成する
+rails g model User email:string role:string status:string
+=> xxx_create_users.rbやモデルファイルができる
+
+マイグレーションの修正を行う
+
+最後に、rails db:migrate を実行
+=> テーブルできた！
+
+[STEP2]
+Userモデル修正
+最低限のバリデーション(テーブル設定ベース)を追加
+
+[STEP3]
+UsersControllerを作る
+rails g controller Api::Users
+=> users_controller.rb (+test)できた
+index, show, create, update, delete を追加で定義
+
+
+[STEP4]
+ルーティング routes.rb修正
+
+[STEP5]
+動作確認
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"user":{"email":"test@example.com"}}'
+
+curl http://localhost:3000/api/users
+
+curl http://localhost:3000/api/users/1

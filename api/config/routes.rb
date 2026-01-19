@@ -8,7 +8,11 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
   namespace :api do
+    # テスト用
     get 'hello', to: 'hello#index'
     post 'hello', to: 'hello#create'
+
+    # ユーザ関連
+    resources :users
   end
 end
