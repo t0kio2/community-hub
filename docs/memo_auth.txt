@@ -1,0 +1,130 @@
+まずは Devise + JWTによるメールアドレス+パスワード方式の認証を作る
+
+gem "devise"
+gem "devise-jwt"
+
+bundle install
+
+Devise初期化
+
+rails g devise:install
+=> devise.rb, devise.en.yml ができた
+
+
+UserをDevise化
+devise用カラムをUserに追加
+rails g devise User
+rails db:migrate
+=> 必要なカラムを追加するマイグレーションファイルができるので適用
+エラー発生
+PG::DuplicateColumn: ERROR:  column "email" of relation "users" already exists
+/app/db/migrate/20260119073049_add_devise_to_users.rb:7:in `block in up'
+/app/db/migrate/20260119073049_add_devise_to_users.rb:5:in `up'
+
+emailは既に作成済みなので、emailに関する処理をコメントアウトして解消した
+
+DEVISE_JWT_SECRET_KEYを作成する。
+まず、ランダム文字列を秘密鍵とする
+docker compose run --rm api bin/rails secret
+
+.envにそれを追記
+
+これで動いた。
+
+
+[まとめ]
+全体像
+
+- 方式: Devise + devise-jwtでトークン認証（セッション未使用のAPI構成）。
+- 主役: UserモデルのDeviseモジュールとJWT失効戦略（デニ―リスト）で発行/失効
+を管理。
+- ルーティング: devise_for :users をJSON向けにエンドポイント名を調整。
+
+モデル設定（User）
+
+- 有効モジュール: :database_authenticatable, :registerable, :recoverable, :rememberable, :validatable, :jwt_authenticatable
+- JWT戦略: jwt_revocation_strategy: JwtDenylist（jwt_denylistsテーブルで失効
+管理）
+- 補足: role/statusのバリデーションあり。登録時はDevise経由でパスワード
+必須。
+
+JWT設定（config/initializers/devise.rb）
+
+- 秘密鍵: jwt.secret = ENV.fetch("DEVISE_JWT_SECRET_KEY")（本番は環境変数/
+Secret Manager推奨）
+- 発行: jwt.dispatch_requests = [["POST", %r{^/api/login$}]]
+- 失効: jwt.revocation_requests = [["DELETE", %r{^/api/logout$}]]
+- 有効期限: jwt.expiration_time = 14.days.to_i
+- 推奨追加: API専用ならconfig.navigational_formats = []でHTML系リダイレクト
+を抑止。
+
+ルーティング（config/routes.rb）
+
+- 読み込み: 先頭でrequire 'devise'（Rails 8系/API構成でdevise_for未定義
+対策）
+- 設定:
+    - defaults: { format: :json }（JSON前提）
+    - path: ""（ルート直下に配置）
+    - path_names: { sign_in: "api/login", sign_out: "api/logout",
+registration: "api/signup" }
+- 主なエンドポイント:
+    - POST /api/login（JWT発行）
+    - DELETE /api/logout（JWT失効）
+    - POST /api/signup（ユーザー登録）
+
+コントローラでの使い方
+
+- 保護: 認可が必要なAPIにbefore_action :authenticate_user!を追加。
+- 利用: current_userでログインユーザー参照、sign_outで明示的ログアウト可。
+- ヘッダ: 認証時はAuthorization: Bearer <JWT>を付与。
+
+リクエスト例
+
+- ログイン: POST /api/login に user[email], user[password] を送信 → レスポン
+スヘッダAuthorizationにJWT付与。
+- 認証API: 取得したJWTをAuthorizationヘッダに付けてアクセス。
+
+運用上の注意
+
+- 鍵ローテーション: DEVISE_JWT_SECRET_KEY変更で既存トークンは無効化。
+- メール系機能: :recoverable等はメール送信設定が必要（APIでも送信元/配信設定
+を整備）。
+- セッション中間層: JWT運用ではCookie/Sessionミドルウェアは不要（セッション
+を使わない前提）。
+
+
+[jwt_denylistテーブルについて]
+使われ方
+
+- 発行時: ログインでJWTを発行。テーブルには何も登録しません（各トークンには
+固有のjtiが入ります）。
+- 検証時: 各リクエストでJWTを復号し、署名とexp（有効期限）を確認後、
+JwtDenylistに同じjtiが存在するかを照会。存在すれば無効（認証失敗）、存在しな
+ければ有効としてcurrent_userに通します。
+- 失効時: DELETE /api/logoutでrevokeが呼ばれ、jwt_denylists(jti, exp)に登
+録。以後そのトークンは期限内でも使えません。
+- 期限切れ: トークン自体がexpで無効になるため、新規登録は不要です（denylist
+は「任意失効」の記録用）。
+
+テーブルの役割
+
+- 欲しい動作: 「期限内でも任意のタイミングで使えなくする」ためのブラックリ
+スト。
+- カラム: jti（トークン識別子）, exp（自然失効時刻）。expは古い行の掃除（後
+述）に利用。
+- インデックス: jtiにインデックスあり。可能ならユニーク制約にして重複を防ぐ
+のが無難です。
+
+メンテナンス（掃除）
+
+- 自動削除はされません。定期的にexp < nowの行を削除してください。
+- 例（Rake/cron等で定期実行）:
+    - Rails: JwtDenylist.where('exp < ?', Time.current).delete_all
+    - SQL: DELETE FROM jwt_denylists WHERE exp < NOW();
+
+補足
+
+- 複数デバイス: 各デバイスのトークンは別jti。片方だけログアウトすると、その
+jtiのみ失効します（全端末無効化したい場合は別設計が必要）。
+- 秘密鍵ローテーション: 秘密鍵を変えると旧トークンは検証に失敗し使えなくなり
+ます（denylistの有無に関係なく）。ただしテーブルの掃除は継続してください。
