@@ -264,6 +264,7 @@ Devise.setup do |config|
   #
   # The "*/*" below is required to match Internet Explorer requests.
   # config.navigational_formats = ['*/*', :html, :turbo_stream]
+  config.navigational_formats = []
 
   # The default HTTP method used to sign out a resource. Default is :delete.
   config.sign_out_via = :delete
@@ -281,6 +282,9 @@ Devise.setup do |config|
   #   manager.intercept_401 = false
   #   manager.default_strategies(scope: :user).unshift :some_external_strategy
   # end
+  config.warden do |manager|
+    manager.scope_defaults :user, store: false
+  end
 
   # ==> Mountable engine configurations
   # When using Devise inside an engine, let's call it `MyEngine`, and this engine
@@ -316,12 +320,12 @@ Devise.setup do |config|
 
     # ログインでJWT発行
     jwt.dispatch_requests = [
-      ["POST", %r{^/api/login$}]
+      [ "POST", %r{^/api/login$} ]
     ]
 
     # ログアウトで失効
     jwt.revocation_requests = [
-      ["DELETE", %r{^/api/logout$}]
+      [ "DELETE", %r{^/api/logout$} ]
     ]
 
     # 期限（例：14日）

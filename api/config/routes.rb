@@ -1,4 +1,4 @@
-require 'devise'
+require "devise"
 
 Rails.application.routes.draw do
   # devise_for :users
@@ -15,17 +15,20 @@ Rails.application.routes.draw do
       sign_in: "api/login",
       sign_out: "api/logout",
       registration: "api/signup"
+    },
+    controllers: {
+      sessions: "users/sessions",
+      registrations: "users/registrations"
     }
 
   # Defines the root path route ("/")
   # root "posts#index"
   namespace :api do
     # テスト用
-    get 'hello', to: 'hello#index'
-    post 'hello', to: 'hello#create'
+    get "hello", to: "hello#index"
+    post "hello", to: "hello#create"
 
     # ユーザ関連
     resources :users
   end
-
 end
