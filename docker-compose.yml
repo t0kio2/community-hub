@@ -12,6 +12,8 @@ services:
       - ./db/init:/docker-entrypoint-initdb.d
 
   api:
+    env_file:
+        - .env
     build:
       context: ./api
     depends_on:
