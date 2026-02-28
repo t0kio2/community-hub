@@ -1,6 +1,13 @@
 class Users::SessionsController < Devise::SessionsController
   respond_to :json
 
+  def create
+    Rails.logger.warn("[LOGIN] headers content_type=#{request.content_type} accept=#{request.headers['Accept']}")
+    Rails.logger.warn("[LOGIN] raw_post=#{request.raw_post}")
+    Rails.logger.warn("[LOGIN] params=#{params.to_unsafe_h}")
+    super
+  end
+
   private
 
   def respond_with(resource, _opts = {})

@@ -43,3 +43,22 @@ curl -X POST http://localhost:3000/api/users \
 curl http://localhost:3000/api/users
 
 curl http://localhost:3000/api/users/1
+
+
+
+エンドポイント
+
+- 新規登録: POST /api/signup（Devise Registrations、JSON）
+- ログイン: POST /api/login（JWT発行）
+- ログアウト: DELETE /api/logout（JWT失効）
+
+リクエスト例（docker-compose のポート 3001）
+
+- サインアップ
+    - curl: curl -i -X POST http://localhost:3001/api/signup -H 'Content-Type: application/json' -d '{"user":{"email":"test@example.com","password":"password","password_confirmation":"password"}}'
+    - 成功: 201 Created、{"user":{"id":..., "email":"..."}}
+- ログイン（JWT取得）
+    - curl: curl -i -X POST http://localhost:3001/api/login -H 'Content-Type: application/json' -d '{"user":{"email":"test@example.com","password":"password"}}'
+    - レスポンスヘッダ Authorization: Bearer <JWT> を取り出して以降の認可に使用
+- 認可が必要なAPI例（ユーザー一覧）
+    - curl: curl -i http://localhost:3001/api/users -H "Authorization: Bearer <JWT>"
