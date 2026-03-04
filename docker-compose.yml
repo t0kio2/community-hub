@@ -29,6 +29,23 @@ services:
       - "3001:3000"   # Nextと被らないように3001
     tty: true
 
+  web:
+    image: node:20-bookworm-slim
+    working_dir: /app
+    depends_on:
+      - api
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - CLOUDFLARE_DEV=0
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 3000"
+    ports:
+      - "3000:3000"
+
 volumes:
   pgdata:
   bundle:
+  web_node_modules:
