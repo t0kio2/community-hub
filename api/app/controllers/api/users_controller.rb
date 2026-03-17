@@ -8,6 +8,9 @@ class Api::UsersController < ApplicationController
 
   def show
     user = User.find(params[:id])
+
+    Rails.logger.warn("[LOGIN] show ** user #{user.inspect}")
+
     render json: user
   end
 

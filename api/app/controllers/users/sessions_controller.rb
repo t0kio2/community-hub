@@ -27,7 +27,8 @@ class Users::SessionsController < Devise::SessionsController
     end
   end
 
-  def respond_to_an_destroy
+  # Devise の API モード向け: HTML 応答分岐を使わず 204 を返す
+  def respond_to_on_destroy
     head :no_content
   end
 end

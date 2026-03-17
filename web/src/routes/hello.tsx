@@ -1,14 +1,31 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
-export const Route = createFileRoute('/hello')({ component: Hello })
+type HelloResponse = { message: string; method: string };
+
+const helloQuery = () => ({
+  queryKey: ['hello'] as const,
+  queryFn: () => api<HelloResponse>('/api/hello'),
+});
+
+export const Route = createFileRoute('/hello')({
+  loader: async ({ context }: { context: any }) => {
+    await context.queryClient.ensureQueryData(helloQuery());
+    return null;
+  },
+  component: Hello,
+});
 
 function Hello() {
-  return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <h1 className="display-title text-4xl font-bold text-[var(--sea-ink)]">
-        Hello world
-      </h1>
-    </main>
-  )
-}
+  const { data, isPending, error } = useQuery(helloQuery());
 
+  return (
+    <main>
+      <h1>Hello (from API)</h1>
+      {isPending && <p>Loading...</p>}
+      {error && <p style={{ color: 'crimson' }}>Error: {(error as Error).message}</p>}
+      {!isPending && !error && <p>{data?.message}</p>}
+    </main>
+  );
+}
