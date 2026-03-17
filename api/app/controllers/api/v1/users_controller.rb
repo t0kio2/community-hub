@@ -1,5 +1,10 @@
-class Api::UsersController < ApplicationController
+class Api::V1::UsersController < ApplicationController
   before_action :authenticate_user!
+
+  # GET /api/v1/me
+  def me
+    render json: current_user
+  end
 
   def index
     users = User.all
@@ -8,9 +13,7 @@ class Api::UsersController < ApplicationController
 
   def show
     user = User.find(params[:id])
-
     Rails.logger.warn("[LOGIN] show ** user #{user.inspect}")
-
     render json: user
   end
 
@@ -38,11 +41,9 @@ class Api::UsersController < ApplicationController
     head :no_content
   end
 
-
-
   private
 
-    def user_params
-      params.require(:user).permit(:email, :role, :status)
-    end
+  def user_params
+    params.require(:user).permit(:email, :role, :status)
+  end
 end

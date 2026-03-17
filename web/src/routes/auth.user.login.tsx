@@ -3,12 +3,12 @@ import * as React from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useAuth } from '@/contexts/AuthContext';
 
-export const Route = createFileRoute('/login')({
-  component: LoginComponent,
+export const Route = createFileRoute('/auth/user/login')({
+  component: UserLoginComponent,
 });
 
-function LoginComponent() {
-  const navigate = useNavigate({ from: '/login' });
+function UserLoginComponent() {
+  const navigate = useNavigate({ from: '/auth/user/login' });
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,8 +22,7 @@ function LoginComponent() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      // On success, redirect to the home page
-      await navigate({ to: '/' });
+      await navigate({ to: '/app' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {
@@ -41,7 +40,7 @@ function LoginComponent() {
         borderRadius: '8px',
       }}
     >
-      <h2>Login</h2>
+      <h2>User Login</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>

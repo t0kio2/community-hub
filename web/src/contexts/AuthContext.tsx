@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchAndSetUser = React.useCallback(
     async (authToken: string, userId: number) => {
       try {
-        const userData = await api<User>(`/api/users/${userId}`, {
+        const userData = await api<User>(`/api/v1/users/${userId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         setUser(userData);
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           (import.meta as any).env?.VITE_API_ORIGIN ||
           'http://api:3000'
         : '';
-    const response = await fetch(`${apiOrigin}/api/login`, {
+    const response = await fetch(`${apiOrigin}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     if (token) {
-      await api('/api/logout', {
+      await api('/api/v1/auth/logout', {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -150,7 +150,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     password: string,
     passwordConfirmation: string,
   ) => {
-    const response = await api<User>('/api/signup', {
+    const response = await api<User>('/api/v1/auth/signup', {
       method: 'POST',
       body: JSON.stringify({
         user: { email, password, password_confirmation: passwordConfirmation },

@@ -1,34 +1,33 @@
 require "devise"
 
 Rails.application.routes.draw do
-  # devise_for :users
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # Devise (API v1)
   devise_for :users,
     defaults: { format: :json },
-    path: "",
+    path: "api/v1",
     path_names: {
-      sign_in: "api/login",
-      sign_out: "api/logout",
-      registration: "api/signup"
+      sign_in: "auth/login",
+      sign_out: "auth/logout",
+      registration: "auth/signup"
     },
     controllers: {
       sessions: "users/sessions",
       registrations: "users/registrations"
     }
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # API v1
   namespace :api do
-    # テスト用
-    get "hello", to: "hello#index"
-    post "hello", to: "hello#create"
+    namespace :v1 do
+      # テスト用
+      get "hello", to: "hello#index"
+      post "hello", to: "hello#create"
 
-    # ユーザ関連
-    resources :users
+      # ユーザ関連
+      get "me", to: "users#me"
+      resources :users
+    end
   end
 end

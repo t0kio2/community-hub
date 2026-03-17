@@ -27,7 +27,7 @@ paths:
           required: false
           description: 挨拶対象の名前
       responses:
-        '200':
+        "200":
           description: 成功
           content:
             application/json:
@@ -52,7 +52,7 @@ paths:
                 name:
                   type: string
       responses:
-        '200':
+        "200":
           description: 成功
           content:
             application/json:
@@ -90,7 +90,7 @@ paths:
                   required: [email, password, password_confirmation]
               required: [user]
       responses:
-        '201':
+        "201":
           description: 作成成功
           content:
             application/json:
@@ -98,13 +98,13 @@ paths:
                 type: object
                 properties:
                   user:
-                    $ref: '#/components/schemas/User'
-        '422':
+                    $ref: "#/components/schemas/User"
+        "422":
           description: バリデーションエラー
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/login:
     post:
@@ -131,7 +131,7 @@ paths:
                   required: [email, password]
               required: [user]
       responses:
-        '200':
+        "200":
           description: ログイン成功
           headers:
             Authorization:
@@ -144,13 +144,13 @@ paths:
                 type: object
                 properties:
                   user:
-                    $ref: '#/components/schemas/User'
-        '401':
+                    $ref: "#/components/schemas/User"
+        "401":
           description: 認証失敗
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/logout:
     delete:
@@ -160,9 +160,9 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '204':
+        "204":
           description: ログアウト成功（No Content）
-        '401':
+        "401":
           description: 未認証
 
   /api/users:
@@ -172,15 +172,15 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 成功
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/User'
-        '401':
+                  $ref: "#/components/schemas/User"
+        "401":
           description: 未認証
     post:
       tags: [Users]
@@ -195,22 +195,22 @@ paths:
               type: object
               properties:
                 user:
-                  $ref: '#/components/schemas/UserWrite'
+                  $ref: "#/components/schemas/UserWrite"
               required: [user]
       responses:
-        '201':
+        "201":
           description: 作成成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '422':
+                $ref: "#/components/schemas/User"
+        "422":
           description: バリデーションエラー
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: 未認証
 
   /api/users/{id}:
@@ -226,15 +226,15 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: 成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '404':
+                $ref: "#/components/schemas/User"
+        "404":
           description: 見つからない
-        '401':
+        "401":
           description: 未認証
     patch:
       tags: [Users]
@@ -249,22 +249,22 @@ paths:
               type: object
               properties:
                 user:
-                  $ref: '#/components/schemas/UserWrite'
+                  $ref: "#/components/schemas/UserWrite"
               required: [user]
       responses:
-        '200':
+        "200":
           description: 更新成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '422':
+                $ref: "#/components/schemas/User"
+        "422":
           description: バリデーションエラー
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: 未認証
     delete:
       tags: [Users]
@@ -272,9 +272,9 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '204':
+        "204":
           description: 削除成功（No Content）
-        '401':
+        "401":
           description: 未認証
 
 components:
@@ -294,7 +294,7 @@ components:
           format: email
         role:
           type: string
-          enum: [user, provider, admin]
+          enum: [user, tenant, admin]
         status:
           type: string
           enum: [active, suspended]
@@ -313,7 +313,7 @@ components:
           format: email
         role:
           type: string
-          enum: [user, provider, admin]
+          enum: [user, tenant, admin]
         status:
           type: string
           enum: [active, suspended]
@@ -326,4 +326,3 @@ components:
           items:
             type: string
       required: [errors]
-

@@ -1,31 +1,31 @@
-# CommunityHubのER図
+# CommunityHub の ER 図
 
 ```mermaid
 erDiagram
   users {
     int id PK
     text email　"UNIQUE, NOT NULL"
-    text role "'user' | 'provider' | 'admin'"
+    text role "'user' | 'tenant' | 'admin'"
     text status "'active' | 'suspended'"
   }
 
-  provider_users {
-    int provider_id PK, FK "UNIQUE (provider_id, user_id)"
-    int user_id PK, FK "UNIQUE (provider_id, user_id)"
-    %% UNIQUE (provider_id, user_id)
-    text provider_role "'owner' | 'staff'"
+  tenant_users {
+    int tenant_id PK, FK "UNIQUE (tenant_id, user_id)"
+    int user_id PK, FK "UNIQUE (tenant_id, user_id)"
+    %% UNIQUE (tenant_id, user_id)
+    text tenant_role "'owner' | 'staff'"
   }
 
-  providers {
+  tenants {
     int id PK
     text name
     text address
     text contact_info
   }
-  
+
   %% Relationships
-  users ||--o{ provider_users : has
-  providers ||--o{ provider_users : has
+  users ||--o{ tenant_users : has
+  tenants ||--o{ tenant_users : has
 
   emergency_contacts {
     int id PK
@@ -61,7 +61,7 @@ erDiagram
   payment_methods {
     int id PK
     int user_id FK
-    text provider
+    text tenant
     text method_type
     text external_id
     text status

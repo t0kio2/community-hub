@@ -320,12 +320,12 @@ Devise.setup do |config|
 
     # ログインでJWT発行
     jwt.dispatch_requests = [
-      [ "POST", %r{^/api/login$} ]
+      [ "POST", %r{^/api/v1/auth/login$} ]
     ]
 
     # ログアウトで失効
     jwt.revocation_requests = [
-      [ "DELETE", %r{^/api/logout$} ]
+      [ "DELETE", %r{^/api/v1/auth/logout$} ]
     ]
 
     # 期限（例：14日）

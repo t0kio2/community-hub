@@ -1,45 +1,45 @@
-import { useState } from 'react';
-import * as React from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react'
+import * as React from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useAuth } from '@/contexts/AuthContext'
 
-export const Route = createFileRoute('/register')({
+export const Route = createFileRoute('/auth/user/sign-up')({
   component: RegisterComponent,
-});
+})
 
 function RegisterComponent() {
-  const navigate = useNavigate({ from: '/register' });
-  const { register } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate({ from: '/auth/user/sign-up' })
+  const { register } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault()
     if (password !== passwordConfirmation) {
-      setError('Passwords do not match.');
-      return;
+      setError('Passwords do not match.')
+      return
     }
-    setError(null);
-    setSuccess(null);
-    setIsSubmitting(true);
+    setError(null)
+    setSuccess(null)
+    setIsSubmitting(true)
     try {
-      await register(email, password, passwordConfirmation);
-      setSuccess('Registration successful! Please log in.');
+      await register(email, password, passwordConfirmation)
+      setSuccess('Registration successful! Please log in.')
       setTimeout(() => {
-        navigate({ to: '/login' });
-      }, 2000);
+        navigate({ to: '/auth/user/login' })
+      }, 2000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+      setError(err instanceof Error ? err.message : 'An unknown error occurred.')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div
@@ -51,7 +51,7 @@ function RegisterComponent() {
         borderRadius: '8px',
       }}
     >
-      <h2>Register</h2>
+      <h2>Sign Up</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>
@@ -107,7 +107,9 @@ function RegisterComponent() {
               type="button"
               onClick={() => setShowPasswordConfirmation((v) => !v)}
               aria-pressed={showPasswordConfirmation}
-              aria-label={showPasswordConfirmation ? 'Hide confirm password' : 'Show confirm password'}
+              aria-label={
+                showPasswordConfirmation ? 'Hide confirm password' : 'Show confirm password'
+              }
               style={{ padding: '8px 12px', cursor: 'pointer' }}
             >
               {showPasswordConfirmation ? 'Hide' : 'Show'}
@@ -125,5 +127,6 @@ function RegisterComponent() {
         </button>
       </form>
     </div>
-  );
+  )
 }
+

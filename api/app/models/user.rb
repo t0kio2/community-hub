@@ -5,6 +5,6 @@ class User < ApplicationRecord
           :recoverable, :rememberable, :validatable,
           :jwt_authenticatable, jwt_revocation_strategy: JwtDenylist
   validates :email, presence: true, uniqueness: true
-  validates :role, inclusion: { in: %w[user provider admin] }
+  validates :role, inclusion: { in: %w[user tenant admin] }
   validates :status, inclusion: { in: %w[active suspended] }
 end

@@ -1,5 +1,5 @@
-class Api::HelloController < ApplicationController
-  # GET /api/hello?name=Tom
+class Api::V1::HelloController < ApplicationController
+  # GET /api/v1/hello?name=Tom
   def index
     name = hello_params[:name] || "World"
     render json: {
@@ -8,7 +8,7 @@ class Api::HelloController < ApplicationController
     }
   end
 
-  # POST /api/hello
+  # POST /api/v1/hello
   def create
     name = hello_params[:name] || "World"
     render json: {
@@ -16,6 +16,8 @@ class Api::HelloController < ApplicationController
       method: "POST"
     }
   end
+
+  private
 
   def hello_params
     params.permit(:name)

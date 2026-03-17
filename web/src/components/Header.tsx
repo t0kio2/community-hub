@@ -1,9 +1,15 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useAuth } from '@/contexts/AuthContext';
+import * as React from 'react';
 
 export default function Header() {
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -27,7 +33,7 @@ export default function Header() {
           <Link to="/about">About</Link>
           <Link to="/hello">Hello</Link>
           <Link to="/">Home</Link>
-          {isAuthenticated ? (
+          {!mounted ? null : isAuthenticated ? (
             <>
               <span style={{ margin: '0 10px' }}>Hi, {user?.email}</span>
               <button
@@ -44,8 +50,8 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link to="/login">Login</Link>
-              <Link to="/register">Register</Link>
+              <Link to="/auth/user/login">Login</Link>
+              <Link to="/auth/user/sign-up">Sign Up</Link>
             </>
           )}
         </div>
