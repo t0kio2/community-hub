@@ -28,6 +28,13 @@ Rails.application.routes.draw do
       # ユーザ関連
       get "me", to: "users#me"
       resources :users
+
+      namespace :auth do
+        # リフレッシュ（POSTで新しいアクセスJWT + 新しいリフレッシュ）
+        post "refresh", to: "refresh_tokens#create"
+        # 端末単位のリフレッシュ無効化
+        delete "refresh", to: "refresh_tokens#destroy"
+      end
     end
   end
 end

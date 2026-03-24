@@ -318,17 +318,17 @@ Devise.setup do |config|
   config.jwt do |jwt|
     jwt.secret = ENV.fetch("DEVISE_JWT_SECRET_KEY")
 
-    # ログインでJWT発行
+    # ログインでアクセスJWTを発行（レスポンスHeader: Authorization）
     jwt.dispatch_requests = [
       [ "POST", %r{^/api/v1/auth/login$} ]
     ]
 
-    # ログアウトで失効
+    # ログアウト受理時に現在のアクセスJWTをDenylistへ
     jwt.revocation_requests = [
       [ "DELETE", %r{^/api/v1/auth/logout$} ]
     ]
 
-    # 期限（例：14日）
-    jwt.expiration_time = 14.days.to_i
+    # アクセストークンは短命（例：15分）。
+    jwt.expiration_time = 15.minutes.to_i
   end
 end
