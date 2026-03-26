@@ -7,7 +7,7 @@
 ```
 id
 email
-password_digest
+encrypted_password
 account_type
 status
 last_login_at
