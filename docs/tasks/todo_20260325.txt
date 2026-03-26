@@ -1,0 +1,27 @@
+devise_forは何をしている？
+jwt scopeはどういう意味を持つ？
+
+その上で、accountsを対象にすると、どういうことになる？
+
+
+devise_for :accounts,
+    defaults: { format: :json },
+    path: "api/v1",
+    path_names: {
+      sign_in: "auth/login",
+      sign_out: "auth/logout",
+      registration: "auth/signup"
+    },
+    controllers: {
+      sessions: "accounts/sessions",
+      registrations: "accounts/registrations"
+    }
+
+指定したモデル(ここでは Account)に対して、ログイン、新規登録、ログアウトなどのルーティング(URL)を自動生成するメソッドである。
+URLの設定をしている。
+
+
+devise_for :accounts
+とすることで、Accountモデルに対して認証機能を有効にしている。 current_account などのヘルパーが使えるようになる。
+defaults: format: json とすることで全てのリクエストを JSON形式として扱う。APIということ。
+
