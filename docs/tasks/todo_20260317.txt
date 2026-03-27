@@ -1,0 +1,45 @@
+user
+このアプリは、tenantが求人と宿泊の募集を行う、timee/booking.comを合わせた方なサービスです。
+
+codex
+承知しました。文脈に合わせて、ルーティングと画面構成のたたき台を提案します。
+
+ルーティング方針
+
+- 公開側: /jobs, /jobs/:id, /stays, /stays/:id, /search（職種/地域/日付などで絞り込み）
+- テナント用ダッシュボード:
+    - '/app/profile'（独立画面・現状のままでOK）
+    - '/app/jobs', '/app/jobs/new', '/app/jobs/:id'（募集一覧/作成/編集）
+    - '/app/stays', '/app/stays/new', '/app/stays/:id'（宿泊施設一覧/作成/編集）
+    - '/app/applicants'（応募者管理）, '/app/reservations'（予約管理）
+- ユーザー側マイページ: '/app/bookings'（宿泊予約）, '/app/applications'（仕事応募履歴）
+- 管理者: '/admin/...（別空間）
+
+レイアウト/ネスト戦略
+
+- /app はレイアウト専用（Outletのみ）にし、子ページは各ページ単独の画面として描画（すでに対応済み）。
+- さらに親レイアウトの影響を完全に断ちたい画面は、/app 配下でも別レイアウト専用ルート（例: /app/(jobs) 用レイアウト）を用意。
+
+アクセス制御
+
+- 役割別ガード:
+    - テナント専用: '/app/jobs*', '/app/stays*', '/app/applicants', '/app/reservations'
+    - 一般ユーザー専用: '/app/bookings', '/app/applications'
+- 認可失敗時はロールに応じたログイン/トップへリダイレクト。
+
+データモデル（最小コア）
+
+- 仕事: Job(id, tenant_id, title, description, wage, location, date/time, status)
+- 応募: Application(id, job_id, user_id, status, created_at)
+- 宿泊施設: Stay(id, tenant_id, name, address, capacity, amenities)
+- 空室/料金: Availability(id, stay_id, date, price, stock)
+- 予約: Reservation(id, stay_id, user_id, checkin, checkout, price, status)
+
+次のステップ案
+
+- ルートの雛形作成（/app/jobs, /app/stays など）
+- 役割ガードのユーティリティ追加（RouterのbeforeLoad/loaderで検査）
+- 一覧/詳細/作成フォームの最低限UIを配置
+
+この方針でルートのスキャフォールドまで進めましょうか？必要な画面の優先順位（Jobs/ Stays/ 管理）を教えてください。
+Token usage: total=65255 input=58868 (+ 114176 cached) output=6387 (reasoning 3840)

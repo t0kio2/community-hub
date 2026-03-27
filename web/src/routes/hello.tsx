@@ -6,7 +6,7 @@ type HelloResponse = { message: string; method: string };
 
 const helloQuery = () => ({
   queryKey: ['hello'] as const,
-  queryFn: () => api<HelloResponse>('/api/hello'),
+  queryFn: () => api<HelloResponse>('/api/v1/hello'),
 });
 
 export const Route = createFileRoute('/hello')({
