@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  account: one
+  token_digest: MyString
+  device_id: MyString
+  device_name: MyString
+  user_agent: MyString
+  last_used_ip: MyString
+  expired_at: 2026-03-27 02:12:33
+  revoked_at: 2026-03-27 02:12:33
+  last_used_at: 2026-03-27 02:12:33
+
+two:
+  account: two
+  token_digest: MyString
+  device_id: MyString
+  device_name: MyString
+  user_agent: MyString
+  last_used_ip: MyString
+  expired_at: 2026-03-27 02:12:33
+  revoked_at: 2026-03-27 02:12:33
+  last_used_at: 2026-03-27 02:12:33

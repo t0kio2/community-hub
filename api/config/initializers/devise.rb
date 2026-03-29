@@ -281,10 +281,12 @@ Devise.setup do |config|
   # If you want to use other strategies, that are not supported by Devise, or
   # change the failure app, you can configure them inside the config.warden block.
   #
-  # config.warden do |warden_config|
-  #   warden_config.intercept_401 = false
-  #   warden_config.default_strategies(scope: :user).unshift :some_external_strategy
-  # end
+  # スコープごとのセッション保存可否（APIはセッション無効、MVCは有効）
+  config.warden do |warden_config|
+    warden_config.scope_defaults :user_account, store: false
+    warden_config.scope_defaults :tenant_account, store: true
+    warden_config.scope_defaults :admin_account, store: true
+  end
 
   # ==> Mountable engine configurations
   # When using Devise inside an engine, let's call it `MyEngine`, and this engine
@@ -306,7 +308,7 @@ Devise.setup do |config|
   # apps is `200 OK` and `302 Found` respectively, but new apps are generated with
   # these new defaults that match Hotwire/Turbo behavior.
   # Note: These might become the new default in future versions of Devise.
-  config.responder.error_status = :unprocessable_content
+  config.responder.error_status = :unprocessable_entity
   config.responder.redirect_status = :see_other
 
   # ==> Configuration for :registerable

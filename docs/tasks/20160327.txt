@@ -1,0 +1,35 @@
+基本的な枠組みは概ね用意済みですが「未完」です。ログイン/サインアップとアクセストークン発行、リフレッシュトークンの保管・ローテーションは実装途中。一方で、JWTの自動ディスパッチ/失効（denylist）やリフレッ
+シュAPIなど要の部分が不足しています。
+
+【実装状況（要点）】
+
+- Devise + devise-jwt: 導入・初期化済み（api/Gemfile、api/config/initializers/devise.rb）。
+    - JWT発行/失効のフックは設定済み（dispatch_requests/revocation_requests）。
+    - ただし Account に :jwt_authenticatable と失効戦略が未設定（api/app/models/account.rb）。
+    - jwt_denylists テーブル/モデル未実装（ERに記載あり）。
+- エンドポイント: devise_for :accounts を api/v1/auth に割当（api/config/routes.rb）。
+    - Api::V1::Auth::SessionsController でログイン成功時にリフレッシュトークンを発行（api/app/controllers/api/v1/auth/sessions_controller.rb）。
+    - Api::V1::Auth::RegistrationsController でサインアップ成功時にアクセストークンを手動発行＋ヘッダ設定（api/app/controllers/api/v1/auth/registrations_controller.rb）。
+- トークン発行/更新: Auth::TokenService でアクセストークン発行・リフレッシュローテーションの入口を用意（api/app/services/auth/token_service.rb）。
+    - ただし、このファイルは end 不足で文法エラー（クラス/モジュールが未閉塞）。
+- リフレッシュトークン: user_refresh_tokens モデル/テーブル実装済み（api/app/models/user_refresh_token.rb、api/db/migrate/*create_user_refresh_tokens.rb）。
+    - 発行・検証・ローテーション・端末ID単位の無効化は実装済み。
+- 認可フック: Api::V1::BaseController に before_action :authenticate_account! 設置（api/app/controllers/api/v1/base_controller.rb）。
+    - ただし JWT 認証が機能するには :jwt_authenticatable 設定と失効戦略が必要。
+
+【ERドキュメントとの差分（api/docs/DB/ER.md）】
+
+- 記載通りの実装: accounts, user_refresh_tokens は存在。
+- 未実装: jwt_denylists（denylist戦略）、profiles/tenants/tenant_users/admins/sessions などは未作成。
+- ドキュメントの運用方針（HttpOnly/Secure Cookie でのリフレッシュ保存等）は、現状ではJSONレスポンスで返却しており未適用。
+
+【不足点/改善ポイント】
+
+- Account に :jwt_authenticatable, jwt_revocation_strategy: JwtDenylist を追加。
+- JwtDenylist モデル＋テーブル（jti, exp）を作成し、初期化設定に合わせて失効を有効化。
+- Auth::TokenService の文法エラー修正（クラス/モジュールの end 追加）。
+- リフレッシュAPI（例: POST /api/v1/auth/refresh）を実装し、UserRefreshToken.verify_and_rotate! でアクセストークン再発行。
+- ログイン時のアクセストークン発行は現状「自動付与」を想定しているが、jwt_authenticatable 未設定のため手動発行に寄せるか、設定を整えて自動付与に統一。
+- ERの方針（Cookie 保存）に合わせるなら、HttpOnly/Secure/SameSite=strict のSet-Cookie対応とCORS調整（api/config/initializers/cors.rb）が必要。
+
+必要であれば、この不足分の実装（JwtDenylist導入、TokenService修正、リフレッシュAPI追加）まで一括で対応します。どこから手を付けるかご指定ください。
