@@ -1,5 +1,32 @@
+require "devise"
+
+
 Rails.application.routes.draw do
-  devise_for :accounts
+
+  # API (JWT, user_accounts)
+  scope :api do
+    scope :v1 do
+      devise_for :user_accounts,
+        defaults: { format: :json },
+        path: 'auth', # /api/v1/auth
+        controllers: {
+          sessions: 'api/v1/auth/sessions',
+          registrations: 'api/v1/auth/registrations'
+        }
+
+      # 認証テスト用エンドポイント
+      get 'hello', to: 'api/v1/hello#index'
+
+      # トークンリフレッシュ
+      post   'auth/refresh', to: 'api/v1/auth/refresh_tokens#create'
+      delete 'auth/refresh', to: 'api/v1/auth/refresh_tokens#destroy'
+    end
+  end
+
+  # MVC (DBセッション)
+  devise_for :tenant_accounts, path: 'tenant/auth'
+  devise_for :admin_accounts,  path: 'admin/auth'
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

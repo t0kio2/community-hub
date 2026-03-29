@@ -3,6 +3,10 @@
 class DeviseCreateAccounts < ActiveRecord::Migration[8.1]
   def change
     create_table :accounts do |t|
+
+      # アカウントタイプ
+      t.string :account_type, null: false, default: "", comment: "user|tenant|admin"
+
       ## Database authenticatable
       t.string :email,              null: false, default: ""
       t.string :encrypted_password, null: false, default: ""
@@ -36,6 +40,7 @@ class DeviseCreateAccounts < ActiveRecord::Migration[8.1]
       t.timestamps null: false
     end
 
+    add_index :accounts, :account_type
     add_index :accounts, :email,                unique: true
     add_index :accounts, :reset_password_token, unique: true
     # add_index :accounts, :confirmation_token,   unique: true
