@@ -1,4 +1,6 @@
 class  Api::V1::Auth::RegistrationsController < Devise::RegistrationsController
+  # JSON APIはCSRF検証をスキップ
+  skip_forgery_protection
   respond_to :json
 
   # アカウント作成とトークン発行を原子化（どちらか失敗でロールバック）

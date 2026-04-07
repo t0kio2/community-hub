@@ -3,5 +3,5 @@ class Account < ApplicationRecord
   has_many :user_refresh_tokens, dependent: :destroy
 
   validates :account_type, presence: true, inclusion: { in: %w[user tenant admin] }
-  validates :email, presence: true
+  validates :email, presence: true, uniqueness: true
 end
