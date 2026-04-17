@@ -1,5 +1,6 @@
 class Tenant::SessionsController < Devise::SessionsController
   respond_to :html
+  layout 'tenant'
 
   # 一部環境で初回アクセス時に CSRF エラーが発生するため、
   # サインイン(create)のみトークン検証をスキップします。

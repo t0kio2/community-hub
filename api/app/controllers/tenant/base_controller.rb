@@ -3,6 +3,5 @@ class Tenant::BaseController < ActionController::Base
 
   before_action :authenticate_tenant_account!
 
-  layout -> { false }
+  layout 'tenant'
 end
-
