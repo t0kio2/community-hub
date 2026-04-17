@@ -24,8 +24,25 @@ Rails.application.routes.draw do
   end
 
   # MVC (DBセッション)
-  devise_for :tenant_accounts, path: 'tenant/auth'
-  devise_for :admin_accounts,  path: 'admin/auth'
+  devise_for :tenant_accounts,
+             path: 'tenant/auth',
+             controllers: { sessions: 'tenant/sessions' },
+             defaults: { format: :html },
+             sign_out_via: [:post, :delete]
+  devise_for :admin_accounts,
+             path: 'admin/auth',
+             controllers: { sessions: 'admin/sessions' },
+             defaults: { format: :html },
+             sign_out_via: [:post, :delete]
+
+  namespace :admin do
+    root to: 'home#index'
+    resources :tenant_accounts, only: [:index, :new, :create, :edit, :update, :destroy]
+  end
+
+  namespace :tenant do
+    root to: 'home#index'
+  end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

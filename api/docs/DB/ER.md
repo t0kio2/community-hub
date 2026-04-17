@@ -1,6 +1,6 @@
 # テーブル設計
 
-## 認証テーブル
+# 認証/アカウント関連
 
 #### accounts テーブル
 
@@ -8,7 +8,7 @@
 id
 email
 encrypted_password
-account_type
+account_type ['user' | 'tenant_user' | 'admin']
 status
 last_login_at
 email_verified_at
@@ -22,12 +22,23 @@ updated_at
 
 ```
 id
-account_id
+account_id [FK]
 name
 kana
 birth_date
 phone
 avatar_url
+created_at
+updated_at
+```
+
+## ユーザ
+
+### users テーブル
+
+```
+account_id [FK]
+status
 created_at
 updated_at
 ```
@@ -38,10 +49,8 @@ updated_at
 
 ```
 id
-tenant_code
 name
 kana
-business_type: 'job' | 'stay'
 address
 status
 created_at
@@ -52,8 +61,8 @@ updated_at
 
 ```
 id
-tenant_id
-profile_id
+tenant_id [FK]
+account_id [FK]
 role
 status
 created_at
@@ -66,7 +75,7 @@ updated_at
 
 ```
 id
-profile_id
+account_id [FK]
 role
 status
 created_at
@@ -126,4 +135,24 @@ session_id
 data
 created_at
 updated_at
+```
+
+# Tenant - 求人/宿泊情報
+
+TODO
+
+#### job_listings テーブル
+
+```
+id
+tenant_id [FK]
+
+```
+
+#### stay_listings テーブル
+
+```
+id
+tenant_id [FK]
+
 ```

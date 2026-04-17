@@ -1,4 +1,6 @@
 class Api::V1::Auth::SessionsController < Devise::SessionsController
+  # JSON APIはCSRF検証をスキップ
+  skip_forgery_protection
 
   # APIモードなのでJSON形式のみを受け付ける
   respond_to :json

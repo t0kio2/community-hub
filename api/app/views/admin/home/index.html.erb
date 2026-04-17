@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard</title>
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; margin: 40px; }
+      .box { max-width: 720px; margin: 0 auto; padding: 24px; border: 1px solid #ddd; border-radius: 8px; }
+      h1 { margin-top: 0; }
+      .flash { margin-bottom: 12px; }
+      .flash.notice { background:#e7f6ec;border:1px solid #b7e1c0;color:#0a4; padding:10px; border-radius:6px; }
+      .flash.alert  { background:#fff3f3;border:1px solid #f5c2c2;color:#900; padding:10px; border-radius:6px; }
+      .nav { margin: 12px 0; }
+      .nav a { color: #0366d6; text-decoration: none; margin-right: 8px; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>Admin Dashboard</h1>
+
+      <% if flash[:notice].present? %>
+        <div class="flash notice"><%= flash[:notice] %></div>
+      <% end %>
+      <% if flash[:alert].present? %>
+        <div class="flash alert"><%= flash[:alert] %></div>
+      <% end %>
+
+      <p>Signed in as: <strong><%= current_admin_account.email %></strong></p>
+
+      <div class="nav">
+        <a href="<%= admin_tenant_accounts_path %>">テナント一覧</a>
+        <a href="<%= new_admin_tenant_account_path %>">テナントアカウントを作成</a>
+      </div>
+
+      <form action="<%= destroy_admin_account_session_path %>" method="post">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>" />
+        <button type="submit">Sign out</button>
+      </form>
+    </div>
+  </body>
+</html>
+
