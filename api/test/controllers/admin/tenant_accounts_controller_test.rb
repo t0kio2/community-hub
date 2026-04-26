@@ -50,6 +50,36 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_nil TenantAccount.find_by(email: "rollback-owner@example.com")
   end
 
+  test "削除フォームのmethod overrideでテナントアカウントを削除できる" do
+    tenant_account = TenantAccount.create!(
+      email: "delete-owner@example.com",
+      password: "password",
+      password_confirmation: "password"
+    )
+
+    assert_difference -> { TenantAccount.count }, -1 do
+      post admin_tenant_account_path(tenant_account), params: { _method: "delete" }
+    end
+
+    assert_redirected_to admin_tenant_accounts_path
+    assert_nil TenantAccount.find_by(email: "delete-owner@example.com")
+  end
+
+  test "一覧画面にdelete method override付きの削除フォームを表示する" do
+    TenantAccount.create!(
+      email: "index-delete-owner@example.com",
+      password: "password",
+      password_confirmation: "password"
+    )
+
+    get admin_tenant_accounts_path
+
+    assert_response :success
+    assert_includes response.body, 'name="_method"'
+    assert_includes response.body, 'value="delete"'
+    assert_includes response.body, "削除"
+  end
+
   private
 
   def valid_params

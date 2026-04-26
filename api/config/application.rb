@@ -33,6 +33,8 @@ module App
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+    # 管理画面(MVC)のHTMLフォームで _method=delete/patch を解釈する
+    config.middleware.use Rack::MethodOverride
     # 管理画面(MVC)でセッション/クッキーを使うためのミドルウェアを追加
     config.middleware.use ActionDispatch::Cookies
     # セッションはActiveRecordストア（初期化子でstore指定）
