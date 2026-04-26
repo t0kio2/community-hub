@@ -1,0 +1,10 @@
+one:
+  email: user-one@example.com
+  encrypted_password: fixture-password
+  account_type: user
+
+two:
+  email: tenant-two@example.com
+  encrypted_password: fixture-password
+  account_type: tenant
+# column: value

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tenant Account Create</title>
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; margin: 40px; }
+      .box { max-width: 520px; margin: 0 auto; padding: 24px; border: 1px solid #ddd; border-radius: 8px; }
+      fieldset { border: 0; padding: 0; margin: 24px 0 0; }
+      legend { font-weight: 700; margin-bottom: 8px; }
+      label { display:block; margin:10px 0 6px; }
+      input[type="email"], input[type="password"], input[type="text"] { width:100%; padding:10px; box-sizing:border-box; }
+      button { margin-top:16px; padding:10px 16px; }
+      .errors { background:#fff3f3; color:#900; padding:10px; margin-bottom:12px; border:1px solid #f5c2c2; border-radius:6px; }
+      .nav { margin-bottom: 16px; }
+      .nav a { color: #0366d6; text-decoration: none; }
+      .field-with-toggle { position: relative; }
+      .with-toggle { padding-right: 72px; }
+      .toggle-visibility { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); margin: 0; padding: 6px 10px; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div class="nav">
+        <a href="<%= admin_root_path %>">← Admin ダッシュボードへ戻る</a>
+      </div>
+      <h1>テナントアカウント作成</h1>
+
+      <% if @tenant.errors.any? || @organization&.errors&.any? %>
+        <div class="errors">
+          <p>エラーが発生しました:</p>
+          <ul>
+            <% @tenant.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+            <% @organization&.errors&.full_messages&.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%= form_with model: @tenant, url: admin_tenant_accounts_path, method: :post, local: true do |f| %>
+        <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+
+        <fieldset>
+          <legend>アカウント情報</legend>
+
+          <label for="tenant_email">Email</label>
+          <%= f.email_field :email, id: 'tenant_email', required: true, autocomplete: 'username' %>
+
+          <label for="tenant_password">Password</label>
+          <div class="field-with-toggle">
+            <%= f.password_field :password, id: 'tenant_password', required: true, autocomplete: 'new-password', class: 'with-toggle' %>
+            <button type="button" class="toggle-visibility" data-target="tenant_password" aria-pressed="false" aria-label="パスワードを表示">表示</button>
+          </div>
+
+          <label for="tenant_password_confirmation">Password confirmation</label>
+          <div class="field-with-toggle">
+            <%= f.password_field :password_confirmation, id: 'tenant_password_confirmation', required: true, autocomplete: 'new-password', class: 'with-toggle' %>
+            <button type="button" class="toggle-visibility" data-target="tenant_password_confirmation" aria-pressed="false" aria-label="パスワード確認を表示">表示</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>組織情報</legend>
+
+          <label for="organization_name">組織名</label>
+          <%= text_field_tag 'tenant[name]', params.dig(:tenant, :name), id: 'organization_name', required: true, autocomplete: 'organization' %>
+
+          <label for="organization_kana">組織名カナ</label>
+          <%= text_field_tag 'tenant[kana]', params.dig(:tenant, :kana), id: 'organization_kana' %>
+
+          <label for="organization_address">住所</label>
+          <%= text_field_tag 'tenant[address]', params.dig(:tenant, :address), id: 'organization_address', autocomplete: 'street-address' %>
+
+          <%= hidden_field_tag 'tenant[status]', params.dig(:tenant, :status).presence || 'active' %>
+        </fieldset>
+
+        <button type="submit">作成する</button>
+      <% end %>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.toggle-visibility').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var targetId = btn.getAttribute('data-target');
+            var input = document.getElementById(targetId);
+            if (!input) return;
+            var isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.textContent = isHidden ? '非表示' : '表示';
+            btn.setAttribute('aria-pressed', String(isHidden));
+          });
+        });
+      });
+    </script>
+  </body>
+  </html>

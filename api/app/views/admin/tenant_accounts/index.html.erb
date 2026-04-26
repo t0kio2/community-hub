@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tenant Accounts</title>
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; margin: 40px; }
+      .wrap { max-width: 960px; margin: 0 auto; }
+      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+      th, td { border: 1px solid #ddd; padding: 8px 10px; }
+      th { background: #f9f9f9; text-align: left; }
+      .toolbar { display:flex; justify-content: space-between; align-items:center; }
+      .flash { margin: 10px 0; padding:10px; border-radius:6px; }
+      .flash.notice { background:#e7f6ec; border:1px solid #b7e1c0; color:#0a4; }
+      .flash.alert  { background:#fff3f3; border:1px solid #f5c2c2; color:#900; }
+      a.button, button { display:inline-block; padding:8px 12px; border:1px solid #ccc; border-radius:6px; background:#fff; text-decoration:none; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="toolbar">
+        <div>
+          <a href="<%= admin_root_path %>">← Admin ダッシュボード</a>
+        </div>
+        <div>
+          <a class="button" href="<%= new_admin_tenant_account_path %>">＋ 新規作成</a>
+        </div>
+      </div>
+
+      <h1>テナントアカウント一覧</h1>
+
+      <% if flash[:notice] %>
+        <div class="flash notice"><%= flash[:notice] %></div>
+      <% end %>
+      <% if flash[:alert] %>
+        <div class="flash alert"><%= flash[:alert] %></div>
+      <% end %>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>作成日</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+        <% @tenants.each do |t| %>
+          <tr>
+            <td><%= t.id %></td>
+            <td><%= t.email %></td>
+            <td><%= l(t.created_at, format: :long) rescue t.created_at %></td>
+            <td>
+              <a class="button" href="<%= edit_admin_tenant_account_path(t) %>">編集</a>
+              <form action="<%= admin_tenant_account_path(t) %>" method="post" style="display:inline-block; margin-left:6px;" onsubmit="return confirm('削除してよろしいですか？');">
+                <input type="hidden" name="_method" value="delete">
+                <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                <button type="submit">削除</button>
+              </form>
+            </td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </body>
+  </html>
+

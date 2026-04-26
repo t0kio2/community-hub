@@ -6,22 +6,22 @@ ENV BUNDLE_PATH=/usr/local/bundle \
     RAILS_ENV=development
 
 RUN apt-get update -qq \
- && apt-get install -y --no-install-recommends \
-      build-essential \
-      libpq-dev \
-      libyaml-dev \
-      pkg-config \
-      git \
-      curl \
-      postgresql-client \
- && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+        libyaml-dev \
+        pkg-config \
+        git \
+        curl \
+        postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Bundler と Rails を先に入れてビルドキャッシュを効かせる
 RUN gem update --system \
- && gem install bundler \
- && gem install rails -v "~> 8.0"
+    && gem install bundler \
+    && gem install rails -v "~> 8.0"
 
 # エントリポイントを配置
 COPY docker/entrypoint.sh /usr/bin/entrypoint

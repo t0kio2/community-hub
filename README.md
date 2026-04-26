@@ -87,3 +87,15 @@ docker volume rm community-hub_bundle
 docker compose build --no-cache api
 docker compose up
 ```
+
+## テスト
+
+Rails API のテストは Docker Compose 経由で実行する。
+
+詳細は [docs/testing.md](docs/testing.md) を参照。
+
+例:
+
+```
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bin/rails test
+```

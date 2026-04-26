@@ -60,3 +60,19 @@ db/.data/
 # Misc
 coverage/
 tmp/
+
+# web
+web/node_modules
+web/.DS_Store
+web/dist
+web/dist-ssr
+web/*.local
+web/.env
+web/.nitro
+web/.content-collections/
+web/.tanstack
+web/.wrangler
+web/.output
+web/.vinxi
+web/__unconfig*
+web/todos.json

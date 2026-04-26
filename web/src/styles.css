@@ -1,0 +1,49 @@
+/* Minimal base styles */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 16px;
+  line-height: 1.6;
+  color: #1f2937; /* gray-800 */
+  background: #f9fafb; /* gray-50 */
+}
+
+/* Layout */
+header, main, footer {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+}
+
+footer {
+  border-top: 1px solid #e5e7eb;
+  color: #6b7280; /* gray-500 */
+  font-size: 14px;
+}
+
+/* Typography */
+h1, h2, h3, h4 { margin: 0 0 8px; line-height: 1.25; }
+p { margin: 8px 0; }
+
+/* Links */
+a { color: #2563eb; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Header nav */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+nav h2 { font-size: 18px; margin: 0; }
+nav .links a { margin-right: 12px; }
+nav .links a:last-child { margin-right: 0; }
+

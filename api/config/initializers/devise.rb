@@ -14,11 +14,14 @@ Devise.setup do |config|
   # confirmation, reset password and unlock tokens in the database.
   # Devise will use the `secret_key_base` as its `secret_key`
   # by default. You can change it below and use your own secret key.
-  # config.secret_key = 'c8b5b151b8260acbdeef485dc3e6785e0a125b616d5f98c0e01037e43f4442c9034349ebaf76c0175046205e5dd24b3a90b698a5469a5faa486fdbbe1cecd64a'
+  # config.secret_key = 'cd77097d25fc3f064893e1b3126cd7e25393b9f7dff45274851a564d840356dc44c32d0867016b652fe8fa18d5586d568b10d9ca40614f0a2d1de6e8f1392e9e'
 
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
-  # config.parent_controller = 'DeviseController'
+  # In this app, ApplicationController is API-only. To render HTML for
+  # admin (navigational) screens, point Devise controllers to a full-stack
+  # controller inheriting from ActionController::Base.
+  config.parent_controller = 'WebController'
 
   # ==> Mailer Configuration
   # Configure the e-mail address which will be shown in Devise::Mailer,
@@ -126,7 +129,7 @@ Devise.setup do |config|
   config.stretches = Rails.env.test? ? 1 : 12
 
   # Set up a pepper to generate the hashed password.
-  # config.pepper = '18c664d7bd5a06c2b8b7937518f213c2ad29e1ef27e2fc23bb7b9c2f44be8d6753cf7561edfc8a0aa5e2d5e599bc9973cd6efc659059815e5a5ca2cb000fa5c2'
+  # config.pepper = 'f67f041c914f1f9c0e1210691c207f4cde5fa5910c89e84d6060a510324d91c7d6d6156d2f5a641ed317c06ad27e66e5b9f53388c68e925399751b43614fe4a7'
 
   # Send a notification to the original email when the user's email is changed.
   # config.send_email_changed_notification = false
@@ -157,6 +160,9 @@ Devise.setup do |config|
   # initial account confirmation) to be applied. Requires additional unconfirmed_email
   # db field (see migrations). Until confirmed, new email is stored in
   # unconfirmed_email column, and copied to email column on successful confirmation.
+  # Also, when used in conjunction with `send_email_changed_notification`,
+  # the notification is sent to the original email when the change is requested,
+  # not when the unconfirmed email is confirmed.
   config.reconfirmable = true
 
   # Defines which key will be used when confirming an account
@@ -241,10 +247,8 @@ Devise.setup do |config|
   # config.encryptor = :sha512
 
   # ==> Scopes configuration
-  # Turn scoped views on. Before rendering "sessions/new", it will first check for
-  # "users/sessions/new". It's turned off by default because it's slower if you
-  # are using only default views.
-  # config.scoped_views = false
+  # 管理画面用にスコープ別ビューを有効化
+  config.scoped_views = true
 
   # Configure the default scope given to Warden. By default it's the first
   # devise role declared in your routes (usually :user).
@@ -263,8 +267,8 @@ Devise.setup do |config|
   # should add them to the navigational formats lists.
   #
   # The "*/*" below is required to match Internet Explorer requests.
-  # config.navigational_formats = ['*/*', :html, :turbo_stream]
-  config.navigational_formats = []
+  # APIとMVCを共存させるためHTMLもナビゲーショナルに含める
+  config.navigational_formats = ['*/*', :html]
 
   # The default HTTP method used to sign out a resource. Default is :delete.
   config.sign_out_via = :delete
@@ -278,12 +282,11 @@ Devise.setup do |config|
   # If you want to use other strategies, that are not supported by Devise, or
   # change the failure app, you can configure them inside the config.warden block.
   #
-  # config.warden do |manager|
-  #   manager.intercept_401 = false
-  #   manager.default_strategies(scope: :user).unshift :some_external_strategy
-  # end
-  config.warden do |manager|
-    manager.scope_defaults :user, store: false
+  # スコープごとのセッション保存可否（APIはセッション無効、MVCは有効）
+  config.warden do |warden_config|
+    warden_config.scope_defaults :user_account, store: false
+    warden_config.scope_defaults :tenant_account, store: true
+    warden_config.scope_defaults :admin_account, store: true
   end
 
   # ==> Mountable engine configurations
@@ -318,17 +321,17 @@ Devise.setup do |config|
   config.jwt do |jwt|
     jwt.secret = ENV.fetch("DEVISE_JWT_SECRET_KEY")
 
-    # ログインでJWT発行
+    # ログインでアクセスJWTを発行（レスポンスHeader: Authorization）
     jwt.dispatch_requests = [
-      [ "POST", %r{^/api/login$} ]
+      [ "POST", %r{^/api/v1/auth/sign_in$} ]
     ]
 
-    # ログアウトで失効
+    # ログアウト受理時に現在のアクセスJWTをDenylistへ
     jwt.revocation_requests = [
-      [ "DELETE", %r{^/api/logout$} ]
+      [ "DELETE", %r{^/api/v1/auth/sign_out$} ]
     ]
 
-    # 期限（例：14日）
-    jwt.expiration_time = 14.days.to_i
+    # アクセストークンは短命（例：15分）。
+    jwt.expiration_time = 15.minutes.to_i
   end
 end
