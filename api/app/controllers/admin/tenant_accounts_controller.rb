@@ -7,22 +7,34 @@ class Admin::TenantAccountsController < Admin::BaseController
 
   def new
     @tenant = TenantAccount.new
+    @organization = Tenant.new(status: 'active')
   end
 
   def create
-    @tenant = TenantAccount.new(tenant_params)
-    if @tenant.save
-      redirect_to admin_tenant_accounts_path, notice: 'テナントアカウントを作成しました'
-    else
-      flash.now[:alert] = '作成に失敗しました'
-      render :new, status: :unprocessable_entity
+    @tenant = TenantAccount.new(tenant_account_params)
+    @organization = Tenant.new(organization_params)
+
+    ActiveRecord::Base.transaction do
+      @tenant.save!
+      @organization.save!
+      TenantUser.create!(
+        account: @tenant,
+        tenant: @organization,
+        role: 'owner',
+        status: 'active'
+      )
     end
+
+    redirect_to admin_tenant_accounts_path, notice: 'テナントアカウントを作成しました'
+  rescue ActiveRecord::RecordInvalid
+    flash.now[:alert] = '作成に失敗しました'
+    render :new, status: :unprocessable_entity
   end
 
   def edit; end
 
   def update
-    attrs = tenant_params
+    attrs = tenant_account_params
     if attrs[:password].blank? && attrs[:password_confirmation].blank?
       attrs.delete(:password)
       attrs.delete(:password_confirmation)
@@ -47,7 +59,11 @@ class Admin::TenantAccountsController < Admin::BaseController
     @tenant = TenantAccount.find(params[:id])
   end
 
-  def tenant_params
+  def tenant_account_params
     params.require(:tenant_account).permit(:email, :password, :password_confirmation)
+  end
+
+  def organization_params
+    params.require(:tenant).permit(:name, :kana, :address).merge(status: 'active')
   end
 end
