@@ -1,0 +1,7 @@
+interface:
+  display_name: "Plan, Document, Implement, Test"
+  short_description: "Plan, implement, test in Japanese"
+  default_prompt: "Use $plan-doc-implement-test to write or update a concrete project document before implementation, then implement and test with Japanese comments and test cases."
+
+policy:
+  allow_implicit_invocation: true

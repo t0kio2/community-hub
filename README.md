@@ -99,3 +99,9 @@ Rails API のテストは Docker Compose 経由で実行する。
 ```
 docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bin/rails test
 ```
+
+## Codex Skills
+
+チームで共有する Codex の作業ルールは `skills/` 配下に置く。
+
+詳細は [docs/codex-skills.md](docs/codex-skills.md) を参照。

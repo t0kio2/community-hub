@@ -3,5 +3,17 @@ class Tenant::BaseController < ActionController::Base
 
   before_action :authenticate_tenant_account!
 
+  helper_method :current_tenant_user, :current_tenant_organization
+
   layout 'tenant'
+
+  private
+
+  def current_tenant_user
+    @current_tenant_user ||= current_tenant_account&.tenant_user
+  end
+
+  def current_tenant_organization
+    @current_tenant_organization ||= current_tenant_user&.tenant
+  end
 end

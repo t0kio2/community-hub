@@ -1,10 +1,154 @@
 <% content_for :title, 'Tenant Dashboard' %>
 
-<div class="box">
-  <h1>テナントダッシュボード</h1>
-  <p>ようこそ。右上にログイン状態を表示しています。</p>
+<style>
+  .tenant-shell {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
 
-  <div class="actions">
-    <!-- ダッシュボードの操作をここに配置してください -->
-  </div>
+  .tenant-sidebar {
+    position: sticky;
+    top: 78px;
+    border-right: 1px solid #e5e7eb;
+    padding-right: 20px;
+  }
+
+  .tenant-org-name {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.25;
+  }
+
+  .tenant-org-kana {
+    margin: 6px 0 0;
+    color: #6b7280;
+    font-size: 13px;
+  }
+
+  .tenant-meta {
+    margin-top: 20px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .tenant-meta-item span {
+    display: block;
+    margin-bottom: 4px;
+    color: #6b7280;
+    font-size: 12px;
+  }
+
+  .tenant-meta-item strong {
+    display: block;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .tenant-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border: 1px solid #bbf7d0;
+    border-radius: 999px;
+    background: #f0fdf4;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .tenant-main {
+    min-width: 0;
+  }
+
+  .tenant-main h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    line-height: 1.25;
+  }
+
+  .tenant-main p {
+    margin: 0;
+    color: #4b5563;
+  }
+
+  .tenant-empty {
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    background: #fffbeb;
+    padding: 14px;
+    color: #92400e;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .dashboard-section {
+    margin-top: 24px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 20px;
+  }
+
+  @media (max-width: 720px) {
+    .tenant-shell {
+      grid-template-columns: 1fr;
+    }
+
+    .tenant-sidebar {
+      position: static;
+      border-right: 0;
+      border-bottom: 1px solid #e5e7eb;
+      padding-right: 0;
+      padding-bottom: 20px;
+    }
+  }
+</style>
+
+<div class="tenant-shell">
+  <aside class="tenant-sidebar" aria-label="組織情報">
+    <% if current_tenant_organization %>
+      <h1 class="tenant-org-name"><%= current_tenant_organization.name %></h1>
+      <% if current_tenant_organization.kana.present? %>
+        <p class="tenant-org-kana"><%= current_tenant_organization.kana %></p>
+      <% end %>
+
+      <div class="tenant-meta">
+        <div class="tenant-meta-item">
+          <span>Role</span>
+          <strong><%= current_tenant_user.role.presence || '-' %></strong>
+        </div>
+
+        <div class="tenant-meta-item">
+          <span>Status</span>
+          <strong><span class="tenant-status"><%= current_tenant_organization.status.presence || '-' %></span></strong>
+        </div>
+
+        <div class="tenant-meta-item">
+          <span>Address</span>
+          <strong><%= current_tenant_organization.address.presence || '-' %></strong>
+        </div>
+
+        <div class="tenant-meta-item">
+          <span>Account</span>
+          <strong><%= current_tenant_account.email %></strong>
+        </div>
+      </div>
+    <% else %>
+      <div class="tenant-empty">
+        このアカウントに紐づく組織情報がありません。
+      </div>
+    <% end %>
+  </aside>
+
+  <section class="tenant-main">
+    <h1>テナントダッシュボード</h1>
+    <p>求人や宿泊募集の運用状況を確認できます。</p>
+
+    <div class="dashboard-section">
+      <p>ダッシュボードの操作をここに配置してください。</p>
+    </div>
+  </section>
 </div>
