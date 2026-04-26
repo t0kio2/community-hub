@@ -8,7 +8,7 @@
 id
 email
 encrypted_password
-account_type ['user' | 'tenant_user' | 'admin']
+account_type ['user' | 'tenant' | 'admin']
 status
 last_login_at
 email_verified_at
