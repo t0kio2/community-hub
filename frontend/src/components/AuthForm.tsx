@@ -31,7 +31,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       } else {
         await signUp({ email, password, passwordConfirmation });
       }
-      router.push("/");
+      router.push("/dashboard");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "認証に失敗しました");
     } finally {

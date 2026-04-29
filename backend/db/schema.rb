@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_29_052000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_061000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -106,7 +106,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_052000) do
   end
 
   create_table "profiles", force: :cascade do |t|
-    t.bigint "account_id", null: false
     t.string "avatar_url"
     t.date "birth_date"
     t.datetime "created_at", null: false
@@ -114,7 +113,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_052000) do
     t.string "name", null: false
     t.string "phone"
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_profiles_on_account_id", unique: true
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_profiles_on_user_id", unique: true
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -195,7 +195,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_052000) do
   add_foreign_key "listings", "tenant_members", column: "created_by_tenant_member_id", on_delete: :nullify
   add_foreign_key "listings", "tenant_members", column: "updated_by_tenant_member_id", on_delete: :nullify
   add_foreign_key "listings", "tenants"
-  add_foreign_key "profiles", "accounts"
+  add_foreign_key "profiles", "users"
   add_foreign_key "stay_listings", "listings"
   add_foreign_key "tenant_members", "accounts"
   add_foreign_key "tenant_members", "tenants"
