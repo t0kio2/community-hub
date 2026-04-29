@@ -1,0 +1,2 @@
+class StayListing < ApplicationRecord
+end

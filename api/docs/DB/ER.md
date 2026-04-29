@@ -178,8 +178,8 @@ id
 listing_id [FK, NOT NULL, UNIQUE]
 employment_type # full_time / part_time / contract / temporary / other
 job_category
-work_location # onsite / remote / hybrid / other
-address
+work_area # 勤務エリア
+work_address # 勤務先住所
 salary_type # hourly / daily / monthly / yearly / other
 salary_min
 salary_max
