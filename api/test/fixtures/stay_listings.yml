@@ -4,8 +4,8 @@ one:
   address: 京都府京都市
   capacity: 2
   price_per_night: 8000
-  check_in_time: 15:00:00
-  check_out_time: 10:00:00
+  check_in_time: "15:00:00"
+  check_out_time: "10:00:00"
   available_from: 2026-05-01
   available_until: 2026-05-31
   amenities: Wi-Fi

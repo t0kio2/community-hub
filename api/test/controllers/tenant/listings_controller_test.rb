@@ -143,9 +143,9 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
       status: "draft"
     )
 
-    assert_raises(ActiveRecord::RecordNotFound) do
-      get edit_tenant_listing_path(listing)
-    end
+    get edit_tenant_listing_path(listing)
+
+    assert_response :not_found
   end
 
   private
