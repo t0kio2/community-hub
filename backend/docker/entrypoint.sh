@@ -27,5 +27,7 @@ fi
 echo "[entrypoint] Preparing database..."
 bundle exec rails db:prepare
 
+rm -f tmp/pids/server.pid
+
 echo "[entrypoint] Starting Rails server..."
 exec bundle exec rails s -b 0.0.0.0 -p 3000
