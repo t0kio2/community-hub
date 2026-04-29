@@ -24,7 +24,7 @@ class Tenant::OrganizationsController < Tenant::BaseController
 
   def require_owner!
     return if performed?
-    return if current_tenant_user&.role == 'owner'
+    return if current_tenant_member&.role == 'owner'
 
     redirect_to tenant_root_path, alert: '組織情報を編集する権限がありません'
   end

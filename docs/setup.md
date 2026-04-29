@@ -56,10 +56,10 @@
 
 - 関連テーブル
   - profiles: rails g model Profile account:references name:string kana:string birth_date:date phone:string avatar_url:string
-  - tenants, tenant_users, admins: ER 通りに生成し、関連付けをモデルへ追加
+  - tenants, tenant_members, admins: ER 通りに生成し、関連付けをモデルへ追加
   - `Account has_one :profile`
   - `Profile belongs_to :account`
-  - `Tenant has_many :tenant_users`, `has_many :profiles, through: :tenant_users` など
+  - `Tenant has_many :tenant_members`, `has_many :profiles, through: :tenant_members` など
 
 動作確認フロー
 

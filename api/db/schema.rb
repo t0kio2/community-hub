@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_17_030129) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_011139) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -66,15 +66,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_030129) do
     t.index ["updated_at"], name: "index_sessions_on_updated_at"
   end
 
-  create_table "tenant_users", force: :cascade do |t|
+  create_table "tenant_members", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
     t.string "role"
     t.string "status"
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_tenant_users_on_account_id", unique: true
-    t.index ["tenant_id"], name: "index_tenant_users_on_tenant_id"
+    t.index ["account_id"], name: "index_tenant_members_on_account_id", unique: true
+    t.index ["tenant_id"], name: "index_tenant_members_on_tenant_id"
   end
 
   create_table "tenants", force: :cascade do |t|
@@ -112,8 +112,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_030129) do
 
   add_foreign_key "admins", "accounts"
   add_foreign_key "profiles", "accounts"
-  add_foreign_key "tenant_users", "accounts"
-  add_foreign_key "tenant_users", "tenants"
+  add_foreign_key "tenant_members", "accounts"
+  add_foreign_key "tenant_members", "tenants"
   add_foreign_key "user_refresh_tokens", "accounts"
   add_foreign_key "users", "accounts"
 end

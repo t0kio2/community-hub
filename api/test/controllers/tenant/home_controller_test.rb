@@ -13,7 +13,7 @@ class Tenant::HomeControllerTest < ActionDispatch::IntegrationTest
       password: "password",
       password_confirmation: "password"
     )
-    TenantUser.create!(
+    TenantMember.create!(
       tenant: @tenant,
       account: @tenant_account,
       role: "owner",
