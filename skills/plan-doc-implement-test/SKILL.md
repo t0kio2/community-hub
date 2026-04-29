@@ -43,6 +43,8 @@ When the implementation differs from the plan, update the document instead of le
 
 Prefer existing project patterns over new abstractions.
 
+When writing HTML, place `<style>` tags at the bottom of the HTML.
+
 ## Tests
 
 Add or update tests with the implementation.

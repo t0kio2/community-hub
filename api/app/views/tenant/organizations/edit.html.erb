@@ -1,0 +1,161 @@
+<% content_for :title, 'Edit Tenant Organization' %>
+
+<div class="organization-edit">
+  <div class="organization-edit-header">
+    <div>
+      <p class="organization-label">組織設定</p>
+      <h1>組織情報を編集</h1>
+    </div>
+    <a class="back-link" href="<%= tenant_root_path %>">ホームへ戻る</a>
+  </div>
+
+  <% if @organization.errors.any? %>
+    <div class="error-box">
+      <p>入力内容を確認してください。</p>
+      <ul>
+        <% @organization.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: @organization, url: tenant_organization_path, method: :patch, local: true, html: { class: 'organization-form' } do |f| %>
+    <div class="form-field">
+      <%= f.label :name, '組織名' %>
+      <%= f.text_field :name, required: true, autocomplete: 'organization' %>
+    </div>
+
+    <div class="form-field">
+      <%= f.label :kana, '組織名かな' %>
+      <%= f.text_field :kana %>
+    </div>
+
+    <div class="form-field">
+      <%= f.label :address, '住所' %>
+      <%= f.text_field :address, autocomplete: 'street-address' %>
+    </div>
+
+    <div class="form-actions">
+      <%= f.submit '更新する' %>
+      <a href="<%= tenant_root_path %>">キャンセル</a>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .organization-edit {
+    display: grid;
+    gap: 24px;
+  }
+
+  .organization-edit-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 1px solid #d8dee8;
+    padding-bottom: 20px;
+  }
+
+  .organization-label {
+    margin: 0 0 6px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .organization-edit h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 28px;
+    line-height: 1.25;
+  }
+
+  .back-link {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .error-box {
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    padding: 14px 16px;
+    color: #991b1b;
+  }
+
+  .error-box p {
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+
+  .error-box ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .organization-form {
+    display: grid;
+    gap: 18px;
+    max-width: 640px;
+  }
+
+  .form-field {
+    display: grid;
+    gap: 6px;
+  }
+
+  .form-field label {
+    color: #374151;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .form-field input {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: #111827;
+    font: inherit;
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-top: 6px;
+  }
+
+  .form-actions input[type="submit"] {
+    min-height: 40px;
+    border: 1px solid #2563eb;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    padding: 0 16px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .form-actions input[type="submit"]:hover {
+    background: #1d4ed8;
+  }
+
+  .form-actions a {
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  @media (max-width: 640px) {
+    .organization-edit-header {
+      display: grid;
+    }
+  }
+</style>
