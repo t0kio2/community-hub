@@ -94,7 +94,7 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
       password: "password",
       password_confirmation: "password"
     )
-    TenantUser.create!(
+    TenantMember.create!(
       tenant: tenant,
       account: account,
       role: role,

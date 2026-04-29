@@ -17,7 +17,7 @@ class Admin::TenantAccountsController < Admin::BaseController
     ActiveRecord::Base.transaction do
       @tenant.save!
       @organization.save!
-      TenantUser.create!(
+      TenantMember.create!(
         account: @tenant,
         tenant: @organization,
         role: 'owner',

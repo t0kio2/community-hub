@@ -178,7 +178,7 @@ sign_in admin_account
 
 `accounts.email` は unique index があるため、fixture や test 内で同じ email を使い回さない。
 
-`tenant_users.account_id` も unique index があるため、1 account に複数の `tenant_user` を作らない。
+`tenant_members.account_id` も unique index があるため、1 account に複数の `tenant_user` を作らない。
 
 ### transaction を伴う作成フローのテスト
 

@@ -9,13 +9,13 @@
 - tenant アカウントは admin 画面から作成する想定
 - 既存の `/admin/tenant_accounts/new` は `accounts` の tenant account だけを作っている
 
-しかし `tenant_users` は `accounts` と `tenants` を紐づけるテーブルなので、tenant account だけ作っても「このログインユーザーがどの tenant に所属するか」が分からない。
+しかし `tenant_members` は `accounts` と `tenants` を紐づけるテーブルなので、tenant account だけ作っても「このログインユーザーがどの tenant に所属するか」が分からない。
 
 そのため、admin が最初の tenant account を作成するときに、tenant の組織情報も同時に入力し、以下 3 レコードを同一トランザクションで作成する。
 
 1. `accounts`
 2. `tenants`
-3. `tenant_users`
+3. `tenant_members`
 
 ## 用語整理
 
@@ -37,17 +37,17 @@ tenant 用アカウントは `TenantAccount < Account` として扱い、`accoun
 
 `tenants` はログイン情報を持たない。組織情報だけを持つ。
 
-### tenant_users
+### tenant_members
 
 tenant 組織に所属するログインユーザーを表す。
 
-`tenant_users.account_id` で `accounts` に紐づき、`tenant_users.tenant_id` で `tenants` に紐づく。
+`tenant_members.account_id` で `accounts` に紐づき、`tenant_members.tenant_id` で `tenants` に紐づく。
 
 つまり「この account は、この tenant のメンバーである」を表すテーブル。
 
 ## role 方針
 
-`tenant_users.role` は初期から使う。
+`tenant_members.role` は初期から使う。
 
 ただし、最初の実装では owner/staff による細かい権限制御は入れない。
 
@@ -211,7 +211,7 @@ end
 
 ```ruby
 class Tenant < ApplicationRecord
-  has_many :tenant_users, dependent: :destroy
+  has_many :tenant_members, dependent: :destroy
 
   validates :name, presence: true
   validates :status, presence: true
@@ -276,7 +276,7 @@ address: 東京都...
 status: active
 ```
 
-### tenant_users
+### tenant_members
 
 ```text
 id: 7
@@ -355,7 +355,7 @@ admin が tenant account 作成フォームを送信したとき:
 
 ## 実装時の注意
 
-- `tenant_users.account_id` には unique index があるため、1 account は 1 tenant にだけ所属できる
+- `tenant_members.account_id` には unique index があるため、1 account は 1 tenant にだけ所属できる
 - 既存 controller の `@tenant` は実際には `TenantAccount` を指しているので、名前を整理した方がよい
 - admin の tenant 一覧が `TenantAccount` 一覧なのか、`Tenant` 一覧なのかは後で整理が必要
 - まずは既存画面の責務に合わせて「admin が tenant owner account と tenant 組織を同時作成する」実装を優先する
