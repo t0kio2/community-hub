@@ -26,7 +26,7 @@ Devise + JWT の設定
 
     DEVISE_JWT_SECRET_KEYを作成する。
     まず、ランダム文字列を秘密鍵とする
-    docker compose run --rm api bin/rails secret
+    docker compose run --rm backend bin/rails secret
 
     .envにそれを追記
 
@@ -135,7 +135,7 @@ session, registration controller
 
     結論
 
-    - 今の場所（api/app/controllers/users/...）で正しいです。
+    - 今の場所（backend/app/controllers/users/...）で正しいです。
     Devise は「リソース名＝users」のスコープを使うため、カスタムは
     Users::... 名前空間に置くのが基本です。URL に api/ が付いていて
     も、これは devise_for の path/path_names で付け替えているだけで、
@@ -152,7 +152,7 @@ session, registration controller
 
     どうしても controllers/api 配下に置きたい場合
 
-    - 置き場所: api/app/controllers/api/users/sessions_controller.rb
+    - 置き場所: backend/app/controllers/api/users/sessions_controller.rb
     など
     - クラス名: class Api::Users::SessionsController <
     Devise::SessionsController

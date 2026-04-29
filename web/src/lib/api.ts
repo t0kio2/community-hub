@@ -6,7 +6,7 @@ export const api = async <T>(
     typeof window === 'undefined'
       ? process.env.API_ORIGIN ||
         (import.meta as any).env?.VITE_API_ORIGIN ||
-        'http://api:3000'
+        'http://backend:3000'
       : '';
 
   const defaultOptions: RequestInit = {

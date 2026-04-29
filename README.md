@@ -1,13 +1,13 @@
 ```
 project-root/
   docker-compose.yml
-  api/        # Rails API
+  backend/    # Rails backend
   db/         # DB関連（初期化SQLなど置き場）
   web/        # Next.js（後で）
 
 ```
 
-Rails: APIモード（Rails 8系）
+Rails: backend（Rails 8系）
 DB: PostgreSQL
 web: Next.js
 
@@ -26,7 +26,7 @@ DATABASE=app_development
 
 ### 起動手順
 
-1. 初回ビルド＆起動（Rails API プロジェクトは初回起動時に自動生成されます）
+1. 初回ビルド＆起動（Rails backend プロジェクトは初回起動時に自動生成されます）
 
 ```
 docker compose up --build
@@ -35,19 +35,19 @@ docker compose up --build
 2. ブラウザで http://localhost:3001 にアクセス
 
 メモ:
-- API コンテナは `api/Dockerfile` と `api/docker/entrypoint.sh` を使用します。
-- 初回起動時に `api/` 配下へ Rails API 雛形を生成し、`DATABASE_URL`（PostgreSQL）で `db:prepare` を実行します。
+- backend コンテナは `backend/Dockerfile` と `backend/docker/entrypoint.sh` を使用します。
+- 初回起動時に `backend/` 配下へ Rails backend 雛形を生成し、`DATABASE_URL`（PostgreSQL）で `db:prepare` を実行します。
 - 以降の起動は `docker compose up` のみでOKです。
 - Gemはコンテナの `bundle` ボリュームに永続化されます。
 
 ## 実施した対応（セットアップと修正）
 
-- `api/Dockerfile` を開発向けに整備
+- `backend/Dockerfile` を開発向けに整備
   - ベース: `ruby:3.3-slim`
   - 追加パッケージ: `build-essential`, `libpq-dev`, `libyaml-dev`, `pkg-config`, `postgresql-client` など
   - 目的: `psych` ネイティブ拡張のビルド失敗（`yaml.h not found`）の解消
-- `api/docker/entrypoint.sh` を追加
-  - 初回起動時に Rails API を自動生成（`rails new --api`）
+- `backend/docker/entrypoint.sh` を追加
+  - 初回起動時に Rails backend を自動生成（`rails new --api`）
   - `--skip-docker --skip-ci --skip-git` で Docker/Kamal 等の上書きを回避
   - 起動前に `bundle install` と `rails db:prepare` を実行
 - `docker-compose.yml` を調整
@@ -61,9 +61,9 @@ docker compose up --build
 docker compose down
 ```
 
-2. API イメージをキャッシュ無効で再ビルド
+2. backend イメージをキャッシュ無効で再ビルド
 ```
-docker compose build --no-cache api
+docker compose build --no-cache backend
 ```
 
 3. 起動
@@ -84,20 +84,20 @@ docker compose up
 ```
 docker compose down
 docker volume rm community-hub_bundle
-docker compose build --no-cache api
+docker compose build --no-cache backend
 docker compose up
 ```
 
 ## テスト
 
-Rails API のテストは Docker Compose 経由で実行する。
+Rails backend のテストは Docker Compose 経由で実行する。
 
 詳細は [docs/testing.md](docs/testing.md) を参照。
 
 例:
 
 ```
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bin/rails test
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test
 ```
 
 ## Codex Skills

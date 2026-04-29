@@ -8,7 +8,7 @@
 
 - サーバー実行時のみAPIのフルオリジンを付与するよう修正しました。
     - 変更: web/src/routes/hello.tsx
-    - 実装: SSR時は process.env.API_ORIGIN または VITE_API_ORIGIN、なければ http://api:3000 を使用
+    - 実装: SSR時は process.env.API_ORIGIN または VITE_API_ORIGIN、なければ http://backend:3000 を使用
 
 使い方
 
@@ -32,7 +32,7 @@
 -      headers: { Accept: 'application/json' },
 -    })
 +    const apiOrigin = typeof window === 'undefined'
-+      ? process.env.API_ORIGIN || (import.meta as any).env?.VITE_API_ORIGIN || 'http://api:3000'
++      ? process.env.API_ORIGIN || (import.meta as any).env?.VITE_API_ORIGIN || 'http://backend:3000'
 +      : ''
 +    const res = await fetch(`${apiOrigin}/api/hello`, { headers: { Accept: 'application/json' } })
      if (!res.ok) throw new Error(`HTTP ${res.status}`)

@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       typeof window === 'undefined'
         ? process.env.API_ORIGIN ||
           (import.meta as any).env?.VITE_API_ORIGIN ||
-          'http://api:3000'
+          'http://backend:3000'
         : '';
     const response = await fetch(`${apiOrigin}/api/v1/auth/login`, {
       method: 'POST',
