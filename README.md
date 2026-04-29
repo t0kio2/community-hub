@@ -3,13 +3,13 @@ project-root/
   docker-compose.yml
   backend/    # Rails backend
   db/         # DB関連（初期化SQLなど置き場）
-  web/        # Next.js（後で）
+  frontend/   # Next.js frontend
 
 ```
 
 Rails: backend（Rails 8系）
 DB: PostgreSQL
-web: Next.js
+frontend: Next.js
 
 docker環境で開発を行う
 
@@ -32,7 +32,9 @@ DATABASE=app_development
 docker compose up --build
 ```
 
-2. ブラウザで http://localhost:3001 にアクセス
+2. ブラウザで http://localhost:3000 にアクセス
+
+backend の MVC 画面は http://localhost:3001 で確認する。
 
 メモ:
 - backend コンテナは `backend/Dockerfile` と `backend/docker/entrypoint.sh` を使用します。
@@ -72,7 +74,8 @@ docker compose up
 ```
 
 4. 動作確認
-- http://localhost:3001 にアクセス
+- frontend: http://localhost:3000
+- backend: http://localhost:3001
 
 ## トラブルシューティング
 
