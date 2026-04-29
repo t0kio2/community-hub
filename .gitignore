@@ -19,36 +19,38 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Next.js (web)
-web/node_modules/
-web/.next/
-web/out/
-web/.turbo/
-web/.vercel/
-web/dist/
+# Next.js (frontend)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+frontend/.vercel/
+frontend/dist/
+frontend/.env
+frontend/.env.*
 
-# Rails (api)
-api/log/*
-!api/log/.keep
-api/tmp/*
-!api/tmp/.keep
-api/tmp/pids/*
-!api/tmp/pids/.keep
-api/tmp/cache/*
-!api/tmp/cache/.keep
-api/tmp/sockets/*
-!api/tmp/sockets/.keep
-api/storage/*
-!api/storage/.keep
-api/public/assets
-api/.bundle
-api/vendor/bundle
-api/coverage/
-api/.byebug_history
+# Rails (backend)
+backend/log/*
+!backend/log/.keep
+backend/tmp/*
+!backend/tmp/.keep
+backend/tmp/pids/*
+!backend/tmp/pids/.keep
+backend/tmp/cache/*
+!backend/tmp/cache/.keep
+backend/tmp/sockets/*
+!backend/tmp/sockets/.keep
+backend/storage/*
+!backend/storage/.keep
+backend/public/assets
+backend/.bundle
+backend/vendor/bundle
+backend/coverage/
+backend/.byebug_history
 
 # Rails credentials
-api/config/master.key
-api/config/credentials/*.key
+backend/config/master.key
+backend/config/credentials/*.key
 
 # Docker (local overrides)
 docker-compose.override.yml
@@ -61,18 +63,5 @@ db/.data/
 coverage/
 tmp/
 
-# web
-web/node_modules
-web/.DS_Store
-web/dist
-web/dist-ssr
-web/*.local
-web/.env
-web/.nitro
-web/.content-collections/
-web/.tanstack
-web/.wrangler
-web/.output
-web/.vinxi
-web/__unconfig*
-web/todos.json
+# Removed local frontend leftovers
+web_tanstack_deleted/
