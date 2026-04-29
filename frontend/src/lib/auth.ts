@@ -15,6 +15,9 @@ type AuthParams = {
 };
 
 const DEVICE_ID_KEY = "communityHubDeviceId";
+const ACCESS_TOKEN_KEY = "accessToken";
+const REFRESH_TOKEN_KEY = "refreshToken";
+const ACCOUNT_KEY = "account";
 
 function getDeviceId() {
   const current = window.localStorage.getItem(DEVICE_ID_KEY);
@@ -45,10 +48,13 @@ async function requestAuth(path: string, body: unknown) {
 
   const authorization = response.headers.get("Authorization");
   if (authorization) {
-    window.localStorage.setItem("accessToken", authorization.replace("Bearer ", ""));
+    window.localStorage.setItem(ACCESS_TOKEN_KEY, authorization.replace("Bearer ", ""));
   }
   if (data.refresh_token) {
-    window.localStorage.setItem("refreshToken", data.refresh_token);
+    window.localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+  }
+  if (data.account) {
+    window.localStorage.setItem(ACCOUNT_KEY, JSON.stringify(data.account));
   }
 
   return data;
@@ -71,4 +77,25 @@ export function signUp({ email, password, passwordConfirmation }: AuthParams) {
       password_confirmation: passwordConfirmation,
     },
   });
+}
+
+export function getCurrentAccount() {
+  const stored = window.localStorage.getItem(ACCOUNT_KEY);
+  if (!stored) return null;
+
+  try {
+    return JSON.parse(stored) as NonNullable<AuthResponse["account"]>;
+  } catch {
+    return null;
+  }
+}
+
+export function hasAccessToken() {
+  return Boolean(window.localStorage.getItem(ACCESS_TOKEN_KEY));
+}
+
+export function logout() {
+  window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+  window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+  window.localStorage.removeItem(ACCOUNT_KEY);
 }
