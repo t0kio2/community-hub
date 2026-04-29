@@ -5,6 +5,18 @@ Rails API のテスト実行方法をまとめる。
 テストは Docker 環境で実行する。
 development DB ではなく、test DB の `app_test` を使う。
 
+`docker-compose.yml` の `api` サービスは development 起動用に `RAILS_ENV=development` と development DB の `DATABASE_URL` を持っている。
+そのため、テスト実行時は必ず `-e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test` を指定する。
+
+以下のように環境変数を省略して実行しない。
+
+```sh
+docker compose run --rm api bin/rails test
+```
+
+この形で実行すると、test 環境の fixture が development DB に投入される危険がある。
+`api/test/test_helper.rb` では `app_test` 以外に接続している場合に停止するガードを入れている。
+
 実行方法は、ホスト側から Docker にコマンドを渡す方法と、api コンテナ内に入って実行する方法の 2 通り。
 
 ## ホスト側から実行する
@@ -100,6 +112,6 @@ bin/rails test test/models/tenant_member_test.rb -v
 
 `app_test` がまだない場合は、`bin/rails db:prepare` で作成される。
 
-`DATABASE_URL` が development DB を向いたまま `bin/rails test` を実行すると、`app_development` を purge しようとすることがある。テスト前に `DATABASE_URL` が `app_test` を向いていることを確認する。
+`DATABASE_URL` が development DB を向いたまま `bin/rails test` を実行すると、fixture によって development DB のデータがテストデータに置き換わる危険がある。テスト前に `DATABASE_URL` が `app_test` を向いていることを確認する。
 
 Docker 実行時に Docker API へ接続できない場合は、Docker Desktop が起動しているか確認する。

@@ -2,8 +2,8 @@ class CreateListings < ActiveRecord::Migration[8.1]
   def change
     create_table :listings do |t|
       t.references :tenant, null: false, foreign_key: true
-      t.references :created_by_tenant_member, foreign_key: { to_table: :tenant_members }
-      t.references :updated_by_tenant_member, foreign_key: { to_table: :tenant_members }
+      t.references :created_by_tenant_member, foreign_key: { to_table: :tenant_members, on_delete: :nullify }
+      t.references :updated_by_tenant_member, foreign_key: { to_table: :tenant_members, on_delete: :nullify }
       t.string :listing_type, null: false
       t.string :title, null: false
       t.text :description

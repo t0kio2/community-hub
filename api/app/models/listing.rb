@@ -3,8 +3,14 @@ class Listing < ApplicationRecord
   STATUSES = %w[draft published closed archived].freeze
 
   belongs_to :tenant
-  belongs_to :created_by_tenant_member, class_name: "TenantMember", optional: true
-  belongs_to :updated_by_tenant_member, class_name: "TenantMember", optional: true
+  belongs_to :created_by_tenant_member,
+             class_name: "TenantMember",
+             optional: true,
+             inverse_of: :created_listings
+  belongs_to :updated_by_tenant_member,
+             class_name: "TenantMember",
+             optional: true,
+             inverse_of: :updated_listings
 
   has_one :job_listing, dependent: :destroy
   has_one :stay_listing, dependent: :destroy

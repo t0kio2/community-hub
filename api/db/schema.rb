@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_29_043051) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_052000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -192,8 +192,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_043051) do
   add_foreign_key "favorites", "users"
   add_foreign_key "job_listings", "listings"
   add_foreign_key "listing_images", "listings"
-  add_foreign_key "listings", "tenant_members", column: "created_by_tenant_member_id"
-  add_foreign_key "listings", "tenant_members", column: "updated_by_tenant_member_id"
+  add_foreign_key "listings", "tenant_members", column: "created_by_tenant_member_id", on_delete: :nullify
+  add_foreign_key "listings", "tenant_members", column: "updated_by_tenant_member_id", on_delete: :nullify
   add_foreign_key "listings", "tenants"
   add_foreign_key "profiles", "accounts"
   add_foreign_key "stay_listings", "listings"
