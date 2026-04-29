@@ -4,7 +4,7 @@ class Account < ApplicationRecord
 
   has_one :profile, dependent: :destroy
   has_one :user, dependent: :destroy
-  has_one :tenant_user, dependent: :destroy
+  has_one :tenant_member, dependent: :destroy
   has_one :admin, dependent: :destroy
 
   validates :account_type, presence: true, inclusion: { in: %w[user tenant admin] }

@@ -57,7 +57,7 @@ created_at
 updated_at
 ```
 
-#### tenant_users テーブル
+#### tenant_members テーブル
 
 ```
 id

@@ -1,4 +1,4 @@
-class TenantUser < ApplicationRecord
+class TenantMember < ApplicationRecord
   belongs_to :tenant
   belongs_to :account
 

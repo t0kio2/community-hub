@@ -15,7 +15,7 @@
     <% if current_tenant_organization %>
       <div class="tenant-overview-actions">
         <span class="tenant-status"><%= current_tenant_organization.status.presence || '-' %></span>
-        <% if current_tenant_user&.role == 'owner' %>
+        <% if current_tenant_member&.role == 'owner' %>
           <a class="tenant-edit-link" href="<%= edit_tenant_organization_path %>">組織情報を編集</a>
         <% end %>
       </div>
@@ -30,7 +30,7 @@
       </div>
       <div class="tenant-summary-item">
         <span>Role</span>
-        <strong><%= current_tenant_user.role.presence || '-' %></strong>
+        <strong><%= current_tenant_member.role.presence || '-' %></strong>
       </div>
       <div class="tenant-summary-item">
         <span>Address</span>

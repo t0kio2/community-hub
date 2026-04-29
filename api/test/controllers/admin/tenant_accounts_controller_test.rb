@@ -10,10 +10,10 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     sign_in @admin_account
   end
 
-  test "creates tenant account organization and owner tenant user" do
+  test "creates tenant account organization and owner tenant member" do
     assert_difference -> { TenantAccount.count }, 1 do
       assert_difference -> { Tenant.count }, 1 do
-        assert_difference -> { TenantUser.count }, 1 do
+        assert_difference -> { TenantMember.count }, 1 do
           post admin_tenant_accounts_path, params: valid_params
         end
       end
@@ -22,14 +22,14 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_tenant_accounts_path
 
     tenant_account = TenantAccount.find_by!(email: "owner@example.com")
-    tenant_user = tenant_account.tenant_user
+    tenant_member = tenant_account.tenant_member
 
-    assert_equal "owner", tenant_user.role
-    assert_equal "active", tenant_user.status
-    assert_equal "Sample Inn", tenant_user.tenant.name
-    assert_equal "サンプルイン", tenant_user.tenant.kana
-    assert_equal "Tokyo", tenant_user.tenant.address
-    assert_equal "active", tenant_user.tenant.status
+    assert_equal "owner", tenant_member.role
+    assert_equal "active", tenant_member.status
+    assert_equal "Sample Inn", tenant_member.tenant.name
+    assert_equal "サンプルイン", tenant_member.tenant.kana
+    assert_equal "Tokyo", tenant_member.tenant.address
+    assert_equal "active", tenant_member.tenant.status
   end
 
   test "rolls back tenant account when organization is invalid" do
@@ -40,7 +40,7 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
 
     assert_no_difference -> { TenantAccount.count } do
       assert_no_difference -> { Tenant.count } do
-        assert_no_difference -> { TenantUser.count } do
+        assert_no_difference -> { TenantMember.count } do
           post admin_tenant_accounts_path, params: invalid_params
         end
       end
