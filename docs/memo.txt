@@ -1,1 +1,0 @@
-api/app/controllers/api/hello_controller.rb は認証なしだが、認証必要なhello_auth_controller.rbを作成して APIを作って
