@@ -15,8 +15,8 @@ rails generate controller api/hello
 ```
 
 すると以下の2ファイルができた。
-- api/app/controllers/api/hello_controller.rb
-- api/test/controllers/api/hello_controller.rb
+- backend/app/controllers/api/hello_controller.rb
+- backend/test/controllers/api/hello_controller.rb
 
 以下を書いていく
 ```

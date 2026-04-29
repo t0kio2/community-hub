@@ -15,11 +15,11 @@ const config = defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://api:3000',
+        target: 'http://backend:3000',
         changeOrigin: true,
       },
       '/openapi.yaml': {
-        target: 'http://api:3000',
+        target: 'http://backend:3000',
         changeOrigin: true,
       },
     },

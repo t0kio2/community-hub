@@ -1,23 +1,23 @@
 # テスト実行方法
 
-Rails API のテスト実行方法をまとめる。
+Rails backend のテスト実行方法をまとめる。
 
 テストは Docker 環境で実行する。
 development DB ではなく、test DB の `app_test` を使う。
 
-`docker-compose.yml` の `api` サービスは development 起動用に `RAILS_ENV=development` と development DB の `DATABASE_URL` を持っている。
+`docker-compose.yml` の `backend` サービスは development 起動用に `RAILS_ENV=development` と development DB の `DATABASE_URL` を持っている。
 そのため、テスト実行時は必ず `-e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test` を指定する。
 
 以下のように環境変数を省略して実行しない。
 
 ```sh
-docker compose run --rm api bin/rails test
+docker compose run --rm backend bin/rails test
 ```
 
 この形で実行すると、test 環境の fixture が development DB に投入される危険がある。
-`api/test/test_helper.rb` では `app_test` 以外に接続している場合に停止するガードを入れている。
+`backend/test/test_helper.rb` では `app_test` 以外に接続している場合に停止するガードを入れている。
 
-実行方法は、ホスト側から Docker にコマンドを渡す方法と、api コンテナ内に入って実行する方法の 2 通り。
+実行方法は、ホスト側から Docker にコマンドを渡す方法と、backend コンテナ内に入って実行する方法の 2 通り。
 
 ## ホスト側から実行する
 
@@ -26,36 +26,36 @@ docker compose run --rm api bin/rails test
 初回、または DB schema を更新した後:
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bin/rails db:prepare
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails db:prepare
 ```
 
 全テスト:
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bin/rails test
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test
 ```
 
 特定のファイル:
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bin/rails test test/models/tenant_member_test.rb
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test test/models/tenant_member_test.rb
 ```
 
 特定のテストを行番号で指定:
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bin/rails test test/models/tenant_member_test.rb:12
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test test/models/tenant_member_test.rb:12
 ```
 
-## api コンテナ内で実行する
+## backend コンテナ内で実行する
 
-まず api コンテナに入る。
+まず backend コンテナに入る。
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bash
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bash
 ```
 
-すでに api コンテナ内にいる場合は、先に環境変数を test 用にする。
+すでに backend コンテナ内にいる場合は、先に環境変数を test 用にする。
 
 ```sh
 export RAILS_ENV=test

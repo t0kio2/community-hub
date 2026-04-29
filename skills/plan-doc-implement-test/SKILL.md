@@ -56,13 +56,13 @@ For this Rails project, prefer Docker Compose for Rails tests unless a working l
 Use focused commands first, for example:
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bin/rails test path/to/test_file.rb
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test path/to/test_file.rb
 ```
 
 If the test database is missing, prepare it first:
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test api bin/rails db:prepare
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails db:prepare
 ```
 
 ## Japanese Comments And Tests

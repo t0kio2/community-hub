@@ -96,7 +96,7 @@ TenantUser.create!(
 
 対象:
 
-- `api/app/views/admin/tenant_accounts/new.html.erb`
+- `backend/app/views/admin/tenant_accounts/new.html.erb`
 
 現在は tenant account 情報だけを入力している。
 
@@ -124,7 +124,7 @@ UI 上で `status` を入力させるかどうかは任意。
 
 対象:
 
-- `api/app/controllers/admin/tenant_accounts_controller.rb`
+- `backend/app/controllers/admin/tenant_accounts_controller.rb`
 
 現在:
 
@@ -178,7 +178,7 @@ end
 
 対象:
 
-- `api/app/controllers/admin/tenant_accounts_controller.rb`
+- `backend/app/controllers/admin/tenant_accounts_controller.rb`
 
 例:
 
@@ -204,8 +204,8 @@ end
 
 対象候補:
 
-- `api/app/models/tenant.rb`
-- `api/app/models/tenant_user.rb`
+- `backend/app/models/tenant.rb`
+- `backend/app/models/tenant_user.rb`
 
 最低限:
 
@@ -238,7 +238,7 @@ validates :status, inclusion: { in: %w[active inactive] }
 
 対象:
 
-- `api/docs/DB/ER.md`
+- `backend/docs/DB/ER.md`
 
 現在、`accounts.account_type` の説明が以下になっている。
 
