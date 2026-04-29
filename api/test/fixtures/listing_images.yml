@@ -1,0 +1,11 @@
+one:
+  listing: job
+  image_url: https://example.com/job.jpg
+  position: 1
+  alt_text: 求人画像
+
+two:
+  listing: stay
+  image_url: https://example.com/stay.jpg
+  position: 1
+  alt_text: 宿泊画像

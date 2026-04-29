@@ -1,0 +1,18 @@
+job:
+  tenant: one
+  created_by_tenant_member: one
+  updated_by_tenant_member: one
+  listing_type: job
+  title: 求人掲載
+  description: 求人掲載の説明
+  status: published
+  published_at: 2026-04-29 10:00:00
+
+stay:
+  tenant: two
+  created_by_tenant_member: two
+  updated_by_tenant_member: two
+  listing_type: stay
+  title: 宿泊掲載
+  description: 宿泊掲載の説明
+  status: draft
