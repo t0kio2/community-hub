@@ -248,7 +248,14 @@ updated_at
 
 - user_id, listing_id に unique index
 
+
 #### job_applications
+
+TODO: 以下はまだ完全じゃない。listing関連実装できたら設計から行う
+
+めも
+rails g model JobApplication
+rails g model StayReservation
 
 ```
 id

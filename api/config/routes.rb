@@ -43,6 +43,7 @@ Rails.application.routes.draw do
   namespace :tenant do
     root to: 'home#index'
     resource :organization, only: [:edit, :update]
+    resources :listings, only: [:index, :show, :new, :create, :edit, :update]
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

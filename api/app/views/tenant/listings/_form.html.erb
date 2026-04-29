@@ -1,0 +1,320 @@
+<div class="listing-form-page">
+  <nav class="listing-subnav" aria-label="掲載">
+    <a href="<%= tenant_listings_path %>">一覧</a>
+    <% if listing.persisted? %>
+      <a href="<%= tenant_listing_path(listing) %>">詳細</a>
+    <% end %>
+  </nav>
+
+  <section class="listing-form-header" aria-labelledby="listing-form-title">
+    <div>
+      <p class="listing-label">掲載管理</p>
+      <h1 id="listing-form-title"><%= form_title %></h1>
+    </div>
+  </section>
+
+  <% if listing.errors.any? || detail.errors.any? %>
+    <section class="form-errors" aria-label="入力エラー">
+      <ul>
+        <% listing.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+        <% detail.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <%= form_with model: [:tenant, listing], local: true, class: "listing-form" do |form| %>
+    <section class="form-section" aria-label="共通項目">
+      <% unless listing.persisted? %>
+        <div class="type-switch field-wide">
+          <a class="<%= listing.listing_type == "job" ? "active" : "" %>" href="<%= new_tenant_listing_path(listing_type: "job") %>">求人</a>
+          <a class="<%= listing.listing_type == "stay" ? "active" : "" %>" href="<%= new_tenant_listing_path(listing_type: "stay") %>">宿泊</a>
+        </div>
+      <% end %>
+
+      <div class="field field-wide">
+        <label>種別</label>
+        <strong><%= listing.listing_type %></strong>
+        <%= form.hidden_field :listing_type %>
+      </div>
+
+      <div class="field">
+        <%= form.label :title, "タイトル" %>
+        <%= form.text_field :title %>
+      </div>
+
+      <div class="field">
+        <%= form.label :status, "ステータス" %>
+        <%= form.select :status, Listing::STATUSES.map { |status| [status, status] } %>
+      </div>
+
+      <div class="field field-wide">
+        <%= form.label :description, "説明" %>
+        <%= form.text_area :description, rows: 5 %>
+      </div>
+    </section>
+
+    <% if listing.listing_type == "job" %>
+      <%= fields_for "listing[job_listing]", detail do |detail_form| %>
+        <section class="form-section" aria-label="求人詳細">
+          <div class="field">
+            <%= detail_form.label :employment_type, "雇用形態" %>
+            <%= detail_form.select :employment_type, [["", ""]] + JobListing::EMPLOYMENT_TYPES.map { |type| [type, type] } %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :job_category, "職種" %>
+            <%= detail_form.text_field :job_category %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :work_area, "勤務エリア" %>
+            <%= detail_form.text_field :work_area %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :work_address, "勤務先住所" %>
+            <%= detail_form.text_field :work_address %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :salary_type, "給与種別" %>
+            <%= detail_form.select :salary_type, [["", ""]] + JobListing::SALARY_TYPES.map { |type| [type, type] } %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :salary_min, "給与下限" %>
+            <%= detail_form.number_field :salary_min, min: 0 %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :salary_max, "給与上限" %>
+            <%= detail_form.number_field :salary_max, min: 0 %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :working_hours, "勤務時間" %>
+            <%= detail_form.text_field :working_hours %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :work_days, "勤務日" %>
+            <%= detail_form.text_field :work_days %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :application_limit, "応募上限" %>
+            <%= detail_form.number_field :application_limit, min: 0 %>
+          </div>
+          <div class="field field-wide">
+            <%= detail_form.label :required_skills, "必須スキル" %>
+            <%= detail_form.text_area :required_skills, rows: 4 %>
+          </div>
+          <div class="field field-wide">
+            <%= detail_form.label :welcome_skills, "歓迎スキル" %>
+            <%= detail_form.text_area :welcome_skills, rows: 4 %>
+          </div>
+          <div class="field field-wide">
+            <%= detail_form.label :benefits, "待遇" %>
+            <%= detail_form.text_area :benefits, rows: 4 %>
+          </div>
+        </section>
+      <% end %>
+    <% else %>
+      <%= fields_for "listing[stay_listing]", detail do |detail_form| %>
+        <section class="form-section" aria-label="宿泊詳細">
+          <div class="field">
+            <%= detail_form.label :stay_type, "宿泊種別" %>
+            <%= detail_form.select :stay_type, [["", ""]] + StayListing::STAY_TYPES.map { |type| [type, type] } %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :address, "住所" %>
+            <%= detail_form.text_field :address %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :capacity, "定員" %>
+            <%= detail_form.number_field :capacity, min: 1 %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :price_per_night, "1泊料金" %>
+            <%= detail_form.number_field :price_per_night, min: 0 %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :check_in_time, "チェックイン" %>
+            <%= detail_form.time_field :check_in_time %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :check_out_time, "チェックアウト" %>
+            <%= detail_form.time_field :check_out_time %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :available_from, "予約開始" %>
+            <%= detail_form.date_field :available_from %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :available_until, "予約終了" %>
+            <%= detail_form.date_field :available_until %>
+          </div>
+          <div class="field field-wide">
+            <%= detail_form.label :amenities, "設備" %>
+            <%= detail_form.text_area :amenities, rows: 4 %>
+          </div>
+          <div class="field field-wide">
+            <%= detail_form.label :house_rules, "ルール" %>
+            <%= detail_form.text_area :house_rules, rows: 4 %>
+          </div>
+        </section>
+      <% end %>
+    <% end %>
+
+    <div class="form-actions">
+      <%= form.submit listing.persisted? ? "更新" : "作成" %>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .listing-form-page {
+    display: grid;
+    gap: 20px;
+  }
+
+  .listing-subnav {
+    display: flex;
+    gap: 14px;
+  }
+
+  .listing-subnav a {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .listing-form-header {
+    border-bottom: 1px solid #d8dee8;
+    padding-bottom: 18px;
+  }
+
+  .listing-label {
+    margin: 0 0 6px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .listing-form-header h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 28px;
+    line-height: 1.25;
+  }
+
+  .form-errors {
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #991b1b;
+    padding: 12px 16px;
+  }
+
+  .form-errors ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .listing-form {
+    display: grid;
+    gap: 20px;
+  }
+
+  .form-section {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    border: 1px solid #d8dee8;
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .field {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .field-wide {
+    grid-column: 1 / -1;
+  }
+
+  .field label,
+  .field > label {
+    color: #475569;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .field strong {
+    color: #111827;
+    font-size: 15px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #111827;
+    font: inherit;
+    padding: 9px 10px;
+  }
+
+  .type-switch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .type-switch a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    min-width: 74px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .type-switch a.active {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+
+  .field textarea {
+    resize: vertical;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .form-actions input {
+    min-height: 40px;
+    border: 1px solid #2563eb;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 0 18px;
+  }
+
+  @media (max-width: 760px) {
+    .form-section {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

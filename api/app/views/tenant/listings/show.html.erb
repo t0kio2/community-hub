@@ -1,0 +1,156 @@
+<% content_for :title, @listing.title %>
+
+<div class="listing-show">
+  <nav class="listing-subnav" aria-label="掲載">
+    <a href="<%= tenant_listings_path %>">一覧</a>
+    <a href="<%= edit_tenant_listing_path(@listing) %>">編集</a>
+  </nav>
+
+  <section class="listing-heading" aria-labelledby="listing-title">
+    <div>
+      <p class="listing-label"><%= @listing.listing_type %></p>
+      <h1 id="listing-title"><%= @listing.title %></h1>
+    </div>
+    <span class="status-badge"><%= @listing.status %></span>
+  </section>
+
+  <section class="detail-grid" aria-label="掲載詳細">
+    <div>
+      <span>説明</span>
+      <strong><%= @listing.description.presence || "-" %></strong>
+    </div>
+    <div>
+      <span>公開日時</span>
+      <strong><%= @listing.published_at ? l(@listing.published_at, format: :short) : "-" %></strong>
+    </div>
+    <div>
+      <span>終了日時</span>
+      <strong><%= @listing.closed_at ? l(@listing.closed_at, format: :short) : "-" %></strong>
+    </div>
+  </section>
+
+  <% if @listing.listing_type == "job" && @detail %>
+    <section class="detail-grid" aria-label="求人詳細">
+      <div><span>雇用形態</span><strong><%= @detail.employment_type.presence || "-" %></strong></div>
+      <div><span>職種</span><strong><%= @detail.job_category.presence || "-" %></strong></div>
+      <div><span>勤務エリア</span><strong><%= @detail.work_area.presence || "-" %></strong></div>
+      <div><span>勤務先住所</span><strong><%= @detail.work_address.presence || "-" %></strong></div>
+      <div><span>給与種別</span><strong><%= @detail.salary_type.presence || "-" %></strong></div>
+      <div><span>給与</span><strong><%= [@detail.salary_min, @detail.salary_max].compact.join(" - ").presence || "-" %></strong></div>
+      <div><span>勤務時間</span><strong><%= @detail.working_hours.presence || "-" %></strong></div>
+      <div><span>勤務日</span><strong><%= @detail.work_days.presence || "-" %></strong></div>
+      <div><span>応募上限</span><strong><%= @detail.application_limit.presence || "-" %></strong></div>
+    </section>
+  <% elsif @detail %>
+    <section class="detail-grid" aria-label="宿泊詳細">
+      <div><span>宿泊種別</span><strong><%= @detail.stay_type.presence || "-" %></strong></div>
+      <div><span>住所</span><strong><%= @detail.address.presence || "-" %></strong></div>
+      <div><span>定員</span><strong><%= @detail.capacity.presence || "-" %></strong></div>
+      <div><span>1泊料金</span><strong><%= @detail.price_per_night.presence || "-" %></strong></div>
+      <div><span>チェックイン</span><strong><%= @detail.check_in_time&.strftime("%H:%M").presence || "-" %></strong></div>
+      <div><span>チェックアウト</span><strong><%= @detail.check_out_time&.strftime("%H:%M").presence || "-" %></strong></div>
+      <div><span>予約開始</span><strong><%= @detail.available_from.presence || "-" %></strong></div>
+      <div><span>予約終了</span><strong><%= @detail.available_until.presence || "-" %></strong></div>
+    </section>
+  <% end %>
+</div>
+
+<style>
+  .listing-show {
+    display: grid;
+    gap: 20px;
+  }
+
+  .listing-subnav {
+    display: flex;
+    gap: 14px;
+  }
+
+  .listing-subnav a {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .listing-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid #d8dee8;
+    padding-bottom: 18px;
+  }
+
+  .listing-label {
+    margin: 0 0 6px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .listing-heading h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 28px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid #d8dee8;
+    border-radius: 8px;
+    background: #d8dee8;
+  }
+
+  .detail-grid div {
+    min-width: 0;
+    background: #fff;
+    padding: 14px;
+  }
+
+  .detail-grid span {
+    display: block;
+    margin-bottom: 6px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .detail-grid strong {
+    display: block;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  @media (max-width: 760px) {
+    .listing-heading {
+      display: grid;
+    }
+
+    .detail-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

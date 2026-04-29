@@ -1,11 +1,15 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
-# This model initially had no columns defined. If you add columns to the
-# model remove the "{}" from the fixture names and add the columns immediately
-# below each fixture, per the syntax in the comments below
-#
-one: {}
-# column: value
-#
-two: {}
-# column: value
+one:
+  listing: job
+  employment_type: part_time
+  job_category: 接客
+  work_area: 東京都
+  work_address: 東京都千代田区
+  salary_type: hourly
+  salary_min: 1200
+  salary_max: 1800
+  working_hours: 10:00-18:00
+  work_days: 週3日
+  required_skills: 日本語で接客できること
+  welcome_skills: 英語で案内できること
+  benefits: 交通費支給
+  application_limit: 5
