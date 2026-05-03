@@ -53,6 +53,7 @@
             <td><%= t.email %></td>
             <td><%= l(t.created_at, format: :long) rescue t.created_at %></td>
             <td>
+              <a class="button" href="<%= admin_tenant_account_path(t) %>">掲載</a>
               <a class="button" href="<%= edit_admin_tenant_account_path(t) %>">編集</a>
               <%= form_with url: admin_tenant_account_path(t), method: :delete, local: true, html: { style: 'display:inline-block; margin-left:6px;', onsubmit: "return confirm('削除してよろしいですか？');" } do %>
                 <button type="submit">削除</button>

@@ -80,6 +80,53 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "削除"
   end
 
+  test "テナント別掲載画面で対象テナントの掲載だけを表示する" do
+    tenant_account = create_tenant_account_with_organization(
+      email: "listing-owner@example.com",
+      tenant_name: "掲載確認テナント"
+    )
+    other_tenant_account = create_tenant_account_with_organization(
+      email: "other-listing-owner@example.com",
+      tenant_name: "別テナント"
+    )
+    target_listing = create_listing_for(tenant_account.tenant_member.tenant, title: "対象テナントの掲載")
+    other_listing = create_listing_for(other_tenant_account.tenant_member.tenant, title: "別テナントの掲載")
+
+    get admin_tenant_account_path(tenant_account)
+
+    assert_response :success
+    assert_includes response.body, tenant_account.email
+    assert_includes response.body, "掲載確認テナント"
+    assert_includes response.body, target_listing.title
+    assert_not_includes response.body, other_listing.title
+  end
+
+  test "テナント一覧に掲載画面へのリンクを表示する" do
+    tenant_account = create_tenant_account_with_organization(
+      email: "index-listing-owner@example.com",
+      tenant_name: "一覧リンク確認テナント"
+    )
+
+    get admin_tenant_accounts_path
+
+    assert_response :success
+    assert_includes response.body, admin_tenant_account_path(tenant_account)
+    assert_includes response.body, "掲載"
+  end
+
+  test "組織が未作成のテナントアカウントでも掲載画面を表示できる" do
+    tenant_account = TenantAccount.create!(
+      email: "no-organization-owner@example.com",
+      password: "password",
+      password_confirmation: "password"
+    )
+
+    get admin_tenant_account_path(tenant_account)
+
+    assert_response :success
+    assert_includes response.body, "組織情報がありません"
+  end
+
   private
 
   def valid_params
@@ -95,5 +142,37 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
         address: "Tokyo"
       }
     }
+  end
+
+  def create_tenant_account_with_organization(email:, tenant_name:)
+    tenant_account = TenantAccount.create!(
+      email: email,
+      password: "password",
+      password_confirmation: "password"
+    )
+    tenant = Tenant.create!(
+      name: tenant_name,
+      kana: "テナント",
+      address: "Tokyo",
+      status: "active"
+    )
+    TenantMember.create!(
+      account: tenant_account,
+      tenant: tenant,
+      role: "owner",
+      status: "active"
+    )
+
+    tenant_account
+  end
+
+  def create_listing_for(tenant, title:)
+    tenant.listings.create!(
+      listing_type: "job",
+      title: title,
+      description: "#{title}の説明",
+      status: "published",
+      published_at: Time.current
+    )
   end
 end

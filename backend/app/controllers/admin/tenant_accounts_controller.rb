@@ -1,5 +1,5 @@
 class Admin::TenantAccountsController < Admin::BaseController
-  before_action :set_tenant, only: %i[edit update destroy]
+  before_action :set_tenant, only: %i[show edit update destroy]
 
   def index
     @tenants = TenantAccount.order(id: :desc)
@@ -8,6 +8,11 @@ class Admin::TenantAccountsController < Admin::BaseController
   def new
     @tenant = TenantAccount.new
     @organization = Tenant.new(status: 'active')
+  end
+
+  def show
+    @organization = @tenant.tenant_member&.tenant
+    @listings = @organization&.listings&.order(updated_at: :desc, id: :desc) || Listing.none
   end
 
   def create

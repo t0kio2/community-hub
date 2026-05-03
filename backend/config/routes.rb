@@ -41,7 +41,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     root to: 'home#index'
-    resources :tenant_accounts, only: [:index, :new, :create, :edit, :update, :destroy]
+    resources :tenant_accounts, only: [:index, :show, :new, :create, :edit, :update, :destroy]
   end
 
   namespace :tenant do
