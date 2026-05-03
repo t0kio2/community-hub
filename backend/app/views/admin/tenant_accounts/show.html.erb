@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tenant Listings</title>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="toolbar">
+        <a href="<%= admin_tenant_accounts_path %>">← テナントアカウント一覧</a>
+      </div>
+
+      <h1>テナント別掲載一覧</h1>
+
+      <section class="tenantSummary">
+        <div>
+          <span>アカウント</span>
+          <strong><%= @tenant.email %></strong>
+        </div>
+        <div>
+          <span>組織</span>
+          <strong><%= @organization&.name || "未作成" %></strong>
+        </div>
+      </section>
+
+      <% if @organization.blank? %>
+        <div class="emptyState">
+          <h2>組織情報がありません</h2>
+          <p>このテナントアカウントには組織が紐づいていません。</p>
+        </div>
+      <% elsif @listings.any? %>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>タイトル</th>
+              <th>種別</th>
+              <th>ステータス</th>
+              <th>公開日時</th>
+              <th>更新日時</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @listings.each do |listing| %>
+              <tr>
+                <td><%= listing.id %></td>
+                <td><%= listing.title %></td>
+                <td><%= listing.listing_type %></td>
+                <td><%= listing.status %></td>
+                <td><%= listing.published_at ? (l(listing.published_at, format: :long) rescue listing.published_at) : "未公開" %></td>
+                <td><%= l(listing.updated_at, format: :long) rescue listing.updated_at %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="emptyState">
+          <h2>掲載がありません</h2>
+          <p>このテナントにはまだ掲載が作成されていません。</p>
+        </div>
+      <% end %>
+    </div>
+  </body>
+</html>
+
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 40px; }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  .toolbar { margin-bottom: 20px; }
+  .toolbar a { color: #0366d6; text-decoration: none; }
+  h1 { margin: 0 0 20px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th, td { border: 1px solid #ddd; padding: 8px 10px; vertical-align: top; }
+  th { background: #f9f9f9; text-align: left; }
+  .tenantSummary { border: 1px solid #ddd; border-radius: 8px; display: grid; gap: 12px; margin-bottom: 18px; padding: 16px; }
+  .tenantSummary span { color: #666; display: block; font-size: 13px; margin-bottom: 4px; }
+  .emptyState { border: 1px solid #ddd; border-radius: 8px; margin-top: 16px; padding: 20px; }
+  .emptyState h2 { font-size: 18px; margin: 0 0 8px; }
+  .emptyState p { color: #666; margin: 0; }
+</style>
