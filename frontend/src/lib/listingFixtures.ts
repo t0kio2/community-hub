@@ -1,0 +1,48 @@
+import type { Listing } from "@/lib/listings";
+
+export const sampleListings: Listing[] = [
+  {
+    id: 1,
+    title: "地域イベント運営サポート",
+    tenantName: "Community Works",
+    listingType: "job",
+    category: "onsite",
+    area: "東京都 渋谷区",
+    priceLabel: "時給 1,500円",
+    summary: "受付、来場者案内、会場設営を担当する短期スタッフ募集です。",
+    publishedAt: "2026-04-28",
+  },
+  {
+    id: 2,
+    title: "観光案内ページの翻訳",
+    tenantName: "Local Guide Lab",
+    listingType: "job",
+    category: "remote",
+    area: "リモート",
+    priceLabel: "固定報酬 30,000円",
+    summary: "日本語の観光案内文を英語へ翻訳し、公開前の確認まで行います。",
+    publishedAt: "2026-04-27",
+  },
+  {
+    id: 3,
+    title: "駅近の個室ステイ",
+    tenantName: "North Stay",
+    listingType: "stay",
+    category: "private-room",
+    area: "北海道 札幌市",
+    priceLabel: "1泊 6,800円",
+    summary: "生活用品が揃った個室です。中長期の滞在にも対応しています。",
+    publishedAt: "2026-04-26",
+  },
+  {
+    id: 4,
+    title: "交流スペース付きシェア滞在",
+    tenantName: "Harbor House",
+    listingType: "stay",
+    category: "shared",
+    area: "神奈川県 横浜市",
+    priceLabel: "1泊 4,200円",
+    summary: "共有ラウンジとワークスペースを利用できる滞在プランです。",
+    publishedAt: "2026-04-25",
+  },
+];

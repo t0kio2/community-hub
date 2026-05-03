@@ -2,70 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { hasAccessToken, logout } from "@/lib/auth";
-
-type ListingType = "all" | "job" | "stay";
-type CategoryFilter = "all" | "remote" | "onsite" | "private-room" | "shared";
-
-type Listing = {
-  id: number;
-  title: string;
-  tenantName: string;
-  listingType: Exclude<ListingType, "all">;
-  category: Exclude<CategoryFilter, "all">;
-  area: string;
-  priceLabel: string;
-  summary: string;
-  publishedAt: string;
-};
-
-const sampleListings: Listing[] = [
-  {
-    id: 1,
-    title: "地域イベント運営サポート",
-    tenantName: "Community Works",
-    listingType: "job",
-    category: "onsite",
-    area: "東京都 渋谷区",
-    priceLabel: "時給 1,500円",
-    summary: "受付、来場者案内、会場設営を担当する短期スタッフ募集です。",
-    publishedAt: "2026-04-28",
-  },
-  {
-    id: 2,
-    title: "観光案内ページの翻訳",
-    tenantName: "Local Guide Lab",
-    listingType: "job",
-    category: "remote",
-    area: "リモート",
-    priceLabel: "固定報酬 30,000円",
-    summary: "日本語の観光案内文を英語へ翻訳し、公開前の確認まで行います。",
-    publishedAt: "2026-04-27",
-  },
-  {
-    id: 3,
-    title: "駅近の個室ステイ",
-    tenantName: "North Stay",
-    listingType: "stay",
-    category: "private-room",
-    area: "北海道 札幌市",
-    priceLabel: "1泊 6,800円",
-    summary: "生活用品が揃った個室です。中長期の滞在にも対応しています。",
-    publishedAt: "2026-04-26",
-  },
-  {
-    id: 4,
-    title: "交流スペース付きシェア滞在",
-    tenantName: "Harbor House",
-    listingType: "stay",
-    category: "shared",
-    area: "神奈川県 横浜市",
-    priceLabel: "1泊 4,200円",
-    summary: "共有ラウンジとワークスペースを利用できる滞在プランです。",
-    publishedAt: "2026-04-25",
-  },
-];
+import { useEffect, useMemo, useState } from "react";
+import { logout } from "@/lib/auth";
+import {
+  fetchPublicListings,
+  filterListings,
+  type CategoryFilter,
+  type Listing,
+  type ListingType,
+} from "@/lib/listings";
+import { useAuthSnapshot } from "@/lib/useAuthSnapshot";
 
 const typeOptions: Array<{ label: string; value: ListingType }> = [
   { label: "すべて", value: "all" },
@@ -81,62 +27,71 @@ const categoryOptions: Array<{ label: string; value: CategoryFilter }> = [
   { label: "シェア", value: "shared" },
 ];
 
-function subscribeAuthStore() {
-  return () => {};
-}
-
-function getAuthSnapshot() {
-  return String(hasAccessToken());
-}
-
-function getServerAuthSnapshot() {
-  return "false";
-}
-
 function getTypeLabel(type: Listing["listingType"]) {
   return type === "job" ? "仕事" : "滞在";
 }
 
 export default function ListingsPage() {
   const router = useRouter();
-  const isAuthenticated = useSyncExternalStore(
-    subscribeAuthStore,
-    getAuthSnapshot,
-    getServerAuthSnapshot
-  ) === "true";
+  const auth = useAuthSnapshot();
   const [query, setQuery] = useState("");
   const [listingType, setListingType] = useState<ListingType>("all");
   const [category, setCategory] = useState<CategoryFilter>("all");
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [isLoadingListings, setIsLoadingListings] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!auth.isCheckingAuth && !auth.isAuthenticated) {
       router.replace("/auth/login");
     }
-  }, [isAuthenticated, router]);
+  }, [auth.isAuthenticated, auth.isCheckingAuth, router]);
 
-  const filteredListings = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+  useEffect(() => {
+    if (!auth.isAuthenticated) return;
 
-    return sampleListings.filter((listing) => {
-      const matchesQuery =
-        normalizedQuery.length === 0 ||
-        [listing.title, listing.tenantName, listing.area, listing.summary]
-          .join(" ")
-          .toLowerCase()
-          .includes(normalizedQuery);
-      const matchesType = listingType === "all" || listing.listingType === listingType;
-      const matchesCategory = category === "all" || listing.category === category;
+    let ignore = false;
 
-      return matchesQuery && matchesType && matchesCategory;
-    });
-  }, [category, listingType, query]);
+    async function loadListings() {
+      setIsLoadingListings(true);
+      setLoadError("");
 
-  function handleLogout() {
-    logout();
+      try {
+        const nextListings = await fetchPublicListings();
+        if (!ignore) {
+          setListings(nextListings);
+        }
+      } catch (caught) {
+        if (!ignore) {
+          setLoadError(
+            caught instanceof Error ? caught.message : "掲載一覧を取得できませんでした"
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoadingListings(false);
+        }
+      }
+    }
+
+    void loadListings();
+
+    return () => {
+      ignore = true;
+    };
+  }, [auth.isAuthenticated]);
+
+  const filteredListings = useMemo(
+    () => filterListings(listings, query, listingType, category),
+    [category, listingType, listings, query]
+  );
+
+  async function handleLogout() {
+    await logout();
     router.replace("/auth/login");
   }
 
-  if (!isAuthenticated) {
+  if (auth.isCheckingAuth || !auth.isAuthenticated) {
     return (
       <main className="appShell">
         <p className="loadingText">読み込み中</p>
@@ -165,7 +120,9 @@ export default function ListingsPage() {
         <div>
           <p className="eyebrow">Listings</p>
           <h1 id="listings-title">掲載を探す</h1>
-          <p className="leadText">公開中 {filteredListings.length} 件</p>
+          <p className="leadText">
+            {isLoadingListings ? "掲載を読み込み中" : `公開中 ${filteredListings.length} 件`}
+          </p>
         </div>
       </section>
 
@@ -210,7 +167,24 @@ export default function ListingsPage() {
       </section>
 
       <section className="listingResults" aria-label="掲載一覧">
-        {filteredListings.length > 0 ? (
+        {loadError ? (
+          <div className="emptyState" role="alert">
+            <h2>掲載を取得できませんでした</h2>
+            <p>{loadError}</p>
+            <button
+              className="secondaryButton"
+              onClick={() => window.location.reload()}
+              type="button"
+            >
+              再読み込み
+            </button>
+          </div>
+        ) : isLoadingListings ? (
+          <div className="emptyState">
+            <h2>読み込み中</h2>
+            <p>公開中の掲載を取得しています。</p>
+          </div>
+        ) : filteredListings.length > 0 ? (
           filteredListings.map((listing) => (
             <article className="listingCard" key={listing.id}>
               <div className="listingCardMain">
@@ -224,7 +198,11 @@ export default function ListingsPage() {
               </div>
               <div className="listingCardSide">
                 <div className="priceLabel">{listing.priceLabel}</div>
-                <time dateTime={listing.publishedAt}>{listing.publishedAt}</time>
+                {listing.publishedAt ? (
+                  <time dateTime={listing.publishedAt}>{listing.publishedAt}</time>
+                ) : (
+                  <span className="listingDateFallback">公開日未設定</span>
+                )}
                 <button className="secondaryButton" type="button">
                   詳細
                 </button>
