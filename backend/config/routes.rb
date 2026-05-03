@@ -14,12 +14,16 @@ Rails.application.routes.draw do
           registrations: 'api/v1/auth/registrations'
         }
 
-      # 認証テスト用エンドポイント
-      get 'hello', to: 'api/v1/hello#index'
-
       # トークンリフレッシュ
       post   'auth/refresh', to: 'api/v1/auth/refresh_tokens#create'
       delete 'auth/refresh', to: 'api/v1/auth/refresh_tokens#destroy'
+
+      get "public/listings", to: "api/v1/public/listings#index"
+      get "public/listings/:id", to: "api/v1/public/listings#show"
+
+      get "user/favorites", to: "api/v1/user/favorites#index"
+      post "user/favorites", to: "api/v1/user/favorites#create"
+      delete "user/favorites/:id", to: "api/v1/user/favorites#destroy"
     end
   end
 
