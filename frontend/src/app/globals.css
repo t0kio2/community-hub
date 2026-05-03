@@ -437,6 +437,11 @@ h2 {
   font-size: 13px;
 }
 
+.listingDateFallback {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .emptyState {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -453,6 +458,10 @@ h2 {
   font-size: 14px;
   line-height: 1.7;
   margin: 8px 0 0;
+}
+
+.emptyState .secondaryButton {
+  margin-top: 16px;
 }
 
 @media (max-width: 720px) {

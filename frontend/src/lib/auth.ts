@@ -8,34 +8,28 @@ export type AuthResponse = {
   error?: string;
 };
 
+export type SessionResponse = {
+  account: AuthResponse["account"] | null;
+  isAuthenticated: boolean;
+};
+
 type AuthParams = {
   email: string;
   password: string;
   passwordConfirmation?: string;
 };
 
-const DEVICE_ID_KEY = "communityHubDeviceId";
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 const ACCOUNT_KEY = "account";
 
-function getDeviceId() {
-  const current = window.localStorage.getItem(DEVICE_ID_KEY);
-  if (current) return current;
-
-  const next = window.crypto.randomUUID();
-  window.localStorage.setItem(DEVICE_ID_KEY, next);
-  return next;
-}
-
 async function requestAuth(path: string, body: unknown) {
   const response = await fetch(path, {
     method: "POST",
+    credentials: "same-origin",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      "X-Device-Id": getDeviceId(),
-      "X-Device-Name": "browser",
     },
     body: JSON.stringify(body),
   });
@@ -46,16 +40,7 @@ async function requestAuth(path: string, body: unknown) {
     throw new Error(data.errors?.join("\n") || data.error || "認証に失敗しました");
   }
 
-  const authorization = response.headers.get("Authorization");
-  if (authorization) {
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, authorization.replace("Bearer ", ""));
-  }
-  if (data.refresh_token) {
-    window.localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
-  }
-  if (data.account) {
-    window.localStorage.setItem(ACCOUNT_KEY, JSON.stringify(data.account));
-  }
+  clearLegacyAuthStorage();
 
   return data;
 }
@@ -79,22 +64,39 @@ export function signUp({ email, password, passwordConfirmation }: AuthParams) {
   });
 }
 
-export function getCurrentAccount() {
-  const stored = window.localStorage.getItem(ACCOUNT_KEY);
-  if (!stored) return null;
+export async function getCurrentSession() {
+  const response = await fetch("/api/v1/auth/session", {
+    credentials: "same-origin",
+    headers: {
+      Accept: "application/json",
+    },
+  });
 
-  try {
-    return JSON.parse(stored) as NonNullable<AuthResponse["account"]>;
-  } catch {
-    return null;
+  if (!response.ok) {
+    return {
+      account: null,
+      isAuthenticated: false,
+    };
   }
+
+  return (await response.json().catch(() => ({
+    account: null,
+    isAuthenticated: false,
+  }))) as SessionResponse;
 }
 
-export function hasAccessToken() {
-  return Boolean(window.localStorage.getItem(ACCESS_TOKEN_KEY));
+export async function logout() {
+  await fetch("/api/v1/auth/session", {
+    method: "DELETE",
+    credentials: "same-origin",
+    headers: {
+      Accept: "application/json",
+    },
+  }).catch(() => null);
+  clearLegacyAuthStorage();
 }
 
-export function logout() {
+function clearLegacyAuthStorage() {
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.localStorage.removeItem(REFRESH_TOKEN_KEY);
   window.localStorage.removeItem(ACCOUNT_KEY);

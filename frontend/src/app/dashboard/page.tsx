@@ -2,13 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
-import { getCurrentAccount, hasAccessToken, logout } from "@/lib/auth";
-
-type Account = {
-  id: number;
-  email: string;
-};
+import { useEffect } from "react";
+import { logout } from "@/lib/auth";
+import { useAuthSnapshot } from "@/lib/useAuthSnapshot";
 
 const nextActions = [
   {
@@ -28,48 +24,22 @@ const nextActions = [
   },
 ];
 
-function subscribeAuthStore() {
-  return () => {};
-}
-
-function getAuthSnapshot() {
-  return JSON.stringify({
-    account: getCurrentAccount(),
-    isAuthenticated: hasAccessToken(),
-  });
-}
-
-function getServerAuthSnapshot() {
-  return JSON.stringify({
-    account: null,
-    isAuthenticated: false,
-  });
-}
-
 export default function DashboardPage() {
   const router = useRouter();
-  const authSnapshot = useSyncExternalStore(
-    subscribeAuthStore,
-    getAuthSnapshot,
-    getServerAuthSnapshot
-  );
-  const auth = useMemo(
-    () => JSON.parse(authSnapshot) as { account: Account | null; isAuthenticated: boolean },
-    [authSnapshot]
-  );
+  const auth = useAuthSnapshot();
 
   useEffect(() => {
-    if (!auth.isAuthenticated) {
+    if (!auth.isCheckingAuth && !auth.isAuthenticated) {
       router.replace("/auth/login");
     }
-  }, [auth.isAuthenticated, router]);
+  }, [auth.isAuthenticated, auth.isCheckingAuth, router]);
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     router.replace("/auth/login");
   }
 
-  if (!auth.isAuthenticated) {
+  if (auth.isCheckingAuth || !auth.isAuthenticated) {
     return (
       <main className="appShell">
         <p className="loadingText">読み込み中</p>
