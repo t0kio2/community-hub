@@ -1,4 +1,4 @@
-class Profile < ApplicationRecord
+class UserProfile < ApplicationRecord
   belongs_to :user
 
   validates :name, presence: true

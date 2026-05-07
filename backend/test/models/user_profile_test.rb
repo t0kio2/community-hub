@@ -1,8 +1,8 @@
 require "test_helper"
 
-class ProfileTest < ActiveSupport::TestCase
+class UserProfileTest < ActiveSupport::TestCase
   test "ユーザーに紐づくプロフィールは有効" do
-    profile = Profile.new(
+    user_profile = UserProfile.new(
       user: users(:one),
       name: "山田 太郎",
       kana: "ヤマダ タロウ",
@@ -11,20 +11,20 @@ class ProfileTest < ActiveSupport::TestCase
       avatar_url: "https://example.com/avatar.png"
     )
 
-    assert profile.valid?
+    assert user_profile.valid?
   end
 
   test "ユーザーがないプロフィールは無効" do
-    profile = Profile.new(name: "山田 太郎")
+    user_profile = UserProfile.new(name: "山田 太郎")
 
-    assert_not profile.valid?
-    assert_includes profile.errors[:user], "must exist"
+    assert_not user_profile.valid?
+    assert_includes user_profile.errors[:user], "must exist"
   end
 
   test "名前がないプロフィールは無効" do
-    profile = Profile.new(user: users(:one), name: nil)
+    user_profile = UserProfile.new(user: users(:one), name: nil)
 
-    assert_not profile.valid?
-    assert_includes profile.errors[:name], "can't be blank"
+    assert_not user_profile.valid?
+    assert_includes user_profile.errors[:name], "can't be blank"
   end
 end
