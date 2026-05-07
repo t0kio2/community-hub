@@ -16,22 +16,6 @@ created_at
 updated_at
 ```
 
-## 共通
-
-#### profiles
-
-```
-id
-account_id [FK]
-name
-kana
-birth_date
-phone
-avatar_url
-created_at
-updated_at
-```
-
 ## ユーザ
 
 ### users
@@ -39,6 +23,22 @@ updated_at
 ```
 account_id [FK]
 status
+created_at
+updated_at
+```
+
+#### user_profiles
+
+ユーザー専用プロフィール。認証情報である `accounts` には直接紐づけず、サービス利用者である `users` に 1:1 で紐づける。
+
+```
+id
+user_id [FK, NOT NULL, UNIQUE]
+name [NOT NULL]
+kana
+birth_date
+phone
+avatar_url
 created_at
 updated_at
 ```

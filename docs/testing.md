@@ -5,113 +5,20 @@ Rails backend のテスト実行方法をまとめる。
 テストは Docker 環境で実行する。
 development DB ではなく、test DB の `app_test` を使う。
 
-`docker-compose.yml` の `backend` サービスは development 起動用に `RAILS_ENV=development` と development DB の `DATABASE_URL` を持っている。
-そのため、テスト実行時は必ず `-e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test` を指定する。
-
-以下のように環境変数を省略して実行しない。
-
-```sh
-docker compose run --rm backend bin/rails test
-```
-
-この形で実行すると、test 環境の fixture が development DB に投入される危険がある。
-`backend/test/test_helper.rb` では `app_test` 以外に接続している場合に停止するガードを入れている。
-
-実行方法は、ホスト側から Docker にコマンドを渡す方法と、backend コンテナ内に入って実行する方法の 2 通り。
-
-## ホスト側から実行する
-
-プロジェクトルートで実行する。
-
-初回、または DB schema を更新した後:
-
-```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails db:prepare
-```
-
 全テスト:
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test -v
 ```
 
 特定のファイル:
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test test/models/tenant_member_test.rb
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test -v test/models/tenant_member_test.rb
 ```
 
 特定のテストを行番号で指定:
 
 ```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test test/models/tenant_member_test.rb:12
+docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bin/rails test -v test/models/tenant_member_test.rb:12
 ```
-
-## backend コンテナ内で実行する
-
-まず backend コンテナに入る。
-
-```sh
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgres://app:app@db:5432/app_test backend bash
-```
-
-すでに backend コンテナ内にいる場合は、先に環境変数を test 用にする。
-
-```sh
-export RAILS_ENV=test
-export DATABASE_URL=postgres://app:app@db:5432/app_test
-```
-
-接続先を確認する場合:
-
-```sh
-bin/rails runner 'puts Rails.env; puts ActiveRecord::Base.connection_db_config.database'
-```
-
-`test` と `app_test` が表示されれば OK。
-
-初回、または DB schema を更新した後:
-
-```sh
-bin/rails db:prepare
-```
-
-全テスト:
-
-```sh
-bin/rails test
-```
-
-特定のファイル:
-
-```sh
-bin/rails test test/models/tenant_member_test.rb
-```
-
-特定のテストを行番号で指定:
-
-```sh
-bin/rails test test/models/tenant_member_test.rb:12
-```
-
-テストケース名を表示する:
-
-```sh
-bin/rails test -v
-```
-
-特定ファイルでテストケース名を表示する:
-
-```sh
-bin/rails test test/models/tenant_member_test.rb -v
-```
-
-## 補足
-
-`bin/rails test` はデフォルトではテストケース名を表示せず、`.` で進捗を表示する。
-
-`app_test` がまだない場合は、`bin/rails db:prepare` で作成される。
-
-`DATABASE_URL` が development DB を向いたまま `bin/rails test` を実行すると、fixture によって development DB のデータがテストデータに置き換わる危険がある。テスト前に `DATABASE_URL` が `app_test` を向いていることを確認する。
-
-Docker 実行時に Docker API へ接続できない場合は、Docker Desktop が起動しているか確認する。
