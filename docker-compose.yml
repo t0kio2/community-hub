@@ -41,7 +41,7 @@ services:
     environment:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
-      BACKEND_ORIGIN: http://backend:3000
+      NEXT_PUBLIC_API_ORIGIN: http://localhost:3001
       TZ: Asia/Tokyo
     volumes:
       - ./frontend:/app

@@ -1,3 +1,5 @@
+import { buildApiUrl } from "@/lib/auth";
+
 export type ListingType = "all" | "job" | "stay";
 export type CategoryFilter = "all" | "remote" | "onsite" | "private-room" | "shared";
 
@@ -46,7 +48,7 @@ type ListingsResponse = {
 };
 
 export async function fetchPublicListings() {
-  const response = await fetch("/api/v1/public/listings", {
+  const response = await fetch(buildApiUrl("/api/v1/public/listings"), {
     headers: {
       Accept: "application/json",
     },

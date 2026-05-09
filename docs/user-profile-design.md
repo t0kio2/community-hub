@@ -68,9 +68,7 @@
 
 ## API 連携
 
-Next.js 側は既存の `frontend/src/app/api/v1/user/[...path]/route.ts` を使い、cookie の access token / refresh token 管理を隠蔽する。
-
-現在の user API proxy は `GET` / `POST` / `DELETE` のみを export しているため、保存 API を通す実装時に `PUT` も追加する。
+Next.js BFF は使わず、frontend の API helper から Rails API を直接呼び出す。認証付き API は `frontend/src/lib/auth.ts` の `authenticatedFetch` を使い、access token 期限切れ時は refresh 後に 1 回だけ再試行する。
 
 ### 取得
 
@@ -204,7 +202,7 @@ export type ProfileFormValues = {
 - `backend/test/controllers/api/v1/user/user_profiles_controller_test.rb`
 - `frontend/src/app/dashboard/page.tsx`
 - `frontend/src/app/profile/page.tsx`
-- `frontend/src/app/api/v1/user/[...path]/route.ts`
+- `frontend/src/lib/auth.ts`
 - `frontend/src/lib/profile.ts`
 - `frontend/src/app/globals.css`
 

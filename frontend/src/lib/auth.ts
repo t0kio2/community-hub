@@ -19,17 +19,67 @@ type AuthParams = {
   passwordConfirmation?: string;
 };
 
-const ACCESS_TOKEN_KEY = "accessToken";
-const REFRESH_TOKEN_KEY = "refreshToken";
-const ACCOUNT_KEY = "account";
+const ACCESS_TOKEN_KEY = "communityHubAccessToken";
+const REFRESH_TOKEN_KEY = "communityHubRefreshToken";
+const ACCOUNT_KEY = "communityHubAccount";
+const DEVICE_ID_KEY = "communityHubDeviceId";
+const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN || "http://localhost:3001";
+
+type StoredAuth = {
+  accessToken: string;
+  refreshToken?: string;
+  account?: AuthResponse["account"];
+};
+
+function getApiUrl(path: string) {
+  return `${API_ORIGIN}${path}`;
+}
+
+function getDeviceId() {
+  const stored = window.localStorage.getItem(DEVICE_ID_KEY);
+  if (stored) return stored;
+
+  const nextDeviceId = crypto.randomUUID();
+  window.localStorage.setItem(DEVICE_ID_KEY, nextDeviceId);
+  return nextDeviceId;
+}
+
+function extractBearerToken(response: Response) {
+  return response.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") || "";
+}
+
+function storeAuth({ accessToken, refreshToken, account }: StoredAuth) {
+  window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+
+  if (refreshToken) {
+    window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
+
+  if (account) {
+    window.localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+  }
+}
+
+function getStoredAccount() {
+  const stored = window.localStorage.getItem(ACCOUNT_KEY);
+  if (!stored) return null;
+
+  try {
+    return JSON.parse(stored) as NonNullable<AuthResponse["account"]>;
+  } catch {
+    window.localStorage.removeItem(ACCOUNT_KEY);
+    return null;
+  }
+}
 
 async function requestAuth(path: string, body: unknown) {
-  const response = await fetch(path, {
+  const response = await fetch(getApiUrl(path), {
     method: "POST",
-    credentials: "same-origin",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
+      "X-Device-Id": getDeviceId(),
+      "X-Device-Name": "browser",
     },
     body: JSON.stringify(body),
   });
@@ -40,9 +90,18 @@ async function requestAuth(path: string, body: unknown) {
     throw new Error(data.errors?.join("\n") || data.error || "認証に失敗しました");
   }
 
-  clearLegacyAuthStorage();
+  const accessToken = extractBearerToken(response);
+  if (!accessToken) {
+    throw new Error("アクセストークンを取得できませんでした");
+  }
 
-  return data;
+  storeAuth({
+    accessToken,
+    refreshToken: data.refresh_token,
+    account: data.account,
+  });
+
+  return { account: data.account };
 }
 
 export function login({ email, password }: AuthParams) {
@@ -65,39 +124,117 @@ export function signUp({ email, password, passwordConfirmation }: AuthParams) {
 }
 
 export async function getCurrentSession() {
-  const response = await fetch("/api/v1/auth/session", {
-    credentials: "same-origin",
-    headers: {
-      Accept: "application/json",
-    },
-  });
+  const accessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY);
+  const account = getStoredAccount();
 
-  if (!response.ok) {
+  if (accessToken) {
     return {
-      account: null,
-      isAuthenticated: false,
+      account,
+      isAuthenticated: true,
     };
   }
 
-  return (await response.json().catch(() => ({
+  if (await refreshAuthSession()) {
+    return {
+      account: getStoredAccount(),
+      isAuthenticated: true,
+    };
+  }
+
+  return {
     account: null,
     isAuthenticated: false,
-  }))) as SessionResponse;
+  };
 }
 
 export async function logout() {
-  await fetch("/api/v1/auth/session", {
-    method: "DELETE",
-    credentials: "same-origin",
-    headers: {
-      Accept: "application/json",
-    },
-  }).catch(() => null);
-  clearLegacyAuthStorage();
+  const refreshToken = window.localStorage.getItem(REFRESH_TOKEN_KEY);
+
+  if (refreshToken) {
+    await fetch(getApiUrl("/api/v1/auth/refresh"), {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    }).catch(() => null);
+  }
+
+  clearAuthStorage();
 }
 
-function clearLegacyAuthStorage() {
+export async function authenticatedFetch(path: string, init: RequestInit = {}) {
+  const response = await fetchWithAccessToken(path, init);
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  if (!(await refreshAuthSession())) {
+    clearAuthStorage();
+    return response;
+  }
+
+  return fetchWithAccessToken(path, init);
+}
+
+export function buildApiUrl(path: string) {
+  return getApiUrl(path);
+}
+
+async function fetchWithAccessToken(path: string, init: RequestInit) {
+  const accessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY);
+  const headers = new Headers(init.headers);
+  headers.set("Accept", headers.get("Accept") || "application/json");
+
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  return fetch(getApiUrl(path), {
+    ...init,
+    headers,
+  });
+}
+
+async function refreshAuthSession() {
+  const refreshToken = window.localStorage.getItem(REFRESH_TOKEN_KEY);
+  if (!refreshToken) return false;
+
+  const response = await fetch(getApiUrl("/api/v1/auth/refresh"), {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+
+  const data = (await response.json().catch(() => ({}))) as AuthResponse;
+  if (!response.ok) {
+    clearAuthStorage();
+    return false;
+  }
+
+  const accessToken = extractBearerToken(response);
+  if (!accessToken) {
+    clearAuthStorage();
+    return false;
+  }
+
+  storeAuth({
+    accessToken,
+    refreshToken: data.refresh_token,
+    account: data.account,
+  });
+
+  return true;
+}
+
+function clearAuthStorage() {
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.localStorage.removeItem(REFRESH_TOKEN_KEY);
   window.localStorage.removeItem(ACCOUNT_KEY);
+  window.localStorage.removeItem(DEVICE_ID_KEY);
 }
