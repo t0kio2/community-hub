@@ -17,6 +17,7 @@ class  Api::V1::Auth::RegistrationsController < Devise::RegistrationsController
     begin
       ActiveRecord::Base.transaction do
         resource.save!
+        resource.create_user!(status: "active")
 
         access_token, _expires_in = Auth::TokenService.issue_access_for(resource, scope: :user_account)
 
