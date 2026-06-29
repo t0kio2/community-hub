@@ -23,6 +23,26 @@ class Api::V1::CorsTest < ActionDispatch::IntegrationTest
     assert_equal "Authorization", response.headers["Access-Control-Expose-Headers"]
   end
 
+  test "認証が必要なAPIの401レスポンスにもCORSヘッダを返す" do
+    get "/api/v1/user/profile", headers: { "Origin" => "http://localhost:3000" }
+
+    assert_response :unauthorized
+    assert_equal "http://localhost:3000", response.headers["Access-Control-Allow-Origin"]
+    assert_equal "Authorization", response.headers["Access-Control-Expose-Headers"]
+  end
+
+  test "FRONTEND_ORIGINSが空文字でも既定originを許可する" do
+    previous_origins = ENV["FRONTEND_ORIGINS"]
+    ENV["FRONTEND_ORIGINS"] = ""
+
+    get "/api/v1/user/profile", headers: { "Origin" => "http://localhost:3000" }
+
+    assert_response :unauthorized
+    assert_equal "http://localhost:3000", response.headers["Access-Control-Allow-Origin"]
+  ensure
+    ENV["FRONTEND_ORIGINS"] = previous_origins
+  end
+
   test "ログインAPIレスポンスでもAuthorizationヘッダを公開する" do
     UserAccount.create!(
       email: "cors-login@example.com",

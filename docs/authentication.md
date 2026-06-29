@@ -51,6 +51,10 @@ Rails API は `FRONTEND_ORIGINS` で許可 origin を受け取る。未指定時
 
 API レスポンスでは `Access-Control-Allow-Headers` に `Authorization`, `Content-Type`, `X-Device-Id`, `X-Device-Name` を含める。ログインとリフレッシュで返る access token を読むため、`Access-Control-Expose-Headers` に `Authorization` を含める。
 
+認証失敗の `401 Unauthorized` でも CORS ヘッダを返す。ブラウザが 401 レスポンスを読めないと frontend の `authenticatedFetch` が refresh token による再発行へ進めないため。
+
+`FRONTEND_ORIGINS` が未指定または空文字の場合は、ローカル開発用の既定 origin を使う。
+
 ## ログイン
 
 ログイン処理は frontend から Rails API を直接呼び出す。
