@@ -9,24 +9,19 @@ class ApiCorsMiddleware
 
   def call(env)
     request = Rack::Request.new(env)
+    api_request = api_request?(request)
 
-    if api_request?(request) && request.options?
-      return [204, cors_headers(request), []]
+    if api_request && request.options?
+      return [204, self.class.headers_for(request), []]
     end
 
     status, headers, body = @app.call(env)
-    cors_headers(request).each { |key, value| headers[key] = value } if api_request?(request)
+    self.class.headers_for(request).each { |key, value| headers[key] = value } if api_request
 
     [status, headers, body]
   end
 
-  private
-
-  def api_request?(request)
-    request.path.start_with?("/api/")
-  end
-
-  def cors_headers(request)
+  def self.headers_for(request)
     origin = request.get_header("HTTP_ORIGIN").to_s
     return {} unless allowed_origins.include?(origin)
 
@@ -40,10 +35,19 @@ class ApiCorsMiddleware
     }
   end
 
-  def allowed_origins
-    ENV.fetch("FRONTEND_ORIGINS", DEFAULT_ALLOWED_ORIGINS)
+  def self.allowed_origins
+    origins = ENV.fetch("FRONTEND_ORIGINS", DEFAULT_ALLOWED_ORIGINS)
+    origins = DEFAULT_ALLOWED_ORIGINS if origins.blank?
+
+    origins
        .split(",")
        .map(&:strip)
        .reject(&:empty?)
+  end
+
+  private
+
+  def api_request?(request)
+    request.path.start_with?("/api/")
   end
 end
