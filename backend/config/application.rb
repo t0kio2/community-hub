@@ -1,4 +1,5 @@
 require_relative "boot"
+require_relative "../lib/api_cors_middleware"
 
 require "rails/all"
 
@@ -33,6 +34,8 @@ module App
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+    # frontendからRails APIを直接呼ぶため、認証controllerを含む全APIにCORSを適用する
+    config.middleware.insert_before 0, ApiCorsMiddleware
     # 管理画面(MVC)のHTMLフォームで _method=delete/patch を解釈する
     config.middleware.use Rack::MethodOverride
     # 管理画面(MVC)でセッション/クッキーを使うためのミドルウェアを追加

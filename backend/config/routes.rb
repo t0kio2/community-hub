@@ -21,6 +21,8 @@ Rails.application.routes.draw do
       get "public/listings", to: "api/v1/public/listings#index"
       get "public/listings/:id", to: "api/v1/public/listings#show"
 
+      get "user/profile", to: "api/v1/user/user_profiles#show"
+      put "user/profile", to: "api/v1/user/user_profiles#update"
       get "user/favorites", to: "api/v1/user/favorites#index"
       post "user/favorites", to: "api/v1/user/favorites#create"
       delete "user/favorites/:id", to: "api/v1/user/favorites#destroy"

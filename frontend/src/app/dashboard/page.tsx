@@ -18,7 +18,7 @@ const nextActions = [
     value: "気になる掲載を後で見返す",
   },
   {
-    href: "/dashboard",
+    href: "/profile",
     label: "プロフィール",
     value: "応募や問い合わせに使う情報を整える",
   },
@@ -53,6 +53,13 @@ export default function DashboardPage() {
         <Link className="brandLink" href="/dashboard">
           Community Hub
         </Link>
+        <nav className="headerNav" aria-label="メイン">
+          <Link aria-current="page" href="/dashboard">
+            マイページ
+          </Link>
+          <Link href="/listings">掲載を探す</Link>
+          <Link href="/profile">プロフィール</Link>
+        </nav>
         <button className="ghostButton" onClick={handleLogout} type="button">
           ログアウト
         </button>

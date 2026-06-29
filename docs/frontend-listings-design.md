@@ -24,7 +24,7 @@
 
 ## API 連携
 
-- 取得先は Next.js rewrite 経由の `/api/v1/public/listings` とする。
+- 取得先は `NEXT_PUBLIC_API_ORIGIN` で指定した Rails API の `/api/v1/public/listings` とする。
 - API の `listing_type` は表示側で `job` / `stay` に変換する。
 - 仕事掲載は `detail.work_area` と給与情報を、滞在掲載は `detail.address` と `price_per_night` を優先して表示する。
 - API から取得できない補助情報は画面が壊れないように既定ラベルへフォールバックする。
