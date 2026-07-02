@@ -164,6 +164,19 @@ export async function logout() {
   clearAuthStorage();
 }
 
+export async function deleteAccount() {
+  const response = await authenticatedFetch("/api/v1/user/account", {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as AuthResponse;
+    throw new Error(data.errors?.join("\n") || data.error || "アカウントを削除できませんでした");
+  }
+
+  clearAuthStorage();
+}
+
 export async function authenticatedFetch(path: string, init: RequestInit = {}) {
   const response = await fetchWithAccessToken(path, init);
 

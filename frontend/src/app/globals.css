@@ -172,6 +172,23 @@ h1 {
   white-space: pre-wrap;
 }
 
+.toast {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  color: var(--success);
+  font-size: 14px;
+  font-weight: 800;
+  left: 50%;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 12px 14px;
+  position: fixed;
+  top: 18px;
+  transform: translateX(-50%);
+  width: max-content;
+  z-index: 30;
+}
+
 .appShell {
   margin: 0 auto;
   max-width: 1120px;
@@ -352,17 +369,40 @@ h2 {
   padding: 28px 0 44px;
 }
 
+.profileMainColumn {
+  display: grid;
+  gap: 18px;
+}
+
 .profileForm,
+.dangerZone,
 .profilePreview {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
 }
 
-.profileForm {
+.profileForm,
+.dangerZone {
   display: grid;
   gap: 16px;
   padding: 20px;
+}
+
+.dangerZone {
+  border-color: #fecaca;
+}
+
+.dangerZone h2 {
+  color: var(--danger);
+  font-size: 18px;
+}
+
+.dangerZone p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 8px 0 0;
 }
 
 .formNotice,
@@ -391,6 +431,84 @@ h2 {
   display: flex;
   justify-content: flex-end;
   padding-top: 16px;
+}
+
+.confirmCheck {
+  align-items: center;
+  color: #334155;
+  display: flex;
+  font-size: 14px;
+  font-weight: 800;
+  gap: 10px;
+}
+
+.confirmCheck input {
+  height: 18px;
+  margin: 0;
+  width: 18px;
+}
+
+.dangerButton {
+  align-items: center;
+  background: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  justify-content: center;
+  justify-self: start;
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.dangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dialogBackdrop {
+  align-items: center;
+  background: rgb(15 23 42 / 42%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 18px;
+  position: fixed;
+  z-index: 40;
+}
+
+.confirmDialog {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgb(15 23 42 / 20%);
+  display: grid;
+  gap: 14px;
+  max-width: 420px;
+  padding: 22px;
+  width: 100%;
+}
+
+.confirmDialog h2 {
+  color: var(--danger);
+  font-size: 20px;
+}
+
+.confirmDialog p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.dialogActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .profilePreview {

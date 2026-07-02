@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { logout } from "@/lib/auth";
+import { deleteAccount, logout } from "@/lib/auth";
 import {
   emptyProfileFormValues,
   fetchUserProfile,
@@ -26,6 +26,11 @@ export default function ProfilePage() {
   const [loadError, setLoadError] = useState("");
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     if (!auth.isCheckingAuth && !auth.isAuthenticated) {
@@ -113,6 +118,70 @@ export default function ProfilePage() {
     }
   }
 
+  function openDeleteDialog() {
+    setDeleteError("");
+    setIsDeleteDialogOpen(true);
+  }
+
+  function closeDeleteDialog() {
+    if (isDeletingAccount) return;
+
+    setIsDeleteDialogOpen(false);
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteError("");
+    setIsDeletingAccount(true);
+
+    try {
+      await deleteAccount();
+      setIsDeleteDialogOpen(false);
+      setToastMessage("アカウントを削除しました");
+      window.setTimeout(() => router.replace("/auth/login"), 1500);
+    } catch (caught) {
+      setDeleteError(caught instanceof Error ? caught.message : "アカウントを削除できませんでした");
+      setIsDeleteDialogOpen(false);
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  }
+
+  function renderDeleteAccountSection() {
+    return (
+      <section className="dangerZone" aria-labelledby="delete-account-title">
+        <div>
+          <h2 id="delete-account-title">アカウント削除</h2>
+          <p>アカウント、プロフィール、保存済みトークンを削除します。</p>
+        </div>
+
+        {deleteError ? (
+          <p className="formError" role="alert">
+            {deleteError}
+          </p>
+        ) : null}
+
+        <label className="confirmCheck">
+          <input
+            checked={deleteConfirmed}
+            disabled={isDeletingAccount}
+            onChange={(event) => setDeleteConfirmed(event.target.checked)}
+            type="checkbox"
+          />
+          <span>削除後に復元できないことを確認しました</span>
+        </label>
+
+        <button
+          className="dangerButton"
+          disabled={!deleteConfirmed || isDeletingAccount}
+          onClick={openDeleteDialog}
+          type="button"
+        >
+          アカウントを削除
+        </button>
+      </section>
+    );
+  }
+
   if (auth.isCheckingAuth || !auth.isAuthenticated) {
     return (
       <main className="appShell">
@@ -123,6 +192,12 @@ export default function ProfilePage() {
 
   return (
     <main className="appShell">
+      {toastMessage ? (
+        <div className="toast" role="status">
+          {toastMessage}
+        </div>
+      ) : null}
+
       <header className="appHeader">
         <Link className="brandLink" href="/dashboard">
           Community Hub
@@ -153,89 +228,98 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {loadError ? (
-        <section className="emptyState" role="alert">
-          <h2>プロフィールを取得できませんでした</h2>
-          <p>{loadError}</p>
-          <button className="secondaryButton" onClick={() => window.location.reload()} type="button">
-            再読み込み
-          </button>
-        </section>
-      ) : (
-        <section className="profileLayout" aria-label="プロフィール編集">
-          <form className="profileForm" onSubmit={handleSubmit}>
-            {isLoadingProfile ? (
-              <div className="formNotice">プロフィールを読み込み中</div>
-            ) : null}
-            {successMessage ? <div className="formSuccess">{successMessage}</div> : null}
-            {formError ? (
-              <p className="formError" role="alert">
-                {formError}
-              </p>
-            ) : null}
+      <section className="profileLayout" aria-label="プロフィール編集">
+        <div className="profileMainColumn">
+          {loadError ? (
+            <>
+              <section className="emptyState" role="alert">
+                <h2>プロフィールを取得できませんでした</h2>
+                <p>{loadError}</p>
+                <button className="secondaryButton" onClick={() => window.location.reload()} type="button">
+                  再読み込み
+                </button>
+              </section>
+              {renderDeleteAccountSection()}
+            </>
+          ) : (
+            <form className="profileForm" onSubmit={handleSubmit}>
+              {isLoadingProfile ? (
+                <div className="formNotice">プロフィールを読み込み中</div>
+              ) : null}
+              {successMessage ? <div className="formSuccess">{successMessage}</div> : null}
+              {formError ? (
+                <p className="formError" role="alert">
+                  {formError}
+                </p>
+              ) : null}
 
-            <label className="field">
-              <span>
-                氏名 <b>必須</b>
-              </span>
-              <input
-                autoComplete="name"
-                disabled={isLoadingProfile || isSaving}
-                onChange={(event) => updateField("name", event.target.value)}
-                required
-                type="text"
-                value={values.name}
-              />
-            </label>
+              <label className="field">
+                <span>
+                  氏名 <b>必須</b>
+                </span>
+                <input
+                  autoComplete="name"
+                  disabled={isLoadingProfile || isSaving}
+                  onChange={(event) => updateField("name", event.target.value)}
+                  required
+                  type="text"
+                  value={values.name}
+                />
+              </label>
 
-            <label className="field">
-              <span>フリガナ</span>
-              <input
-                disabled={isLoadingProfile || isSaving}
-                onChange={(event) => updateField("kana", event.target.value)}
-                type="text"
-                value={values.kana}
-              />
-            </label>
+              <label className="field">
+                <span>フリガナ</span>
+                <input
+                  disabled={isLoadingProfile || isSaving}
+                  onChange={(event) => updateField("kana", event.target.value)}
+                  type="text"
+                  value={values.kana}
+                />
+              </label>
 
-            <label className="field">
-              <span>生年月日</span>
-              <input
-                disabled={isLoadingProfile || isSaving}
-                onChange={(event) => updateField("birthDate", event.target.value)}
-                type="date"
-                value={values.birthDate}
-              />
-            </label>
+              <label className="field">
+                <span>生年月日</span>
+                <input
+                  disabled={isLoadingProfile || isSaving}
+                  onChange={(event) => updateField("birthDate", event.target.value)}
+                  type="date"
+                  value={values.birthDate}
+                />
+              </label>
 
-            <label className="field">
-              <span>電話番号</span>
-              <input
-                autoComplete="tel"
-                disabled={isLoadingProfile || isSaving}
-                onChange={(event) => updateField("phone", event.target.value)}
-                type="tel"
-                value={values.phone}
-              />
-            </label>
+              <label className="field">
+                <span>電話番号</span>
+                <input
+                  autoComplete="tel"
+                  disabled={isLoadingProfile || isSaving}
+                  onChange={(event) => updateField("phone", event.target.value)}
+                  type="tel"
+                  value={values.phone}
+                />
+              </label>
 
-            <label className="field">
-              <span>アバター URL</span>
-              <input
-                disabled={isLoadingProfile || isSaving}
-                onChange={(event) => updateField("avatarUrl", event.target.value)}
-                type="url"
-                value={values.avatarUrl}
-              />
-            </label>
+              <label className="field">
+                <span>アバター URL</span>
+                <input
+                  disabled={isLoadingProfile || isSaving}
+                  onChange={(event) => updateField("avatarUrl", event.target.value)}
+                  type="url"
+                  value={values.avatarUrl}
+                />
+              </label>
 
-            <div className="profileActions">
-              <button className="primaryButton" disabled={isLoadingProfile || isSaving} type="submit">
-                {isSaving ? "保存中" : "プロフィールを保存"}
-              </button>
-            </div>
-          </form>
+              <div className="profileActions">
+                <button className="primaryButton" disabled={isLoadingProfile || isSaving} type="submit">
+                  {isSaving ? "保存中" : "プロフィールを保存"}
+                </button>
+              </div>
+            </form>
+          )}
 
+          {!loadError ? renderDeleteAccountSection() : null}
+        </div>
+
+        {!loadError ? (
           <aside className="profilePreview" aria-label="プロフィールプレビュー">
             <div className="avatarPreview">
               {values.avatarUrl ? (
@@ -261,8 +345,30 @@ export default function ProfilePage() {
               </div>
             </dl>
           </aside>
-        </section>
-      )}
+        ) : null}
+      </section>
+
+      {isDeleteDialogOpen ? (
+        <div className="dialogBackdrop" role="presentation">
+          <section
+            aria-labelledby="delete-dialog-title"
+            aria-modal="true"
+            className="confirmDialog"
+            role="dialog"
+          >
+            <h2 id="delete-dialog-title">アカウントを削除しますか？</h2>
+            <p>この操作を実行すると、アカウントと関連データは削除されます。</p>
+            <div className="dialogActions">
+              <button className="secondaryButton" disabled={isDeletingAccount} onClick={closeDeleteDialog} type="button">
+                キャンセル
+              </button>
+              <button className="dangerButton" disabled={isDeletingAccount} onClick={handleDeleteAccount} type="button">
+                {isDeletingAccount ? "削除中" : "削除する"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }
