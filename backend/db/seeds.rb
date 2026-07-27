@@ -8,18 +8,22 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-# AdminAccount の作成（idempotent）
 admin_email = ENV.fetch('ADMIN_EMAIL', 'admin@example.com')
 admin_password = ENV.fetch('ADMIN_PASSWORD', 'secret123')
 
-admin_account = AdminAccount.find_or_create_by!(email: admin_email) do |admin|
-  admin.password = admin_password
-  admin.password_confirmation = admin_password
-end
+admin_account = AdminAccount.find_by(email: admin_email)
 
-Admin.find_or_create_by!(account: admin_account) do |admin|
-  admin.role = 'super_admin'
-  admin.status = 'active'
+if admin_account
+  raise "Admin is missing for #{admin_email}" unless admin_account.admin
+else
+  admin_account = AdminAccounts::CreateService.new(
+    account_attributes: {
+      email: admin_email,
+      password: admin_password,
+      password_confirmation: admin_password
+    },
+    role: "super_admin"
+  ).call.account
 end
 
 puts "Seed: ensured AdminAccount exists => #{admin_email}"

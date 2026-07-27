@@ -17,19 +17,13 @@ class Admin::TenantAccountsController < Admin::BaseController
   end
 
   def create
-    @tenant = TenantAccount.new(tenant_account_params)
-    @organization = Tenant.new(organization_params)
-
-    ActiveRecord::Base.transaction do
-      @tenant.save!
-      @organization.save!
-      TenantMember.create!(
-        account: @tenant,
-        tenant: @organization,
-        role: "owner",
-        status: "active"
-      )
-    end
+    service = TenantAccounts::CreateService.new(
+      account_attributes: tenant_account_params,
+      tenant_attributes: organization_params
+    )
+    @tenant = service.account
+    @organization = service.tenant
+    service.call
 
     redirect_to admin_tenant_accounts_path, notice: "テナントアカウントを作成しました"
   rescue ActiveRecord::RecordInvalid
@@ -85,6 +79,6 @@ class Admin::TenantAccountsController < Admin::BaseController
   end
 
   def organization_params
-    params.require(:tenant).permit(:name, :kana, :address).merge(status: "active")
+    params.require(:tenant).permit(:name, :kana, :address)
   end
 end

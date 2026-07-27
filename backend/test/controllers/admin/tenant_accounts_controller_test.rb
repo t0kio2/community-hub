@@ -37,6 +37,15 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "active", tenant_member.tenant.status
   end
 
+  test "テナントアカウント作成画面に固定の初期ロールownerを表示する" do
+    get new_admin_tenant_account_path
+
+    assert_response :success
+    assert_includes response.body, "初期ロール"
+    assert_includes response.body, "owner"
+    assert_includes response.body, "この画面では変更できません"
+  end
+
   test "rolls back tenant account when organization is invalid" do
     invalid_params = valid_params.deep_merge(
       tenant_account: { email: "rollback-owner@example.com" },
