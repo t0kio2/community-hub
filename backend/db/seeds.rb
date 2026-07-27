@@ -12,9 +12,14 @@
 admin_email = ENV.fetch('ADMIN_EMAIL', 'admin@example.com')
 admin_password = ENV.fetch('ADMIN_PASSWORD', 'secret123')
 
-AdminAccount.find_or_create_by!(email: admin_email) do |admin|
+admin_account = AdminAccount.find_or_create_by!(email: admin_email) do |admin|
   admin.password = admin_password
   admin.password_confirmation = admin_password
+end
+
+Admin.find_or_create_by!(account: admin_account) do |admin|
+  admin.role = 'super_admin'
+  admin.status = 'active'
 end
 
 puts "Seed: ensured AdminAccount exists => #{admin_email}"

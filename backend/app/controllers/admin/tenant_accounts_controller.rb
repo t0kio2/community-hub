@@ -1,5 +1,6 @@
 class Admin::TenantAccountsController < Admin::BaseController
   before_action :set_tenant, only: %i[show edit update destroy]
+  before_action :authorize_tenant_account!
 
   def index
     @tenants = TenantAccount.order(id: :desc)
@@ -7,7 +8,7 @@ class Admin::TenantAccountsController < Admin::BaseController
 
   def new
     @tenant = TenantAccount.new
-    @organization = Tenant.new(status: 'active')
+    @organization = Tenant.new(status: "active")
   end
 
   def show
@@ -25,14 +26,14 @@ class Admin::TenantAccountsController < Admin::BaseController
       TenantMember.create!(
         account: @tenant,
         tenant: @organization,
-        role: 'owner',
-        status: 'active'
+        role: "owner",
+        status: "active"
       )
     end
 
-    redirect_to admin_tenant_accounts_path, notice: 'テナントアカウントを作成しました'
+    redirect_to admin_tenant_accounts_path, notice: "テナントアカウントを作成しました"
   rescue ActiveRecord::RecordInvalid
-    flash.now[:alert] = '作成に失敗しました'
+    flash.now[:alert] = "作成に失敗しました"
     render :new, status: :unprocessable_entity
   end
 
@@ -46,19 +47,34 @@ class Admin::TenantAccountsController < Admin::BaseController
     end
 
     if @tenant.update(attrs)
-      redirect_to admin_tenant_accounts_path, notice: 'テナントアカウントを更新しました'
+      redirect_to admin_tenant_accounts_path, notice: "テナントアカウントを更新しました"
     else
-      flash.now[:alert] = '更新に失敗しました'
+      flash.now[:alert] = "更新に失敗しました"
       render :edit, status: :unprocessable_entity
     end
   end
 
   def destroy
     @tenant.destroy
-    redirect_to admin_tenant_accounts_path, notice: 'テナントアカウントを削除しました'
+    redirect_to admin_tenant_accounts_path, notice: "テナントアカウントを削除しました"
   end
 
   private
+
+  def authorize_tenant_account!
+    record = @tenant || TenantAccount
+    query = {
+      "index" => :index?,
+      "show" => :show?,
+      "new" => :create?,
+      "create" => :create?,
+      "edit" => :update?,
+      "update" => :update?,
+      "destroy" => :destroy?
+    }.fetch(action_name)
+
+    authorize record, query, with: Admin::TenantAccountPolicy
+  end
 
   def set_tenant
     @tenant = TenantAccount.find(params[:id])
@@ -69,6 +85,6 @@ class Admin::TenantAccountsController < Admin::BaseController
   end
 
   def organization_params
-    params.require(:tenant).permit(:name, :kana, :address).merge(status: 'active')
+    params.require(:tenant).permit(:name, :kana, :address).merge(status: "active")
   end
 end

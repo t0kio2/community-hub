@@ -1,8 +1,10 @@
 class Tenant::ListingsController < Tenant::BaseController
   before_action :set_organization
-  before_action :set_listing, only: [:show, :edit, :update]
+  before_action :set_listing, only: [ :show, :edit, :update ]
+  before_action :authorize_existing_listing!, only: [ :show, :edit, :update ]
 
   def index
+    authorize @organization, :index?, with: Tenant::ListingPolicy
     @listings = @organization.listings.order(updated_at: :desc, id: :desc)
   end
 
@@ -12,11 +14,13 @@ class Tenant::ListingsController < Tenant::BaseController
 
   def new
     @listing = @organization.listings.new(listing_type: listing_type_param, status: "draft")
+    authorize @listing, :create?, with: Tenant::ListingPolicy
     build_detail
   end
 
   def create
     @listing = @organization.listings.new(common_listing_params)
+    authorize @listing, :create?, with: Tenant::ListingPolicy
     @listing.created_by_tenant_member = current_tenant_member
     @listing.updated_by_tenant_member = current_tenant_member
     set_status_timestamps
@@ -61,6 +65,11 @@ class Tenant::ListingsController < Tenant::BaseController
     return if performed?
 
     @listing = @organization.listings.find(params[:id])
+  end
+
+  def authorize_existing_listing!
+    query = action_name == "show" ? :show? : :update?
+    authorize @listing, query, with: Tenant::ListingPolicy
   end
 
   def set_detail

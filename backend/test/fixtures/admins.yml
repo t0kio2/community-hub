@@ -2,10 +2,10 @@
 
 one:
   account: one
-  role: MyString
-  status: MyString
+  role: super_admin
+  status: active
 
 two:
   account: two
-  role: MyString
-  status: MyString
+  role: operator
+  status: active

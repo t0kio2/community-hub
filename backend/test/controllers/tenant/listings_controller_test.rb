@@ -32,6 +32,22 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "勤務エリア"
   end
 
+  test "staffも掲載一覧を表示できる" do
+    @member.update!(role: "staff")
+
+    get tenant_listings_path
+
+    assert_response :success
+  end
+
+  test "staffも掲載作成画面を表示できる" do
+    @member.update!(role: "staff")
+
+    get new_tenant_listing_path(listing_type: "job")
+
+    assert_response :success
+  end
+
   test "宿泊掲載作成画面を表示できる" do
     get new_tenant_listing_path(listing_type: "stay")
 
@@ -169,7 +185,7 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
       status: "active"
     )
 
-    [tenant, account]
+    [ tenant, account ]
   end
 
   def create_job_listing(title:)

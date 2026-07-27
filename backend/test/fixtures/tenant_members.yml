@@ -3,11 +3,11 @@
 one:
   tenant: one
   account: one
-  role: MyString
-  status: MyString
+  role: owner
+  status: active
 
 two:
   tenant: two
   account: two
-  role: MyString
-  status: MyString
+  role: staff
+  status: active

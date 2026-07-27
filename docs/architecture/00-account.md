@@ -6,6 +6,8 @@
 
 本書では認証処理の流れとコンポーネントの責務を扱う。テーブル、カラム、外部キーなどのデータ構造は [`docs/er/00-account.md`](../er/00-account.md) を参照する。
 
+認証後のロール、操作権限、Policyによる認可については [`01-authorization.md`](./01-authorization.md) を参照する。
+
 ## 認証主体
 
 認証主体は次の3種類とし、いずれも `accounts` テーブルを認証情報の共通基盤として利用する。
@@ -282,6 +284,7 @@ Deviseのサインアウト処理で対象Wardenスコープの認証情報を�
 
 ## 関連文書
 
+- [認可・権限アーキテクチャ](./01-authorization.md)
 - [アカウント関連ER図](../er/00-account.md)
 - [認証設計](../authentication.md)
 - [API認証境界設計](../api-auth-boundary-design.md)

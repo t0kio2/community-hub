@@ -7,6 +7,11 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
       password: "password",
       password_confirmation: "password"
     )
+    @admin = Admin.create!(
+      account: @admin_account,
+      role: "super_admin",
+      status: "active"
+    )
     sign_in @admin_account
   end
 
@@ -78,6 +83,49 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'name="_method"'
     assert_includes response.body, 'value="delete"'
     assert_includes response.body, "削除"
+  end
+
+  test "operatorはテナントアカウントを削除できない" do
+    @admin.update!(role: "operator")
+    tenant_account = TenantAccount.create!(
+      email: "operator-delete-owner@example.com",
+      password: "password",
+      password_confirmation: "password"
+    )
+
+    assert_no_difference -> { TenantAccount.count } do
+      delete admin_tenant_account_path(tenant_account)
+    end
+
+    assert_redirected_to admin_root_path
+    assert_equal "この操作を行う権限がありません", flash[:alert]
+    assert TenantAccount.exists?(tenant_account.id)
+  end
+
+  test "operatorの一覧画面には削除フォームを表示しない" do
+    @admin.update!(role: "operator")
+    TenantAccount.create!(
+      email: "operator-index-owner@example.com",
+      password: "password",
+      password_confirmation: "password"
+    )
+
+    get admin_tenant_accounts_path
+
+    assert_response :success
+    assert_includes response.body, "ロール:"
+    assert_includes response.body, "operator"
+    assert_not_includes response.body, 'value="delete"'
+    assert_not_includes response.body, "削除"
+  end
+
+  test "無効な管理者はテナントアカウント一覧を表示できない" do
+    @admin.update!(status: "inactive")
+
+    get admin_tenant_accounts_path
+
+    assert_response :forbidden
+    assert_includes response.body, "このアカウントは利用できません"
   end
 
   test "テナント別掲載画面で対象テナントの掲載だけを表示する" do
