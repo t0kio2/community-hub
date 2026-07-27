@@ -1,0 +1,189 @@
+# アカウント関連 ER 図
+
+`ER.md` の「認証/アカウント関連」から「セッション管理テーブル」までを、役割ごとに分けて図示する。
+
+## 全体関連図
+
+テーブル間の関連だけを俯瞰する。詳細なカラムは後続の領域別 ER 図に記載する。
+
+```mermaid
+erDiagram
+    accounts ||--o| users : "ユーザーとして利用"
+    users ||--|| user_profiles : "プロフィールを持つ"
+    accounts ||--o{ tenant_members : "テナントに所属"
+    tenants ||--o{ tenant_members : "メンバーを持つ"
+    accounts ||--o| admins : "運営者として利用"
+    accounts ||--o{ user_refresh_tokens : "トークンを持つ"
+```
+
+## 認証基盤
+
+`accounts` は一般ユーザー、テナントメンバー、運営管理者で共通利用する認証情報を管理する。
+
+```mermaid
+erDiagram
+    accounts {
+        bigint id PK
+        string email
+        string encrypted_password
+        string account_type
+        string status
+        datetime last_login_at
+        datetime email_verified_at
+        datetime created_at
+        datetime updated_at
+    }
+```
+
+`account_type` は `user`、`tenant`、`admin` のいずれかを取る。
+
+## 一般ユーザー
+
+一般ユーザーとしての状態は `users`、個人プロフィールは `user_profiles` で管理する。
+
+```mermaid
+erDiagram
+    accounts {
+        bigint id PK
+    }
+
+    users {
+        bigint account_id FK
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    user_profiles {
+        bigint id PK
+        bigint user_id FK, UK
+        string name
+        string kana
+        date birth_date
+        string phone
+        string avatar_url
+        datetime created_at
+        datetime updated_at
+    }
+
+    accounts ||--o| users : "ユーザーとして利用"
+    users ||--|| user_profiles : "プロフィールを持つ"
+```
+
+`user_profiles.user_id` は一意であり、ユーザーとプロフィールは 1 対 1 で紐づく。
+
+## テナント
+
+テナントの組織情報は `tenants`、アカウントの所属・権限・在籍状態は `tenant_members` で管理する。
+
+```mermaid
+erDiagram
+    accounts {
+        bigint id PK
+    }
+
+    tenants {
+        bigint id PK
+        string name
+        string kana
+        string address
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    tenant_members {
+        bigint id PK
+        bigint tenant_id FK
+        bigint account_id FK
+        string role
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    accounts ||--o{ tenant_members : "テナントに所属"
+    tenants ||--o{ tenant_members : "メンバーを持つ"
+```
+
+## 運営管理者
+
+運営管理者としての権限と状態は `admins` で管理する。
+
+```mermaid
+erDiagram
+    accounts {
+        bigint id PK
+    }
+
+    admins {
+        bigint id PK
+        bigint account_id FK
+        string role
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    accounts ||--o| admins : "運営者として利用"
+```
+
+## ユーザー認証トークン
+
+一般ユーザーの JWT リフレッシュトークンを、アカウントおよび端末単位で管理する。
+
+```mermaid
+erDiagram
+    accounts {
+        bigint id PK
+    }
+
+    user_refresh_tokens {
+        bigint id PK
+        bigint account_id FK
+        string token_digest UK
+        string device_id
+        string device_name
+        string user_agent
+        string last_used_ip
+        datetime expired_at
+        datetime revoked_at
+        datetime last_used_at
+        datetime created_at
+        datetime updated_at
+    }
+
+    accounts ||--o{ user_refresh_tokens : "トークンを持つ"
+```
+
+`token_digest` は SHA-256 でハッシュ化し、一意制約を設ける。
+
+## JWT 拒否リスト
+
+ログアウト済みアクセストークンの JTI を管理する。`ER.md` 上ではほかのテーブルへの外部キーを持たない。
+
+```mermaid
+erDiagram
+    jwt_denylists {
+        bigint id PK
+        string jti
+        datetime exp
+        datetime created_at
+        datetime updated_at
+    }
+```
+
+## テナント・管理者セッション
+
+テナントおよび運営管理者のサーバーセッションを管理する。`ER.md` 上ではほかのテーブルへの外部キーを持たない。
+
+```mermaid
+erDiagram
+    sessions {
+        bigint id PK
+        string session_id
+        text data
+        datetime created_at
+        datetime updated_at
+    }
+```
