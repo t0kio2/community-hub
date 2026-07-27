@@ -23,6 +23,7 @@ Rails.application.routes.draw do
 
       get "user/profile", to: "api/v1/user/user_profiles#show"
       put "user/profile", to: "api/v1/user/user_profiles#update"
+      delete "user/account", to: "api/v1/user/accounts#destroy"
       get "user/favorites", to: "api/v1/user/favorites#index"
       post "user/favorites", to: "api/v1/user/favorites#create"
       delete "user/favorites/:id", to: "api/v1/user/favorites#destroy"
