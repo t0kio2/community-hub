@@ -40,6 +40,12 @@
         <%= form.password_field :password_confirmation, id: "tenant_password_confirmation", required: true, autocomplete: "new-password", class: "with-toggle" %>
         <button type="button" class="toggle-visibility" data-target="tenant_password_confirmation" aria-pressed="false" aria-label="パスワード確認を表示">表示</button>
       </div>
+
+      <div class="fixed-role" aria-label="初期ロール">
+        <span>初期ロール</span>
+        <strong>owner</strong>
+        <p>テナントの管理責任者として作成されます。この画面では変更できません。</p>
+      </div>
     </fieldset>
 
     <fieldset>
@@ -90,4 +96,8 @@
   .field-with-toggle { position: relative; }
   .with-toggle { padding-right: 72px; }
   .toggle-visibility { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); margin: 0; padding: 6px 10px; font-size: 12px; }
+  .fixed-role { margin-top: 20px; padding: 12px; border: 1px solid #bfdbfe; border-radius: 6px; background: #eff6ff; }
+  .fixed-role span { display: block; color: #475569; font-size: 13px; font-weight: 700; }
+  .fixed-role strong { display: block; margin-top: 4px; color: #1d4ed8; font-size: 18px; }
+  .fixed-role p { margin: 6px 0 0; color: #475569; font-size: 13px; line-height: 1.5; }
 </style>

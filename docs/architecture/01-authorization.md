@@ -302,6 +302,37 @@ Viewでボタンを非表示にしても認可にはならない。URLを直接�
 
 既存データにNULLや許可値以外が存在する場合は、データを補正してから制約を追加する。
 
+## アカウント生成境界
+
+認証アカウントと認可主体は同じトランザクションで生成する。
+
+### テナントアカウント
+
+`TenantAccounts::CreateService` が次のレコードを生成する。
+
+```text
+TenantAccount
+Tenant
+TenantMember
+```
+
+`TenantMember` の初期値は `role = owner`、`status = active` とする。いずれかの保存に失敗した場合は、すべての生成をロールバックする。
+
+運営管理者のテナントアカウント作成画面には、初期ロールが変更不可の `owner` であることを表示する。
+
+### 運営管理者アカウント
+
+`AdminAccounts::CreateService` が次のレコードを生成する。
+
+```text
+AdminAccount
+Admin
+```
+
+`Admin` のロールは呼び出し元が `super_admin` または `operator` を明示し、初期statusは `active` とする。いずれかの保存に失敗した場合は、すべての生成をロールバックする。
+
+Controller、seed、管理タスクは認証アカウントと認可主体を個別に生成せず、対応するServiceを使用する。
+
 ## テスト方針
 
 Policy単体テストでは、各ロールの許可と拒否を検証する。
