@@ -1,13 +1,13 @@
 class Tenant::OrganizationsController < Tenant::BaseController
   before_action :set_organization
-  before_action :require_owner!
+  before_action :authorize_update!
 
   def edit
   end
 
   def update
     if @organization.update(organization_params)
-      redirect_to tenant_root_path, notice: '組織情報を更新しました'
+      redirect_to tenant_root_path, notice: "組織情報を更新しました"
     else
       render :edit, status: :unprocessable_entity
     end
@@ -19,14 +19,13 @@ class Tenant::OrganizationsController < Tenant::BaseController
     @organization = current_tenant_organization
     return if @organization
 
-    redirect_to tenant_root_path, alert: '組織情報がありません'
+    redirect_to tenant_root_path, alert: "組織情報がありません"
   end
 
-  def require_owner!
+  def authorize_update!
     return if performed?
-    return if current_tenant_member&.role == 'owner'
 
-    redirect_to tenant_root_path, alert: '組織情報を編集する権限がありません'
+    authorize @organization, :update?, with: Tenant::OrganizationPolicy
   end
 
   def organization_params

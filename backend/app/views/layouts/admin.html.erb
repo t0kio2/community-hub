@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= content_for?(:title) ? yield(:title) : "運営管理画面" %></title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <nav class="primary-nav" aria-label="運営管理">
+          <div class="brand">
+            <a href="<%= admin_root_path %>">
+              <span>Community Hub</span>
+              <span class="context-badge admin-badge">運営管理画面</span>
+            </a>
+          </div>
+          <a href="<%= admin_tenant_accounts_path %>">テナント一覧</a>
+          <a href="<%= new_admin_tenant_account_path %>">テナント作成</a>
+        </nav>
+
+        <div class="auth">
+          <span class="user">
+            ログイン中:
+            <strong><%= current_admin_account.email %></strong>
+            /
+            ロール:
+            <strong><%= current_admin.role %></strong>
+          </span>
+          <form action="<%= destroy_admin_account_session_path %>" method="post">
+            <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>" />
+            <button type="submit">ログアウト</button>
+          </form>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <% if flash[:notice] %>
+        <div class="flash notice"><%= flash[:notice] %></div>
+      <% end %>
+      <% if flash[:alert] %>
+        <div class="flash alert"><%= flash[:alert] %></div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; margin: 0; color: #111827; }
+      .site-header { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid #e5e7eb; }
+      .header-inner { max-width: 1040px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+      .brand { font-size: 22px; font-weight: 700; letter-spacing: .2px; line-height: 1.2; }
+      .brand a { display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; }
+      .context-badge { padding: 4px 9px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+      .admin-badge { background: #f3e8ff; color: #6b21a8; }
+      .primary-nav { display: flex; align-items: center; gap: 14px; font-size: 14px; }
+      .primary-nav > a { color: #374151; text-decoration: none; font-weight: 700; }
+      .primary-nav > a:hover { color: #111827; text-decoration: underline; }
+      .auth { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+      .auth .user { color: #374151; }
+      .auth button { padding: 6px 10px; border-radius: 6px; border: 1px solid #d1d5db; background: #f9fafb; cursor: pointer; }
+      .container { max-width: 1040px; margin: 24px auto; padding: 0 16px 24px; }
+      .flash { margin-bottom: 12px; padding: 10px; border-radius: 6px; }
+      .flash.notice { background: #e7f6ec; border: 1px solid #b7e1c0; color: #0a4; }
+      .flash.alert { background: #fff3f3; border: 1px solid #f5c2c2; color: #900; }
+      a.button, button { display: inline-block; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; background: #fff; text-decoration: none; }
+      @media (max-width: 760px) {
+        .header-inner { align-items: flex-start; flex-direction: column; gap: 10px; }
+        .brand { font-size: 20px; }
+        .auth { align-items: flex-start; flex-direction: column; }
+      }
+    </style>
+  </body>
+</html>

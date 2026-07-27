@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_07_233533) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,10 +31,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_07_233533) do
   create_table "admins", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
-    t.string "role"
-    t.string "status"
+    t.string "role", null: false
+    t.string "status", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_admins_on_account_id", unique: true
+    t.check_constraint "role::text = ANY (ARRAY['super_admin'::character varying, 'operator'::character varying]::text[])", name: "admins_role_check"
   end
 
   create_table "favorites", force: :cascade do |t|
@@ -134,12 +135,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_07_233533) do
   create_table "tenant_members", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
-    t.string "role"
-    t.string "status"
+    t.string "role", null: false
+    t.string "status", null: false
     t.bigint "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_tenant_members_on_account_id", unique: true
     t.index ["tenant_id"], name: "index_tenant_members_on_tenant_id"
+    t.check_constraint "role::text = ANY (ARRAY['owner'::character varying, 'staff'::character varying]::text[])", name: "tenant_members_role_check"
   end
 
   create_table "tenants", force: :cascade do |t|
