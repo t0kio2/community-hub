@@ -189,7 +189,8 @@ erDiagram
         bigint listing_id FK, UK
         string stay_type
         integer capacity
-        integer price_per_night
+        integer price_per_night_amount
+        string currency
         time check_in_time
         time check_out_time
         date available_from
@@ -206,6 +207,8 @@ erDiagram
 `stay_listings.listing_id` は必須かつ一意とし、1つのListingに宿泊詳細を複数作成しない。
 
 `stay_type` は `private_room`、`shared_room`、`entire_place`、`other` のいずれかを取る。`capacity` は宿泊可能人数、`available_from` と `available_until` は予約可能期間を表す。
+
+`price_per_night_amount` はテナントが入力する利用者向け1泊料金、`currency` はISO 4217の通貨コードを表す。初期仕様では日本円の整数で料金を保持し、`currency = JPY` のみを許可する。システムは入力額へ消費税を自動加算しない。
 
 ## 住所・位置情報
 
