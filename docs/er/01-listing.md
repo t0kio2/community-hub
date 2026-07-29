@@ -98,6 +98,7 @@ erDiagram
         bigint job_category_id FK
         string recruitment_type
         string employment_type
+        string work_mode
         string salary_unit
         integer salary_min_amount
         integer salary_max_amount
@@ -110,10 +111,13 @@ erDiagram
         integer break_minutes
         string work_days
         string working_hours
-        text required_skills
-        text welcome_skills
+        text required_qualifications
+        text preferred_qualifications
         text benefits
-        integer application_limit
+        integer positions_available
+        text dress_code
+        text items_to_bring
+        text selection_process
         datetime created_at
         datetime updated_at
     }
@@ -124,13 +128,19 @@ erDiagram
 
 `job_listings.listing_id` は必須かつ一意とし、1つのListingに求人詳細を複数作成しない。
 
-`recruitment_type` は `ongoing`、`spot` のいずれかを取る。`employment_type` は `regular_employee`、`contract_employee`、`part_time`、`temporary_staff`、`other` のいずれかを取る。`salary_unit` は `hourly`、`daily`、`monthly`、`annual`、`per_shift` のいずれかを取る。
+`recruitment_type` は `ongoing`、`spot` のいずれかを取る。`employment_type` は `regular_employee`、`contract_employee`、`part_time`、`temporary_staff`、`other` のいずれかを取る。`work_mode` は `onsite`、`remote`、`hybrid` のいずれかを取る。`salary_unit` は `hourly`、`daily`、`monthly`、`annual`、`per_shift` のいずれかを取る。
 
 `recruitment_type = spot` の公開時は、`work_starts_at`、`work_ends_at`、`application_deadline` を必須とする。`work_starts_at < work_ends_at`、`application_deadline <= work_starts_at` を満たさなければならない。
 
 公開時は `salary_unit`、`salary_min_amount`、`currency` を必須とする。金額は日本円の整数で保持し、`salary_max_amount` を設定する場合は `salary_min_amount` 以上とする。`per_shift` は1回の勤務に対する報酬を表し、`recruitment_type = spot` でのみ使用できる。
 
 `recruitment_type = ongoing` の公開時は `work_days` と `working_hours` を必須とし、募集要項に表示する。勤務日時による検索やシフト管理には使用しない。
+
+`work_mode = onsite` または `hybrid` の公開時は `listing_location` を必須とし、`remote` では任意とする。
+
+`positions_available` は募集人数を表し、`spot` の公開時は1以上を必須とする。`ongoing` はNULLを許容する。採用済みの応募数が募集人数に達した場合は、新規応募を停止する。
+
+`required_qualifications`、`preferred_qualifications`、`benefits` は募集形態を問わず任意とする。`dress_code` と `items_to_bring` は `spot`、`selection_process` は `ongoing` でのみ使用し、募集形態変更時に使用しなくなるカラムをNULLへ戻す。
 
 ## 職種カテゴリーマスター
 
