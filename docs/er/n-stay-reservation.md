@@ -2,7 +2,7 @@
 
 一般ユーザーによる宿泊Listingの予約を `stay_reservations` で管理する。
 
-Listing本体と宿泊詳細については [`01-listing.md`](./01-listing.md) を参照する。
+Listing本体は [`01-listing.md`](./01-listing.md)、宿泊詳細は [`01-listing-stay.md`](./01-listing-stay.md) を参照する。
 
 ## 全体関連図
 

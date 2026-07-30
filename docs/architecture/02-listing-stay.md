@@ -2,14 +2,18 @@
 
 ## 目的
 
-滞在Listing固有のカラム、宿泊料金、滞在可能期間、公開条件を定義する。
+滞在Listingにおける施設、部屋、在庫、料金プランの責務と、予約受付・公開の業務ルールを定義する。
 
-Listing共通の状態遷移、権限、画像、削除・保持は [`02-listing.md`](./02-listing.md)、住所・位置情報は [`03-location.md`](./03-location.md)、テーブル間の関連は [`../er/01-listing.md`](../er/01-listing.md) を参照する。
+テーブル、カラム、外部キー、インデックスは [`../er/01-listing-stay.md`](../er/01-listing-stay.md) を正本とする。Listing共通の状態遷移、権限、画像、削除・保持は [`02-listing.md`](./02-listing.md)、住所・位置情報は [`03-location.md`](./03-location.md) を参照する。
 
 ## TODO
 
 - [ ] 滞在Listingの公開必須項目を決める
 - [ ] Room Typeの公開必須項目と公開状態の持ち方を決める
+- [ ] Rate Planの公開必須項目と公開状態の持ち方を決める
+- [ ] キャンセル期限、キャンセル料率、当日キャンセル、無断不泊を構造化する方法を決める
+- [ ] 曜日・特定日・繁忙期による料金変更を扱うか決める
+- [ ] Rate Planに最低・最大宿泊数、販売期間を持たせるか決める
 - [ ] 予約確定時に物理Room・Bedを割り当てるか、後から割り当てるか決める
 - [ ] 日付ごとの販売停止と在庫調整の持ち方を決める
 - [ ] 清掃料金、サービス料、宿泊税、入湯税の料金明細を予約仕様で決める
@@ -21,9 +25,9 @@ Listing共通の状態遷移、権限、画像、削除・保持は [`02-listing
 
 ## 宿泊施設・部屋・在庫の単位
 
-1つの `listing` は、テナントが運営する1つの宿泊施設を表す。施設は1つ以上のRoom Typeを持ち、一般ユーザーは予約時に物理的な部屋ではなくRoom Typeを選択する。
+1つのListingは、テナントが運営する1つの宿泊施設を表す。施設は1つ以上のRoom Typeを持ち、一般ユーザーは予約時に物理的な部屋ではなくRoom Typeを選択する。
 
-Room Typeはシステム共通の部屋マスターではなく、テナントが自ら所有する宿泊施設ごとに作成する販売上の部屋分類とする。同じ「ツインルーム」という名称でも、施設が異なる場合は別のRoom Typeとして扱う。Room Typeの所有テナントは `stay_room_type -> stay_listing -> listing -> tenant` の関連から特定し、テナントは自ら所有する施設にのみRoom Typeを作成・更新できる。
+Room Typeはシステム共通の部屋マスターではなく、テナントが自ら所有する宿泊施設ごとに作成する販売上の部屋分類とする。同じ「ツインルーム」という名称でも、施設が異なる場合は別のRoom Typeとして扱う。Room Typeの所有テナントはListingまで関連をたどって特定し、テナントは自ら所有する施設にのみRoom Typeを作成・更新できる。
 
 物理的な宿泊空間はRoomとして登録し、必ず同じ施設に属する1つのRoom Typeへ紐づける。一般ユーザーにはRoomを選択させず、施設側またはシステムが予約へ割り当てる。
 
@@ -31,9 +35,11 @@ Room Typeはシステム共通の部屋マスターではなく、テナント�
 Tenant
 └─ Listing（宿泊施設）
    └─ StayListing（施設共通の宿泊情報）
-      └─ StayRoomType（販売上の部屋分類）
-         └─ StayRoom（物理的な部屋）
-            └─ StayBed（相部屋内の物理的なベッド）
+      ├─ RoomType（販売上の部屋分類）
+      │  └─ Room（物理的な部屋）
+      │     └─ Bed（相部屋内の物理的なベッド）
+      ├─ RatePlan（食事・キャンセル等の販売条件）
+      └─ CancellationPolicy（キャンセル条件）
 ```
 
 | `room_kind` | 販売形態 | 予約・在庫の単位 |
@@ -44,61 +50,37 @@ Tenant
 
 1つのRoom TypeでRoom単位とBed単位の販売を混在させない。同じ物理空間をRoom単位とBed単位の両方で販売すると在庫が競合するため、初期仕様では同一期間に両方の販売方法を併用しない。
 
-物理在庫を登録するため、Room Typeに手入力の `inventory_count` は持たない。`entire_place` と `private_room` の基本在庫は有効なRoomの件数、`shared_room` の基本在庫は有効なBedの件数から算出する。一棟貸しは、その一棟を表すRoomを1件登録する。
+物理在庫を登録するため、Room Typeに手入力の在庫数は持たない。`entire_place` と `private_room` の基本在庫は有効なRoomの件数、`shared_room` の基本在庫は有効なBedの件数から算出する。一棟貸しは、その一棟を表すRoomを1件登録する。
 
-## stay_listings
+## Rate PlanとRoom Type別料金
 
-| カラム | 型 | 必須 | 初期値 | 定義 | 制約・単位 |
-| --- | --- | :---: | --- | --- | --- |
-| `id` | bigint | ○ | 自動採番 | 宿泊詳細の識別子 | 作成後変更不可 |
-| `listing_id` | bigint | ○ | なし | 対応する宿泊Listing | 一意、`listing_type = stay` |
-| `check_in_time` | time | × | NULL | チェックイン時刻 | タイムゾーン・時間幅: 要定義 |
-| `check_out_time` | time | × | NULL | チェックアウト時刻 | タイムゾーン・時間幅: 要定義 |
-| `available_from` | date | × | NULL | 予約可能期間の開始日 | `available_until`以前 |
-| `available_until` | date | × | NULL | 予約可能期間の終了日 | `available_from`以後 |
-| `house_rules` | text | × | NULL | 宿泊時のルール | 入力形式・最大文字数: 要定義 |
-| `created_at` | datetime | ○ | 自動設定 | 作成日時 | アプリケーションから変更しない |
-| `updated_at` | datetime | ○ | 自動設定 | 更新日時 | 保存時に自動更新 |
+Rate Planは、食事やキャンセル条件などをまとめた施設固有の販売プランである。システム共通マスターではなく、テナントが自ら所有する宿泊施設ごとに作成する。
 
-## stay_room_types
+1つのRate Planを複数のRoom Typeへ適用でき、金額はRate PlanとRoom Typeの組み合わせごとに設定する。これにより、同じ「朝食付き・キャンセル可」プランを複数のRoom Typeへ適用しながら、Room Typeごとに異なる料金を設定できる。
 
-| カラム | 型 | 必須 | 初期値 | 定義 | 制約・単位 |
-| --- | --- | :---: | --- | --- | --- |
-| `id` | bigint | ○ | 自動採番 | Room Typeの識別子 | 作成後変更不可 |
-| `stay_listing_id` | bigint | ○ | なし | 所属する宿泊施設 | 所有テナントはListingから特定する |
-| `name` | string | ○ | なし | テナントが設定する利用者向け名称 | 施設内の一意性・最大文字数: 要定義 |
-| `description` | text | × | NULL | Room Typeの説明 | 入力形式・最大文字数: 要定義 |
-| `room_kind` | string | ○ | なし | 販売形態と在庫単位を決める分類 | `entire_place / private_room / shared_room` |
-| `capacity` | integer | × | NULL | Room単位で宿泊できる最大人数 | 公開時は必須、1以上、上限: 要定義。`shared_room`での扱い: 要定義 |
-| `price_per_night_amount` | integer | × | NULL | テナントが入力する1在庫単位・1泊の利用者向け料金 | 公開時は必須、1以上、初期仕様では整数の円単位 |
-| `currency` | string | ○ | `JPY` | ISO 4217通貨コード | 初期仕様では`JPY`のみ |
-| `amenities` | text | × | NULL | Room Typeごとの設備・アメニティ | テキスト / JSON / 別テーブル: 要定義 |
-| `created_at` | datetime | ○ | 自動設定 | 作成日時 | アプリケーションから変更しない |
-| `updated_at` | datetime | ○ | 自動設定 | 更新日時 | 保存時に自動更新 |
+```text
+RatePlan: 朝食付き・キャンセル可
+├─ スタンダードツイン: 15,000円
+├─ デラックスツイン: 20,000円
+└─ 和室: 18,000円
+```
 
-## stay_rooms
+一般ユーザーは予約時にRoom Typeと、そのRoom Typeへ設定されたRate Planの組み合わせを選択する。異なるRate Planを選んでも物理在庫は増えず、選択したRoom Typeに属するRoomまたはBedの共通在庫を消費する。Rate Planごとに在庫数を複製しない。
 
-| カラム | 型 | 必須 | 初期値 | 定義 | 制約・単位 |
-| --- | --- | :---: | --- | --- | --- |
-| `id` | bigint | ○ | 自動採番 | 物理Roomの識別子 | 作成後変更不可 |
-| `stay_room_type_id` | bigint | ○ | なし | 所属するRoom Type | 同じ宿泊施設内のRoom Typeにのみ紐づける |
-| `name` | string | ○ | なし | 施設内の管理名 | 例: `101号室`。施設内で一意 |
-| `active` | boolean | ○ | `true` | 通常在庫として利用できるか | `false`のRoomは新規予約へ割り当てない |
-| `notes` | text | × | NULL | テナント内部の管理メモ | 一般ユーザーへ表示しない |
-| `created_at` | datetime | ○ | 自動設定 | 作成日時 | アプリケーションから変更しない |
-| `updated_at` | datetime | ○ | 自動設定 | 更新日時 | 保存時に自動更新 |
+食事条件は `room_only / breakfast / dinner / breakfast_and_dinner / other` とする。Rate PlanとRoom Type別料金は無効化後も過去の予約から参照できる状態で保持する。
 
-## stay_beds
+キャンセルポリシーは施設ごとにテナントが作成し、複数のRate Planから再利用できる。キャンセル期限や料率を構造化する方法は未決定とする。
 
-| カラム | 型 | 必須 | 初期値 | 定義 | 制約・単位 |
-| --- | --- | :---: | --- | --- | --- |
-| `id` | bigint | ○ | 自動採番 | 物理Bedの識別子 | 作成後変更不可 |
-| `stay_room_id` | bigint | ○ | なし | Bedが設置されている物理Room | `room_kind = shared_room`のRoomにのみ作成可能 |
-| `name` | string | ○ | なし | Room内の管理名 | 例: `A-1`、Room内で一意 |
-| `active` | boolean | ○ | `true` | 通常在庫として利用できるか | `false`のBedは新規予約へ割り当てない |
-| `notes` | text | × | NULL | テナント内部の管理メモ | 一般ユーザーへ表示しない |
-| `created_at` | datetime | ○ | 自動設定 | 作成日時 | アプリケーションから変更しない |
-| `updated_at` | datetime | ○ | 自動設定 | 更新日時 | 保存時に自動更新 |
+## データモデルの責務
+
+データ構造の詳細は [`../er/01-listing-stay.md`](../er/01-listing-stay.md) を参照する。
+
+- `stay_listings`は、チェックイン・チェックアウト時刻、予約可能期間、ハウスルールなど施設共通の宿泊情報を持つ。
+- `stay_room_types`は、名称、説明、販売形態、定員、設備など利用者へ販売する部屋分類を持つ。料金や在庫数は持たない。
+- `stay_rooms`と`stay_beds`は、物理在庫の根拠を持つ。内部管理用の名称やメモは一般ユーザーへ表示しない。
+- `stay_cancellation_policies`は、施設内で再利用するキャンセル条件を持つ。
+- `stay_rate_plans`は、プラン名、説明、食事条件、キャンセルポリシーを持つ。
+- `stay_room_type_rates`は、Room TypeとRate Planの組み合わせおよび、その組み合わせに対する1泊料金を持つ。
 
 ## 宿泊料金
 
@@ -111,11 +93,11 @@ Tenant
 | 追加人数料金 | 要定義 |
 | 清掃料金・手数料 | 要定義 |
 
-Room Typeの `price_per_night_amount` と `currency` を組み合わせて料金を表す。初期仕様では `currency = JPY` のみを許可し、画面に通貨選択を表示しない。
+Room TypeとRate Planの組み合わせに対して料金を設定する。初期仕様では `JPY` のみを許可し、画面に通貨選択を表示しない。
 
-テナントは、一般ユーザーへ表示する消費税を考慮した1泊料金を `price_per_night_amount` に入力する。システムは入力額へ消費税を自動加算せず、税込・税抜を切り替えるカラムも持たない。
+テナントは、一般ユーザーへ表示する消費税を考慮した1泊料金を入力する。システムは入力額へ消費税を自動加算せず、税込・税抜を切り替える属性も持たない。
 
-清掃料金、サービス料、宿泊税、入湯税などの追加料金は `price_per_night_amount` に混在させず、予約時の料金明細として管理する。予約確定前に、宿泊料金、追加料金、税および最終支払額を一般ユーザーへ表示する。
+清掃料金、サービス料、宿泊税、入湯税などの追加料金は1泊料金に混在させず、予約時の料金明細として管理する。予約確定前に、宿泊料金、追加料金、税および最終支払額を一般ユーザーへ表示する。
 
 将来複数通貨へ対応する場合は、ISO 4217の通貨コードから選択可能にし、金額を通貨ごとの最小通貨単位で保持する。予約が存在するListingの通貨は変更できない。
 
@@ -129,13 +111,16 @@ Room Typeの `price_per_night_amount` と `currency` を組み合わせて料金
 
 ## 公開条件
 
-共通の公開条件に加えて必要な滞在固有条件は要定義とする。予約を受け付けるには、一般ユーザーが選択可能なRoom Typeと、その販売形態に対応する有効な物理在庫が少なくとも1件存在しなければならない。
+共通の公開条件に加えて必要な滞在固有条件は要定義とする。予約を受け付けるには、一般ユーザーが選択可能なRoom Type、その販売形態に対応する有効な物理在庫、および選択可能なRate PlanとRoom Type別料金が少なくとも1組存在しなければならない。
 
 ## テスト条件
 
 - 下書きでは滞在固有の公開必須項目が未入力でも保存できること。
-- 自テナントが所有する宿泊施設にのみRoom Type、Room、Bedを作成・更新できること。
+- 自テナントが所有する宿泊施設にのみRoom Type、Room、Bed、Rate Plan、キャンセルポリシー、Room Type別料金を作成・更新できること。
 - Room TypeとRoom、RoomとBedが同じ宿泊施設および許可された販売形態の範囲で紐づくこと。
-- Room Typeの販売形態、定員、料金、時刻、滞在可能期間の許可値と境界値を検証すること。
+- Rate Plan、Room Type、キャンセルポリシーが同じ宿泊施設の範囲で紐づくこと。
+- Room TypeとRate Planの組み合わせを重複登録できないこと。
+- Room Typeの販売形態、定員、Room Type別料金、時刻、滞在可能期間の許可値と境界値を検証すること。
 - 貸切部屋はRoom、相部屋はBedを在庫として数え、無効な物理在庫を除外すること。
+- どのRate Planで予約しても、対象Room Typeの共通在庫を消費すること。
 - 滞在固有の公開条件を満たす場合と満たさない場合を検証すること。

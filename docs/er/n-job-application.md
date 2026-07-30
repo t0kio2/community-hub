@@ -2,7 +2,7 @@
 
 一般ユーザーによる求人Listingへの応募を `job_applications` で管理する。
 
-Listing本体と求人詳細については [`01-listing.md`](./01-listing.md) を参照する。
+Listing本体は [`01-listing.md`](./01-listing.md)、求人詳細は [`01-listing-job.md`](./01-listing-job.md) を参照する。
 
 ## 全体関連図
 

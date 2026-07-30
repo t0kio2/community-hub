@@ -1,10 +1,14 @@
-# Listing 関連 ER 図
+# Listing共通 ER 図
 
-求人と宿泊情報の共通ルートを `listings` とし、種別固有の詳細、画像、お気に入りとの関連を図示する。
+求人と宿泊情報の共通ルートである `listings` と、位置情報、画像、お気に入りのテーブル構造を定義する。
+
+- 求人固有ER: [`01-listing-job.md`](./01-listing-job.md)
+- 滞在固有ER: [`01-listing-stay.md`](./01-listing-stay.md)
+- Listing共通仕様: [`../architecture/02-listing.md`](../architecture/02-listing.md)
 
 ## 全体関連図
 
-テーブル間の関連だけを俯瞰する。詳細なカラムは後続の領域別 ER 図に記載する。
+種別固有テーブルは関連だけを示し、カラムと制約は領域別ERに記載する。
 
 ```mermaid
 erDiagram
@@ -12,20 +16,23 @@ erDiagram
     tenant_members o|--o{ listings : "作成する"
     tenant_members o|--o{ listings : "更新する"
     listings ||--o| job_listings : "求人詳細を持つ"
+    job_categories o|--o{ job_listings : "職種を分類する"
     listings ||--o| stay_listings : "宿泊詳細を持つ"
     stay_listings ||--o{ stay_room_types : "部屋タイプを持つ"
     stay_room_types ||--o{ stay_rooms : "物理客室を持つ"
     stay_rooms ||--o{ stay_beds : "相部屋のベッドを持つ"
-    job_categories o|--o{ job_listings : "職種を分類する"
+    stay_listings ||--o{ stay_rate_plans : "料金プランを持つ"
+    stay_listings ||--o{ stay_cancellation_policies : "キャンセル条件を持つ"
+    stay_cancellation_policies o|--o{ stay_rate_plans : "料金プランに適用する"
+    stay_room_types ||--o{ stay_room_type_rates : "プラン別料金を持つ"
+    stay_rate_plans ||--o{ stay_room_type_rates : "部屋タイプへ適用する"
     listings ||--o| listing_locations : "位置情報を持つ"
     listings ||--o{ listing_images : "画像を持つ"
     users ||--o{ favorites : "お気に入り登録する"
     listings ||--o{ favorites : "お気に入り登録される"
 ```
 
-## Listing 共通情報
-
-`listings` は求人と宿泊に共通するタイトル、説明、公開状態、所属テナント、作成者、更新者を管理する。
+## listings
 
 ```mermaid
 erDiagram
@@ -60,198 +67,29 @@ erDiagram
     tenant_members o|--o{ listings : "更新する"
 ```
 
-`tenant_id`、`listing_type`、`title`、`status` は必須とする。`created_by_tenant_member_id` と `updated_by_tenant_member_id` は、メンバー削除時にNULLを許容する。
+| カラム | 型 | NULL | 初期値 | 制約・定義 |
+| --- | --- | :---: | --- | --- |
+| `id` | bigint | × | 自動採番 | 主キー |
+| `tenant_id` | bigint | × | なし | `tenants.id`への外部キー、作成後変更不可 |
+| `created_by_tenant_member_id` | bigint | ○ | 操作中のメンバー | `tenant_members.id`への外部キー、メンバー削除時はNULL |
+| `updated_by_tenant_member_id` | bigint | ○ | 操作中のメンバー | `tenant_members.id`への外部キー、メンバー削除時はNULL |
+| `listing_type` | string | × | なし | `job / stay`、作成後変更不可 |
+| `title` | string | × | なし | 最大文字数は要定義 |
+| `description` | text | ○ | NULL | 入力形式と最大文字数は要定義 |
+| `status` | string | × | `draft` | `draft / published / closed / archived` |
+| `published_at` | datetime | ○ | NULL | 初回公開日時 |
+| `last_published_at` | datetime | ○ | NULL | 最新公開日時 |
+| `closed_at` | datetime | ○ | NULL | 現在の受付終了日時 |
+| `closed_reason` | string | ○ | NULL | 受付終了理由 |
+| `archived_at` | datetime | ○ | NULL | 現在のアーカイブ日時 |
+| `created_at` | datetime | × | 自動設定 | 作成日時 |
+| `updated_at` | datetime | × | 自動設定 | 更新日時 |
 
-`listing_type` は次の値を取る。
+`listing_type` に対応する種別固有詳細を1件だけ持つ。`job` は `job_listings`、`stay` は `stay_listings` を参照する。
 
-| 値 | 種別 |
-| --- | --- |
-| `job` | 求人 |
-| `stay` | 宿泊 |
+状態遷移と日時カラムの更新条件は [`../architecture/02-listing.md`](../architecture/02-listing.md) を参照する。
 
-`status` は次の値を取る。
-
-| 値 | 状態 |
-| --- | --- |
-| `draft` | 下書き |
-| `published` | 公開中 |
-| `closed` | 募集・予約受付終了 |
-| `archived` | 非表示アーカイブ |
-
-`published_at` は初回公開日時、`last_published_at` は最新公開日時を表す。`closed_at` と `closed_reason` は現在 `closed` の場合に設定し、再公開時にNULLへ戻す。`archived_at` は現在 `archived` の場合に設定する。
-
-## 求人詳細
-
-`job_listings` は `listing_type = job` のListingに対応する求人固有情報を管理する。
-
-```mermaid
-erDiagram
-    listings {
-        bigint id PK
-        string listing_type
-    }
-
-    job_categories {
-        bigint id PK
-    }
-
-    job_listings {
-        bigint id PK
-        bigint listing_id FK, UK
-        bigint job_category_id FK
-        string recruitment_type
-        string employment_type
-        string work_mode
-        string salary_unit
-        integer salary_min_amount
-        integer salary_max_amount
-        string currency
-        integer transportation_fee
-        text salary_notes
-        datetime work_starts_at
-        datetime work_ends_at
-        datetime application_deadline
-        integer break_minutes
-        string work_days
-        string working_hours
-        text required_qualifications
-        text preferred_qualifications
-        text benefits
-        integer positions_available
-        text dress_code
-        text items_to_bring
-        text selection_process
-        datetime created_at
-        datetime updated_at
-    }
-
-    listings ||--o| job_listings : "求人詳細を持つ"
-    job_categories o|--o{ job_listings : "職種を分類する"
-```
-
-`job_listings.listing_id` は必須かつ一意とし、1つのListingに求人詳細を複数作成しない。
-
-`recruitment_type` は `ongoing`、`spot` のいずれかを取る。`employment_type` は `regular_employee`、`contract_employee`、`part_time`、`temporary_staff`、`other` のいずれかを取る。`work_mode` は `onsite`、`remote`、`hybrid` のいずれかを取る。`salary_unit` は `hourly`、`daily`、`monthly`、`annual`、`per_shift` のいずれかを取る。
-
-`recruitment_type = spot` の公開時は、`work_starts_at`、`work_ends_at`、`application_deadline` を必須とする。`work_starts_at < work_ends_at`、`application_deadline <= work_starts_at` を満たさなければならない。
-
-公開時は `salary_unit`、`salary_min_amount`、`currency` を必須とする。金額は日本円の整数で保持し、`salary_max_amount` を設定する場合は `salary_min_amount` 以上とする。`per_shift` は1回の勤務に対する報酬を表し、`recruitment_type = spot` でのみ使用できる。
-
-`recruitment_type = ongoing` の公開時は `work_days` と `working_hours` を必須とし、募集要項に表示する。勤務日時による検索やシフト管理には使用しない。
-
-`work_mode = onsite` または `hybrid` の公開時は `listing_location` を必須とし、`remote` では任意とする。
-
-`positions_available` は募集人数を表し、`spot` の公開時は1以上を必須とする。`ongoing` はNULLを許容する。採用済みの応募数が募集人数に達した場合は、新規応募を停止する。
-
-`required_qualifications`、`preferred_qualifications`、`benefits` は募集形態を問わず任意とする。`dress_code` と `items_to_bring` は `spot`、`selection_process` は `ongoing` でのみ使用し、募集形態変更時に使用しなくなるカラムをNULLへ戻す。
-
-## 職種カテゴリーマスター
-
-職種カテゴリーは `job_categories` で管理し、運営管理画面から更新する。
-
-```mermaid
-erDiagram
-    admins {
-        bigint id PK
-    }
-
-    job_categories {
-        bigint id PK
-        string code UK
-        string name
-        text description
-        integer position
-        boolean active
-        bigint created_by_admin_id FK
-        bigint updated_by_admin_id FK
-        datetime created_at
-        datetime updated_at
-    }
-
-    admins o|--o{ job_categories : "作成する"
-    admins o|--o{ job_categories : "更新する"
-```
-
-`code`、`name`、`position`、`active` は必須とする。`code` は一意かつ作成後変更不可とする。カテゴリーは物理削除せず、`active` で選択可否を管理する。同じ `position` のカテゴリーはID昇順で表示する。
-
-`created_by_admin_id` と `updated_by_admin_id` は管理者削除時にNULLを許容する。管理画面の更新権限は `super_admin` のみに付与し、`operator` は閲覧のみ許可する。
-
-## 宿泊詳細
-
-`stay_listings` は `listing_type = stay` のListingに対応する宿泊固有情報を管理する。
-
-```mermaid
-erDiagram
-    listings {
-        bigint id PK
-        string listing_type
-    }
-
-    stay_listings {
-        bigint id PK
-        bigint listing_id FK, UK
-        time check_in_time
-        time check_out_time
-        date available_from
-        date available_until
-        text house_rules
-        datetime created_at
-        datetime updated_at
-    }
-
-    stay_room_types {
-        bigint id PK
-        bigint stay_listing_id FK
-        string name
-        text description
-        string room_kind
-        integer capacity
-        integer price_per_night_amount
-        string currency
-        text amenities
-        datetime created_at
-        datetime updated_at
-    }
-
-    stay_rooms {
-        bigint id PK
-        bigint stay_room_type_id FK
-        string name
-        boolean active
-        text notes
-        datetime created_at
-        datetime updated_at
-    }
-
-    stay_beds {
-        bigint id PK
-        bigint stay_room_id FK
-        string name
-        boolean active
-        text notes
-        datetime created_at
-        datetime updated_at
-    }
-
-    listings ||--o| stay_listings : "宿泊詳細を持つ"
-    stay_listings ||--o{ stay_room_types : "部屋タイプを持つ"
-    stay_room_types ||--o{ stay_rooms : "物理客室を持つ"
-    stay_rooms ||--o{ stay_beds : "相部屋のベッドを持つ"
-```
-
-`stay_listings.listing_id` は必須かつ一意とし、1つのListingに宿泊詳細を複数作成しない。
-
-1つのListingは1つの宿泊施設を表す。Room Typeは共通マスターではなく、テナントが自ら所有する宿泊施設ごとに作成する販売上の部屋分類とする。一般ユーザーは物理RoomではなくRoom Typeを選択する。テナントの所有関係は `stay_room_types -> stay_listings -> listings -> tenants` をたどって判定する。
-
-`stay_room_types.room_kind` は `entire_place`、`private_room`、`shared_room` のいずれかを取る。`entire_place` と `private_room` は物理Room単位、`shared_room` は物理Room配下のBed単位で販売する。1つのRoom TypeでRoom単位とBed単位の販売を混在させない。
-
-物理Roomは同じ宿泊施設に属する1つのRoom Typeへ紐づける。Bedは `room_kind = shared_room` の物理Roomにのみ作成できる。貸切部屋の基本在庫は `active = true` のRoom数、相部屋の基本在庫は `active = true` のBed数から算出し、Room Typeには手入力の在庫数を保持しない。
-
-`stay_room_types.price_per_night_amount` はテナントが入力する1在庫単位・1泊の利用者向け料金、`currency` はISO 4217の通貨コードを表す。初期仕様では日本円の整数で料金を保持し、`currency = JPY` のみを許可する。システムは入力額へ消費税を自動加算しない。
-
-## 住所・位置情報
-
-求人と宿泊で共通の住所・位置情報を `listing_locations` で管理する。
+## listing_locations
 
 ```mermaid
 erDiagram
@@ -277,13 +115,24 @@ erDiagram
     listings ||--o| listing_locations : "位置情報を持つ"
 ```
 
-`listing_id`、`latitude`、`longitude` は必須とする。`listing_id` は一意とし、1つのListingに位置情報を複数作成しない。Listing削除時は対応する `listing_location` を連動削除する。
+| カラム | 型 | NULL | 初期値 | 制約・定義 |
+| --- | --- | :---: | --- | --- |
+| `id` | bigint | × | 自動採番 | 主キー |
+| `listing_id` | bigint | × | なし | `listings.id`への外部キー、一意 |
+| `postal_code` | string | ○ | NULL | 郵便番号 |
+| `prefecture` | string | ○ | NULL | 都道府県 |
+| `city` | string | ○ | NULL | 市区町村 |
+| `address_line1` | string | ○ | NULL | 町名・番地 |
+| `address_line2` | string | ○ | NULL | 建物名・部屋番号 |
+| `google_place_id` | string | ○ | NULL | Google Place ID |
+| `latitude` | decimal | × | なし | 緯度 |
+| `longitude` | decimal | × | なし | 経度 |
+| `created_at` | datetime | × | 自動設定 | 作成日時 |
+| `updated_at` | datetime | × | 自動設定 | 更新日時 |
 
-表示用住所は構造化住所の各カラムから組み立てる。Google Maps登録済みの地点では `google_place_id` を保存する。住所・位置情報とGoogle Maps表示の仕様は [`../architecture/03-location.md`](../architecture/03-location.md) を参照する。
+Listing削除時は対応する位置情報を連動削除する。住所・位置情報の業務仕様は [`../architecture/03-location.md`](../architecture/03-location.md) を参照する。
 
-## Listing 画像
-
-求人と宿泊で共通の画像を `listing_images` で管理する。
+## listing_images
 
 ```mermaid
 erDiagram
@@ -304,11 +153,17 @@ erDiagram
     listings ||--o{ listing_images : "画像を持つ"
 ```
 
-`listing_id`、`image_url`、`position` は必須とする。`listing_id` と `position` の組み合わせを一意にし、`position` は1から始まる表示順とする。
+| カラム | 型 | NULL | 初期値 | 制約・定義 |
+| --- | --- | :---: | --- | --- |
+| `id` | bigint | × | 自動採番 | 主キー |
+| `listing_id` | bigint | × | なし | `listings.id`への外部キー |
+| `image_url` | string | × | なし | 画像の参照先 |
+| `position` | integer | × | なし | 1以上、Listing内で一意 |
+| `alt_text` | string | ○ | NULL | 画像の代替テキスト |
+| `created_at` | datetime | × | 自動設定 | 作成日時 |
+| `updated_at` | datetime | × | 自動設定 | 更新日時 |
 
-## お気に入り
-
-一般ユーザーとListingの多対多関係を `favorites` で管理する。
+## favorites
 
 ```mermaid
 erDiagram
@@ -332,9 +187,15 @@ erDiagram
     listings ||--o{ favorites : "お気に入り登録される"
 ```
 
-`user_id` と `listing_id` は必須とし、その組み合わせを一意にする。同じユーザーが同じListingを重複登録することはできない。
+| カラム | 型 | NULL | 初期値 | 制約・定義 |
+| --- | --- | :---: | --- | --- |
+| `id` | bigint | × | 自動採番 | 主キー |
+| `user_id` | bigint | × | なし | `users.id`への外部キー、`listing_id`との組み合わせで一意 |
+| `listing_id` | bigint | × | なし | `listings.id`への外部キー、`user_id`との組み合わせで一意 |
+| `created_at` | datetime | × | 自動設定 | 作成日時 |
+| `updated_at` | datetime | × | 自動設定 | 更新日時 |
 
-## 主なインデックス
+## インデックス
 
 | テーブル | カラム | 種別 |
 | --- | --- | --- |
@@ -343,13 +204,6 @@ erDiagram
 | `listings` | `status, published_at` | composite index |
 | `listings` | `created_by_tenant_member_id` | index |
 | `listings` | `updated_by_tenant_member_id` | index |
-| `job_listings` | `listing_id` | unique index |
-| `job_listings` | `job_category_id` | index |
-| `job_categories` | `code` | unique index |
-| `job_categories` | `active, position` | composite index |
-| `job_categories` | `created_by_admin_id` | index |
-| `job_categories` | `updated_by_admin_id` | index |
-| `stay_listings` | `listing_id` | unique index |
 | `listing_locations` | `listing_id` | unique index |
 | `listing_images` | `listing_id, position` | unique index |
 | `favorites` | `user_id, listing_id` | unique index |
