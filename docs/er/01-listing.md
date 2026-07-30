@@ -13,6 +13,9 @@ erDiagram
     tenant_members o|--o{ listings : "更新する"
     listings ||--o| job_listings : "求人詳細を持つ"
     listings ||--o| stay_listings : "宿泊詳細を持つ"
+    stay_listings ||--o{ stay_room_types : "部屋タイプを持つ"
+    stay_room_types ||--o{ stay_rooms : "物理客室を持つ"
+    stay_rooms ||--o{ stay_beds : "相部屋のベッドを持つ"
     job_categories o|--o{ job_listings : "職種を分類する"
     listings ||--o| listing_locations : "位置情報を持つ"
     listings ||--o{ listing_images : "画像を持つ"
@@ -187,28 +190,64 @@ erDiagram
     stay_listings {
         bigint id PK
         bigint listing_id FK, UK
-        string stay_type
-        integer capacity
-        integer price_per_night_amount
-        string currency
         time check_in_time
         time check_out_time
         date available_from
         date available_until
-        text amenities
         text house_rules
         datetime created_at
         datetime updated_at
     }
 
+    stay_room_types {
+        bigint id PK
+        bigint stay_listing_id FK
+        string name
+        text description
+        string room_kind
+        integer capacity
+        integer price_per_night_amount
+        string currency
+        text amenities
+        datetime created_at
+        datetime updated_at
+    }
+
+    stay_rooms {
+        bigint id PK
+        bigint stay_room_type_id FK
+        string name
+        boolean active
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    stay_beds {
+        bigint id PK
+        bigint stay_room_id FK
+        string name
+        boolean active
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
     listings ||--o| stay_listings : "宿泊詳細を持つ"
+    stay_listings ||--o{ stay_room_types : "部屋タイプを持つ"
+    stay_room_types ||--o{ stay_rooms : "物理客室を持つ"
+    stay_rooms ||--o{ stay_beds : "相部屋のベッドを持つ"
 ```
 
 `stay_listings.listing_id` は必須かつ一意とし、1つのListingに宿泊詳細を複数作成しない。
 
-`stay_type` は `private_room`、`shared_room`、`entire_place`、`other` のいずれかを取る。`capacity` は宿泊可能人数、`available_from` と `available_until` は予約可能期間を表す。
+1つのListingは1つの宿泊施設を表す。Room Typeは共通マスターではなく、テナントが自ら所有する宿泊施設ごとに作成する販売上の部屋分類とする。一般ユーザーは物理RoomではなくRoom Typeを選択する。テナントの所有関係は `stay_room_types -> stay_listings -> listings -> tenants` をたどって判定する。
 
-`price_per_night_amount` はテナントが入力する利用者向け1泊料金、`currency` はISO 4217の通貨コードを表す。初期仕様では日本円の整数で料金を保持し、`currency = JPY` のみを許可する。システムは入力額へ消費税を自動加算しない。
+`stay_room_types.room_kind` は `entire_place`、`private_room`、`shared_room` のいずれかを取る。`entire_place` と `private_room` は物理Room単位、`shared_room` は物理Room配下のBed単位で販売する。1つのRoom TypeでRoom単位とBed単位の販売を混在させない。
+
+物理Roomは同じ宿泊施設に属する1つのRoom Typeへ紐づける。Bedは `room_kind = shared_room` の物理Roomにのみ作成できる。貸切部屋の基本在庫は `active = true` のRoom数、相部屋の基本在庫は `active = true` のBed数から算出し、Room Typeには手入力の在庫数を保持しない。
+
+`stay_room_types.price_per_night_amount` はテナントが入力する1在庫単位・1泊の利用者向け料金、`currency` はISO 4217の通貨コードを表す。初期仕様では日本円の整数で料金を保持し、`currency = JPY` のみを許可する。システムは入力額へ消費税を自動加算しない。
 
 ## 住所・位置情報
 
