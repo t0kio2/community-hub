@@ -115,6 +115,7 @@ export function normalizeWorkspace(data) {
     workspace.schemaVersion = 2;
     workspace.tenant ||= { id: "tenant-prototype", name: "Prototype Tenant" };
     workspace.amenities ||= workspace.stayListings[0]?.amenities || [];
+    workspace.stayReservations ||= [];
     workspace.stayListings.forEach((listing) => { delete listing.amenities; });
     return workspace;
   }
@@ -127,6 +128,121 @@ export function normalizeWorkspace(data) {
     tenant: { id: "tenant-prototype", name: "Prototype Tenant" },
     amenities,
     stayListings: [listing],
+    stayReservations: [],
+  };
+}
+
+export function createStayReservation(workspace, input, now = new Date()) {
+  const listing = workspace.stayListings.find((item) => item.id === input.listingId);
+  const roomType = listing?.roomTypes.find((item) => item.id === input.roomTypeId);
+  const rate = listing?.roomTypeRates.find((item) => item.id === input.rateId);
+  const plan = rate && listing.ratePlans.find((item) => item.id === rate.ratePlanId);
+  if (!listing || !roomType || !rate || !plan) throw new Error("選択した販売プランが見つかりません");
+  if (!input.primaryGuest?.name || !input.primaryGuest?.email || !input.primaryGuest?.phone) throw new Error("代表宿泊者の氏名・メールアドレス・電話番号は必須です");
+  if ((input.companionNames || []).filter(Boolean).length + 1 > Number(input.guestCount)) throw new Error("登録する宿泊者数が宿泊人数を超えています");
+
+  const preview = buildStayPreview(listing, input);
+  const previewRoom = preview.roomTypes.find((item) => item.roomType.id === roomType.id);
+  const previewRate = previewRoom?.rates.find((item) => item.rate.id === rate.id);
+  if (!previewRate?.sellable) throw new Error("選択した日程では予約できません");
+
+  const reservations = workspace.stayReservations || [];
+  const activeReservations = reservations.filter((reservation) =>
+    reservation.listingId === listing.id &&
+    reservation.roomTypeId === roomType.id &&
+    ["requested", "confirmed"].includes(reservation.status) &&
+    reservation.checkInDate < input.checkOutDate &&
+    reservation.checkOutDate > input.checkInDate &&
+    (reservation.status !== "requested" || !reservation.approvalExpiresAt || reservation.approvalExpiresAt > now.toISOString()),
+  );
+  const usedCount = activeReservations.reduce((total, reservation) => total + reservation.quantity, 0);
+  const availableAcrossStay = Math.min(...preview.dates.map((date) => Math.max(inventoryForDate(roomType, date) - usedCount, 0)));
+  if (availableAcrossStay < previewRoom.requiredQuantity) throw new Error("ほかの予約により在庫が不足しています");
+
+  const usedRoomIds = new Set(activeReservations.flatMap((reservation) => (reservation.roomAssignments || []).map((item) => item.stayRoomId)));
+  const usedBedIds = new Set(activeReservations.flatMap((reservation) => (reservation.bedAssignments || []).map((item) => item.stayBedId)));
+  const assignedAt = now.toISOString();
+  const roomAssignments = [];
+  const bedAssignments = [];
+  if (roomType.roomKind === "shared_room") {
+    const beds = roomType.rooms.filter((room) => room.active).flatMap((room) => room.beds.filter((bed) => bed.active));
+    beds.filter((bed) => !usedBedIds.has(bed.id)).slice(0, previewRoom.requiredQuantity).forEach((bed) => bedAssignments.push({ stayBedId: bed.id, assignedAt }));
+  } else {
+    roomType.rooms.filter((room) => room.active && !usedRoomIds.has(room.id)).slice(0, previewRoom.requiredQuantity).forEach((room) => roomAssignments.push({ stayRoomId: room.id, assignedAt }));
+  }
+  if (roomAssignments.length + bedAssignments.length !== previewRoom.requiredQuantity) throw new Error("割り当て可能な物理在庫がありません");
+
+  const status = listing.stay.bookingConfirmationMode === "instant" ? "confirmed" : "requested";
+  const approvalDeadline = now.getTime() + listing.stay.approvalDeadlineHours * 3_600_000;
+  const checkInDeadline = new Date(`${input.checkInDate}T${listing.stay.checkInTime}:00Z`).getTime();
+  const approvalExpiresAt = status === "requested"
+    ? new Date(Math.min(approvalDeadline, checkInDeadline)).toISOString()
+    : null;
+  const activeAmenities = workspace.amenities.filter((amenity) => amenity.active);
+  const amenitySnapshot = (ids) => activeAmenities.filter((amenity) => ids.includes(amenity.id)).map((amenity) => ({ id: amenity.id, name: amenity.name }));
+  const nights = previewRate.nights.map((night) => ({ stay_date: night.stayDate, unit_amount: night.unitAmount, quantity: night.quantity, subtotal_amount: night.subtotalAmount }));
+  const reservation = {
+    id: makeId("reservation"),
+    userId: "user-prototype",
+    listingId: listing.id,
+    roomTypeId: roomType.id,
+    stayRoomTypeRateId: rate.id,
+    status,
+    checkInDate: input.checkInDate,
+    checkOutDate: input.checkOutDate,
+    checkInAt: `${input.checkInDate}T${listing.stay.checkInTime}:00`,
+    timeZone: listing.stay.timeZone,
+    quantity: previewRoom.requiredQuantity,
+    guestCount: Number(input.guestCount),
+    approvalExpiresAt,
+    currency: "JPY",
+    accommodationSubtotalAmount: previewRate.totalAmount,
+    additionalFeeTotalAmount: 0,
+    discountTotalAmount: 0,
+    totalAmount: previewRate.totalAmount,
+    priceSnapshot: {
+      version: 1,
+      currency: "JPY",
+      pricing_unit: roomType.roomKind === "shared_room" ? "bed" : "room",
+      room_type: { id: roomType.id, name: roomType.name, room_kind: roomType.roomKind, capacity: roomType.capacity, amenities: amenitySnapshot(roomType.amenityIds) },
+      facility_amenities: amenitySnapshot(listing.stay.facilityAmenityIds),
+      rate_plan: { id: plan.id, name: plan.name, meal_type: plan.mealType },
+      quantity: previewRoom.requiredQuantity,
+      guest_count: Number(input.guestCount),
+      nights,
+      accommodation_subtotal_amount: previewRate.totalAmount,
+      additional_fee_total_amount: 0,
+      discount_total_amount: 0,
+      total_amount: previewRate.totalAmount,
+    },
+    cancellationPolicySnapshot: cancellationPolicySnapshot(plan.cancellationPolicyType),
+    message: input.message || "",
+    guests: [
+      { guestRole: "primary", ...input.primaryGuest },
+      ...(input.companionNames || []).filter(Boolean).map((name) => ({ guestRole: "companion", name })),
+    ],
+    roomAssignments,
+    bedAssignments,
+    createdAt: assignedAt,
+    updatedAt: assignedAt,
+  };
+  workspace.stayReservations ||= [];
+  workspace.stayReservations.push(reservation);
+  return reservation;
+}
+
+function cancellationPolicySnapshot(type) {
+  if (type === "non_refundable") return { type, basis: "accommodation_subtotal", penalty_rate: 100, no_show_penalty_rate: 100 };
+  return {
+    type: "standard",
+    basis: "accommodation_subtotal",
+    rules: [
+      { hours_before_check_in: 168, penalty_rate: 20 },
+      { hours_before_check_in: 48, penalty_rate: 50 },
+      { hours_before_check_in: 24, penalty_rate: 80 },
+      { hours_before_check_in: 0, penalty_rate: 100 },
+    ],
+    no_show_penalty_rate: 100,
   };
 }
 
