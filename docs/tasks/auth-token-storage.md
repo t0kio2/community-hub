@@ -2,7 +2,7 @@
 
 ## 背景
 
-現在の frontend では、ログイン成功時に `accessToken` と `refreshToken` を `localStorage` に保存している。
+現在の user-frontend では、ログイン成功時に `accessToken` と `refreshToken` を `localStorage` に保存している。
 
 `localStorage` は JavaScript から読み取れるため、XSS が発生した場合にトークンが漏えいするリスクがある。特に `refreshToken` は長めの有効期限を持つ前提になりやすく、漏えい時の影響が大きい。
 
@@ -17,7 +17,7 @@
 ### 案1: Rails が HttpOnly Cookie に refresh token を保存する
 
 - `refreshToken` は `HttpOnly`, `Secure`, `SameSite=Lax` または `SameSite=Strict` の Cookie に保存する。
-- frontend の JavaScript から `refreshToken` を読めないようにする。
+- user-frontend の JavaScript から `refreshToken` を読めないようにする。
 - `accessToken` はメモリ上に保持し、必要に応じて refresh endpoint で再発行する。
 
 ### 案2: Next.js を BFF として使う
@@ -28,10 +28,10 @@
 
 ## 影響範囲
 
-- `frontend/src/lib/auth.ts`
-- `frontend/src/components/AuthForm.tsx`
-- `frontend/src/app/auth/login/page.tsx`
-- `frontend/src/app/auth/sign-up/page.tsx`
+- `user-frontend/src/lib/auth.ts`
+- `user-frontend/src/components/AuthForm.tsx`
+- `user-frontend/src/app/auth/login/page.tsx`
+- `user-frontend/src/app/auth/sign-up/page.tsx`
 - `backend/app/controllers/api/v1/auth/sessions_controller.rb`
 - `backend/app/controllers/api/v1/auth/registrations_controller.rb`
 - `backend/app/controllers/api/v1/auth/refresh_tokens_controller.rb`
