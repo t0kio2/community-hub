@@ -22,8 +22,6 @@ erDiagram
     stay_room_types ||--o{ stay_rooms : "物理客室を持つ"
     stay_rooms ||--o{ stay_beds : "相部屋のベッドを持つ"
     stay_listings ||--o{ stay_rate_plans : "料金プランを持つ"
-    stay_listings ||--o{ stay_cancellation_policies : "キャンセル条件を持つ"
-    stay_cancellation_policies o|--o{ stay_rate_plans : "料金プランに適用する"
     stay_room_types ||--o{ stay_room_type_rates : "プラン別料金を持つ"
     stay_rate_plans ||--o{ stay_room_type_rates : "部屋タイプへ適用する"
     listings ||--o| listing_locations : "位置情報を持つ"

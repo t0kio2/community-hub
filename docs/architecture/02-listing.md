@@ -210,7 +210,7 @@ Listingと詳細は同じトランザクションで保存する。どちらか�
 | listing_images | Listingと連動 | 画像本体の削除方法: 要定義 |
 | favorites | Listing・Userと連動 | 物理削除 |
 
-応募・予約が存在するListingの削除可否は、[`../er/n-job-application.md`](../er/n-job-application.md) と [`../er/n-stay-reservation.md`](../er/n-stay-reservation.md) の要件と合わせて定義する。
+応募・予約が存在するListingの削除可否は、[`../er/n-job-application.md`](../er/n-job-application.md) と [`../er/02-stay-reservation.md`](../er/02-stay-reservation.md) の要件と合わせて定義する。
 
 ## インデックス
 

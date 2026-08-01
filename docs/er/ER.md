@@ -13,7 +13,7 @@
 - [求人Listing関連](./01-listing-job.md)
 - [滞在Listing関連](./01-listing-stay.md)
 - [求人応募関連](./n-job-application.md)
-- [宿泊予約関連](./n-stay-reservation.md)
+- [宿泊予約関連](./02-stay-reservation.md)
 - [チャット関連](./n-chat.md)
 
 新しいテーブルは対応する領域別ERへ追加する。複数領域にまたがる場合も、同じカラム定義を複数文書へ重複記載せず、所有する領域を1つ決めて他方から参照する。
