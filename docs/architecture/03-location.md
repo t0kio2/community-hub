@@ -29,6 +29,8 @@
 
 位置情報を持たない下書きListingは、`listing_location` を作成せずに保存する。`listing_location` を作成する場合は、`latitude`、`longitude` を必須とする。
 
+滞在Listingの公開時は`listing_location`を必須とし、`prefecture`、`city`、`address_line1`、`latitude`、`longitude`が設定されていなければならない。`postal_code`、`address_line2`、`google_place_id`は任意とする。完全な住所を保持する条件と一般ユーザーへの開示範囲は分けて扱う。
+
 位置情報による範囲検索を導入する場合のデータ型と空間インデックスは、その機能の設計時に決定する。
 
 ## 地点の登録

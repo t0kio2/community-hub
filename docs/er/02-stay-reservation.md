@@ -2,7 +2,7 @@
 
 一般ユーザーによる宿泊予約と、予約へ自動割り当てする物理Room・Bedを管理する。
 
-Listing本体は [`01-listing.md`](./01-listing.md)、宿泊施設、Room Type、物理在庫、料金プランは [`01-listing-stay.md`](./01-listing-stay.md)、予約の業務仕様は [`../architecture/02-stay-reservation.md`](../architecture/02-stay-reservation.md) を参照する。
+Listing本体は [`01-listing.md`](./01-listing.md)、宿泊施設、Room Type、物理在庫、料金プランは [`01-listing-stay.md`](./01-listing-stay.md)、予約の業務仕様は [`../architecture/04-stay-reservation.md`](../architecture/04-stay-reservation.md) を参照する。
 
 ## 全体関連図
 
@@ -47,6 +47,8 @@ erDiagram
         string status
         date check_in_date
         date check_out_date
+        datetime check_in_at
+        string time_zone
         integer quantity
         integer guest_count
         datetime approval_expires_at
@@ -88,6 +90,8 @@ erDiagram
 | `status` | string | × | なし | `requested / confirmed / rejected / canceled / expired / completed` |
 | `check_in_date` | date | × | なし | 宿泊開始日 |
 | `check_out_date` | date | × | なし | 宿泊終了日、対象期間には含めず`check_in_date`より後 |
+| `check_in_at` | datetime | × | なし | 予約作成時の施設タイムゾーンとチェックイン日・時刻から算出した変更不可のチェックイン開始日時 |
+| `time_zone` | string | × | なし | 予約作成時の施設IANAタイムゾーン名を複製した変更不可の値 |
 | `quantity` | integer | × | `1` | 確保するRoom数またはBed数、1以上 |
 | `guest_count` | integer | × | なし | 宿泊人数、1以上。初期仕様では年齢区分を持たず宿泊者全員を数える |
 | `approval_expires_at` | datetime | ○ | NULL | 承認制では申請時に必須、即時確定ではNULL。申請日時に承認期限時間を加えた日時とチェックイン開始日時の早い方 |
@@ -96,7 +100,7 @@ erDiagram
 | `additional_fee_total_amount` | integer | × | `0` | 追加料金の合計、0以上。初期仕様では0固定 |
 | `discount_total_amount` | integer | × | `0` | 割引の合計、0以上。初期仕様では0固定 |
 | `total_amount` | integer | × | なし | 宿泊料金小計＋追加料金－割引、0以上 |
-| `price_snapshot` | jsonb | × | なし | 予約作成時のRoom Type、Rate Plan、料金単位、数量、日別料金明細および合計を複製した変更不可のJSON |
+| `price_snapshot` | jsonb | × | なし | 予約作成時のRoom Type、Rate Plan、施設・Room TypeのAmenities、料金単位、数量、日別料金明細および合計を複製した変更不可のJSON |
 | `cancellation_policy_snapshot` | jsonb | × | なし | 予約作成時のキャンセル種別、計算対象、固定料率、無断不泊料率を複製した変更不可のJSON |
 | `message` | text | ○ | NULL | 予約時の利用者メッセージ |
 | `created_at` | datetime | × | 自動設定 | 作成日時 |
@@ -108,7 +112,7 @@ erDiagram
 
 予約受付時の宿泊人数は、`entire_place / private_room` では `guest_count <= stay_room_types.capacity × quantity`、`shared_room` では `guest_count = quantity` を満たさなければならない。検証に使用したRoom Typeの `capacity` も `price_snapshot.room_type.capacity` へ複製し、元の定員が変更されても既存予約の判定根拠を保持する。
 
-キャンセル料の判定には現在のRate Planを参照せず、`cancellation_policy_snapshot`だけを使用し、計算基準額には `accommodation_subtotal_amount` を使用する。
+キャンセル料の判定には現在のRate Planを参照せず、`cancellation_policy_snapshot`だけを使用し、計算基準額には `accommodation_subtotal_amount`、期限の基準日時には予約の`check_in_at`を使用する。
 
 ## stay_reservation_guests
 
