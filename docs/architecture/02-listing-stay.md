@@ -32,6 +32,22 @@ Tenant
 
 1つのRoom TypeでRoom単位とBed単位の販売を混在させない。物理在庫を登録するため、Room Typeに手入力の在庫数は持たない。`entire_place / private_room`の基本在庫は有効なRoom数、`shared_room`は有効なBed数から算出する。一棟貸しは一棟を表すRoomを1件登録する。
 
+## 施設画像とRoom Type画像
+
+画像は利用者へ何を説明するかによって紐づけ先を分ける。
+
+| 画像の内容 | 紐づけ先 | 用途 |
+| --- | --- | --- |
+| 外観、ロビー、フロント、共用設備 | Listing | 施設全体の紹介 |
+| 客室内、寝具、客室内の浴室・設備 | Room Type | 利用者が予約する客室分類の紹介 |
+| 傷、故障箇所、清掃・点検記録 | 初期仕様では保持しない | 将来のPMS向け管理資料 |
+
+同じRoom Typeに属する物理Roomは、利用者から見て画像と設備が同等であることを前提とする。公開画像で示す必要がある差が存在する物理Roomは、別のRoom Typeとして販売する。物理Room単位の公開画像は持たない。
+
+Room Type画像は表示順と代替テキストを持ち、表示順が最初の画像をRoom Typeの代表画像とする。形式、ファイルサイズ、推奨解像度、並び替え方法はListing画像と同じ規則を適用し、1つのRoom Typeにつき最大20件とする。
+
+下書きでは画像なしで保存できる。Room Typeを`published`へ遷移するには、利用者向けRoom Type画像を1件以上必須とする。
+
 ## 物理在庫の停止
 
 施設都合による一時停止は、RoomまたはBedと停止期間を紐づけて管理する。`active`は恒久的な有効・無効に使用し、修繕、清掃、手動停止など日付を伴う停止には使用しない。
@@ -122,6 +138,15 @@ AmenitiesはListingおよびRoom Typeの公開必須条件にしない。`active
 
 `stay_available_starts_on`と`stay_available_ends_on`で半開区間`[starts_on, ends_on)`を表す。開始日は最初に宿泊できる日、終了日は最遅チェックアウト日であり、終了日当日の宿泊は含まない。
 
+テナント向け画面では内部表現をそのまま表示せず、「宿泊提供期間」として次の項目を表示する。
+
+| 画面表示 | 保存先 | 変換 |
+| --- | --- | --- |
+| 最初に宿泊できる日 | `stay_available_starts_on` | 入力日をそのまま保存 |
+| 最後に宿泊できる日 | `stay_available_ends_on` | 入力日の翌日を保存 |
+
+両方を未入力にした場合は「期間を制限しない」として扱う。片側だけの指定も許可する。例えば画面で最後に宿泊できる日を2026-08-31と入力した場合、`stay_available_ends_on`には2026-09-01を保存する。
+
 ```text
 stay_available_starts_on = 2026-08-01
 stay_available_ends_on   = 2026-09-01
@@ -195,7 +220,7 @@ Room TypeとRate Planは、単純な有効フラグではなく`status`で公開
 | `published` | 公開中。ほかの販売条件も満たす場合に新規予約で選択できる |
 | `inactive` | 公開停止。一般ユーザーには表示せず、新規予約で選択できない |
 
-初期値は`draft`とする。Room Typeを`published`へ遷移するには、名称、説明、販売形態、定員、および販売形態に対応する有効な物理在庫を必須とする。貸切・個室は有効なRoomが1件以上、相部屋は有効なRoomに属する有効なBedが1件以上必要である。Amenitiesは任意とする。
+初期値は`draft`とする。Room Typeを`published`へ遷移するには、名称、説明、販売形態、定員、利用者向け画像1件以上、および販売形態に対応する有効な物理在庫を必須とする。貸切・個室は有効なRoomが1件以上、相部屋は有効なRoomに属する有効なBedが1件以上必要である。Amenitiesは任意とする。
 
 Rate Planを`published`へ遷移するには、名称、食事条件およびキャンセル種別を必須とし、説明とRoom Type別料金は必須としない。Rate Plan単体を先に公開できるが、有効なRoom Type別料金と結び付くまでは予約候補にならない。
 
@@ -275,6 +300,7 @@ Room Type名は施設内で一意かつ最大100文字、説明は最大5,000文
 - `stay_listings`は予約確定方式、承認期限、時刻、宿泊可能期間、予約受付期間、ハウスルールを持つ。
 - `stay_room_types`は名称、販売形態、定員、公開状態を持ち、料金、在庫数、Amenitiesの自由入力値は持たない。
 - `stay_amenities`と2つの関連テーブルは、共通・テナント固有Amenitiesと施設・Room Typeへの設定を持つ。
+- `stay_room_type_images`は利用者向けのRoom Type画像と表示順を持つ。
 - `stay_rooms / stay_beds`は物理在庫の根拠を持つ。
 - `stay_room_blocks / stay_bed_blocks`は施設都合の停止期間を持つ。
 - `stay_room_type_daily_sales_controls`は営業上のRoom Type別・宿泊日別販売上限を持つ。
@@ -360,7 +386,8 @@ status = published のRoom Type
 - 販売上限が物理在庫数を超えても実際の予約可能数が物理空き数を超えないこと。
 - 期間・曜日による販売上限の一括設定が対象日だけを作成または更新すること。
 - 公開するRoom Typeの`capacity`が1以上で、相部屋では1であること。
-- Room Typeは名称、説明、販売形態、定員および対応する有効な物理在庫がなければ公開できないこと。
+- Room Typeは名称、説明、販売形態、定員、画像1件以上および対応する有効な物理在庫がなければ公開できないこと。
+- 施設全体画像をRoom Type画像の代わりにせず、物理Roomへ公開画像を紐づけないこと。
 - Amenitiesなしでも施設とRoom Typeを公開できること。
 - テナントが共通Amenitiesを変更できず、自テナント固有Amenitiesだけを作成・変更・無効化できること。
 - Amenitiesの`scope`に適合する施設・Room Typeだけへ関連付けられること。

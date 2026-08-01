@@ -14,7 +14,7 @@
 
 | 認証主体 | Deviseスコープ | 認証方式 | 主な利用画面 |
 | --- | --- | --- | --- |
-| 一般ユーザー | `user_account` | JWTアクセストークン、リフレッシュトークン | frontendから利用するJSON API |
+| 一般ユーザー | `user_account` | JWTアクセストークン、リフレッシュトークン | user-frontendから利用するJSON API |
 | テナント | `tenant_account` | DBセッション | Rails MVCのテナント画面 |
 | 運営管理者 | `admin_account` | DBセッション | Rails MVCの管理画面 |
 
@@ -36,7 +36,7 @@
 flowchart LR
     UserBrowser["一般ユーザーのブラウザ"]
     StaffBrowser["テナント・管理者のブラウザ"]
-    Frontend["frontend"]
+    Frontend["user-frontend"]
     RailsAPI["Rails JSON API"]
     RailsMVC["Rails MVC"]
     DeviseJWT["Devise / devise-jwt"]
@@ -101,7 +101,7 @@ sequenceDiagram
 
 ### 認証済みAPI
 
-frontendはJWTを次の形式で送信する。
+user-frontendはJWTを次の形式で送信する。
 
 ```http
 Authorization: Bearer <access_token>
@@ -111,7 +111,7 @@ Rails APIはJWTから `current_user_account` を復元し、業務データは�
 
 ### トークン更新
 
-アクセストークンの有効期限は15分とする。APIが `401 Unauthorized` を返した場合、frontendは保存済みリフレッシュトークンで `POST /api/v1/auth/refresh` を呼び出す。
+アクセストークンの有効期限は15分とする。APIが `401 Unauthorized` を返した場合、user-frontendは保存済みリフレッシュトークンで `POST /api/v1/auth/refresh` を呼び出す。
 
 ```mermaid
 sequenceDiagram
@@ -134,12 +134,12 @@ sequenceDiagram
 
 ### ログアウト
 
-現在のfrontendのログアウトでは次を行う。
+現在のuser-frontendのログアウトでは次を行う。
 
 1. `DELETE /api/v1/auth/refresh` でリフレッシュトークンを失効する。
-2. frontendのlocalStorageから認証情報を削除する。
+2. user-frontendのlocalStorageから認証情報を削除する。
 
-現在のfrontendはDeviseのサインアウトエンドポイントを呼び出していないため、発行済みJWTは `jwt_denylists` に登録されず、有効期限まで最大15分間有効である。即時失効を要件とする場合は、ログアウト時にDeviseのサインアウトも呼び出してJWTのJTIを拒否リストへ登録する。
+現在のuser-frontendはDeviseのサインアウトエンドポイントを呼び出していないため、発行済みJWTは `jwt_denylists` に登録されず、有効期限まで最大15分間有効である。即時失効を要件とする場合は、ログアウト時にDeviseのサインアウトも呼び出してJWTのJTIを拒否リストへ登録する。
 
 ## テナント・運営管理者認証
 

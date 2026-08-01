@@ -3,13 +3,13 @@ project-root/
   docker-compose.yml
   backend/    # Rails backend
   db/         # DB関連（初期化SQLなど置き場）
-  frontend/   # Next.js frontend
+  user-frontend/   # 一般ユーザー向けNext.jsアプリ
 
 ```
 
 Rails: backend（Rails 8系）
 DB: PostgreSQL
-frontend: Next.js
+一般ユーザー向けWeb: Next.js（`user-frontend/`）
 
 docker環境で開発を行う
 
@@ -74,7 +74,7 @@ docker compose up
 ```
 
 4. 動作確認
-- frontend: http://localhost:3000
+- user-frontend: http://localhost:3000
 - backend: http://localhost:3001
 
 ## トラブルシューティング

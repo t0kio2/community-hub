@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 2,
+  "tenant": {
+    "id": "tenant-community-stay",
+    "name": "Community Stay"
+  },
+  "amenities": [
+    { "id": "amenity-wifi", "name": "Wi-Fi", "scope": "both", "category": "connectivity", "source": "common", "active": true },
+    { "id": "amenity-kitchen", "name": "共用キッチン", "scope": "facility", "category": "kitchen", "source": "common", "active": true },
+    { "id": "amenity-aircon", "name": "エアコン", "scope": "room_type", "category": "climate", "source": "common", "active": true },
+    { "id": "amenity-locker", "name": "専用ロッカー", "scope": "room_type", "category": "service", "source": "tenant", "active": true }
+  ],
+  "stayListings": [
+  {
+  "schemaVersion": 1,
+  "id": "listing-kamakura-guesthouse",
+  "listingType": "stay",
+  "status": "draft",
+  "title": "鎌倉 海辺のゲストハウス",
+  "description": "海まで徒歩3分。旅人同士がゆるやかにつながれる小さな宿です。",
+  "images": [
+    { "id": "image-1", "name": "exterior.jpg", "position": 1, "altText": "ゲストハウスの外観" }
+  ],
+  "location": {
+    "postalCode": "248-0014",
+    "prefecture": "神奈川県",
+    "city": "鎌倉市",
+    "addressLine1": "由比ガ浜1-2-3",
+    "addressLine2": "",
+    "googlePlaceId": "",
+    "latitude": 35.3121,
+    "longitude": 139.5451
+  },
+  "stay": {
+    "bookingConfirmationMode": "approval_required",
+    "approvalDeadlineHours": 24,
+    "checkInTime": "15:00",
+    "checkOutTime": "10:00",
+    "timeZone": "Asia/Tokyo",
+    "stayAvailableStartsOn": "2026-08-01",
+    "stayAvailableEndsOn": "2027-08-01",
+    "bookingOpenDaysBefore": 365,
+    "bookingCloseHoursBefore": 0,
+    "houseRules": "館内禁煙です。22時以降は静かにお過ごしください。",
+    "facilityAmenityIds": ["amenity-wifi", "amenity-kitchen"]
+  },
+  "roomTypes": [
+    {
+      "id": "room-type-dorm",
+      "name": "女性専用ドミトリー",
+      "description": "カーテン付きのベッドと専用ロッカーを備えた相部屋です。",
+      "roomKind": "shared_room",
+      "capacity": 1,
+      "status": "published",
+      "amenityIds": ["amenity-wifi", "amenity-aircon", "amenity-locker"],
+      "rooms": [
+        {
+          "id": "room-201",
+          "name": "201",
+          "active": true,
+          "notes": "女性専用",
+          "beds": [
+            { "id": "bed-201-a", "name": "A", "active": true },
+            { "id": "bed-201-b", "name": "B", "active": true },
+            { "id": "bed-201-c", "name": "C", "active": true },
+            { "id": "bed-201-d", "name": "D", "active": false }
+          ]
+        }
+      ],
+      "dailySalesControls": [
+        { "stayDate": "2026-08-15", "salesLimit": 2 }
+      ]
+    },
+    {
+      "id": "room-type-private",
+      "name": "スタンダード個室",
+      "description": "2名まで利用できるシンプルな個室です。",
+      "roomKind": "private_room",
+      "capacity": 2,
+      "status": "published",
+      "amenityIds": ["amenity-wifi", "amenity-aircon"],
+      "rooms": [
+        { "id": "room-101", "name": "101", "active": true, "notes": "", "beds": [] },
+        { "id": "room-102", "name": "102", "active": true, "notes": "", "beds": [] }
+      ],
+      "dailySalesControls": []
+    }
+  ],
+  "ratePlans": [
+    { "id": "plan-room-only", "name": "素泊まり・キャンセル可", "description": "食事なしの基本プラン", "mealType": "room_only", "cancellationPolicyType": "standard", "status": "published" },
+    { "id": "plan-breakfast", "name": "朝食付き・キャンセル可", "description": "地元食材の朝食付き", "mealType": "breakfast", "cancellationPolicyType": "standard", "status": "published" },
+    { "id": "plan-non-refundable", "name": "返金不可", "description": "予約確定後の返金はありません", "mealType": "room_only", "cancellationPolicyType": "non_refundable", "status": "draft" }
+  ],
+  "roomTypeRates": [
+    { "id": "rate-dorm-room-only", "roomTypeId": "room-type-dorm", "ratePlanId": "plan-room-only", "pricePerNightAmount": 4500, "currency": "JPY", "active": true, "dailyPrices": [{ "stayDate": "2026-08-15", "priceAmount": 6000 }] },
+    { "id": "rate-dorm-breakfast", "roomTypeId": "room-type-dorm", "ratePlanId": "plan-breakfast", "pricePerNightAmount": 5800, "currency": "JPY", "active": true, "dailyPrices": [] },
+    { "id": "rate-private-room-only", "roomTypeId": "room-type-private", "ratePlanId": "plan-room-only", "pricePerNightAmount": 12000, "currency": "JPY", "active": true, "dailyPrices": [{ "stayDate": "2026-08-15", "priceAmount": 16000 }] },
+    { "id": "rate-private-breakfast", "roomTypeId": "room-type-private", "ratePlanId": "plan-breakfast", "pricePerNightAmount": 14600, "currency": "JPY", "active": true, "dailyPrices": [] }
+  ]
+  }
+  ]
+}

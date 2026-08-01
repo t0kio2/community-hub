@@ -44,6 +44,15 @@ erDiagram
         datetime updated_at
     }
 
+    stay_room_type_images {
+        bigint id PK
+        bigint stay_room_type_id FK
+        integer position
+        string alt_text
+        datetime created_at
+        datetime updated_at
+    }
+
     stay_amenities {
         bigint id PK
         bigint tenant_id FK
@@ -158,6 +167,7 @@ erDiagram
 
     listings ||--o| stay_listings : "宿泊詳細を持つ"
     stay_listings ||--o{ stay_room_types : "部屋タイプを持つ"
+    stay_room_types ||--o{ stay_room_type_images : "販売用画像を持つ"
     tenants o|--o{ stay_amenities : "固有設備を持つ"
     stay_listings ||--o{ stay_listing_amenities : "施設設備を設定する"
     stay_amenities ||--o{ stay_listing_amenities : "施設へ設定される"
@@ -206,6 +216,19 @@ erDiagram
 | `status` | string | × | `draft` | `draft / published / inactive` |
 | `created_at` | datetime | × | 自動設定 | 作成日時 |
 | `updated_at` | datetime | × | 自動設定 | 更新日時 |
+
+## stay_room_type_images
+
+| カラム | 型 | NULL | 初期値 | 制約・定義 |
+| --- | --- | :---: | --- | --- |
+| `id` | bigint | × | 自動採番 | 主キー |
+| `stay_room_type_id` | bigint | × | なし | `stay_room_types.id`への外部キー |
+| `position` | integer | × | なし | 1以上、Room Type内で一意。最小値を代表画像とする |
+| `alt_text` | string | ○ | NULL | 画像の代替テキスト、最大200文字 |
+| `created_at` | datetime | × | 自動設定 | 作成日時 |
+| `updated_at` | datetime | × | 自動設定 | 更新日時 |
+
+画像本体はActive Storageの`has_one_attached :image`で保持する。Active Storage標準テーブルはフレームワーク管理のため、この業務ER図には展開しない。1つのRoom Typeにつき最大20件とし、Room Type削除時は添付ファイルを含めて連動削除する。
 
 ## stay_amenities
 
@@ -353,11 +376,13 @@ erDiagram
 
 宿泊可能期間は`[stay_available_starts_on, stay_available_ends_on)`として扱う。両方を設定する場合は`stay_available_starts_on < stay_available_ends_on`とする。予約受付期間は`booking_open_days_before × 24 > booking_close_hours_before`とする。
 
-`stay_listing_amenities`、`stay_room_type_amenities`、`stay_rooms`、`stay_beds`、`stay_room_blocks`、`stay_bed_blocks`、`stay_room_type_daily_sales_controls`、`stay_rate_plans`、`stay_room_type_rates`、`stay_room_type_rate_daily_prices`は、関連をたどった`stay_listing_id`または`tenant_id`が一致しなければならない。異なるテナントの固有Amenitiesや異なる施設のレコード同士を紐づけない。
+`stay_room_type_images`、`stay_listing_amenities`、`stay_room_type_amenities`、`stay_rooms`、`stay_beds`、`stay_room_blocks`、`stay_bed_blocks`、`stay_room_type_daily_sales_controls`、`stay_rate_plans`、`stay_room_type_rates`、`stay_room_type_rate_daily_prices`は、関連をたどった`stay_listing_id`または`tenant_id`が一致しなければならない。異なるテナントの固有Amenitiesや異なる施設のレコード同士を紐づけない。
 
 `stay_room_types.capacity` は `entire_place / private_room` では1 Roomあたりの最大宿泊人数とし、`shared_room` では1 Bedあたり1人を表すため1とする。相部屋の物理Room全体の収容人数は、そのRoomに属する有効なBed数から算出する。
 
 Room TypeとRate Planは`status = published`の場合だけ新規予約の候補となる。`stay_room_type_rates.active = true`だけでは選択可能にならず、関連するRoom TypeとRate Planの両方が公開中でなければならない。既存予約から参照されるRoom Type、Rate PlanおよびRoom Type別料金は物理削除しない。
+
+Room Typeを`published`へ変更するには、`stay_room_type_images`が1件以上必要とする。公開後に画像を0件へ減らす操作は許可しない。
 
 停止期間は `[starts_on, ends_on)` の半開区間として扱う。同じRoomまたはBedに対する停止期間同士の重複は許可するが、予約割り当て期間と重複する停止は作成できない。
 
@@ -368,6 +393,7 @@ Room TypeとRate Planは`status = published`の場合だけ新規予約の候補
 | `stay_listings` | `listing_id` | unique index |
 | `stay_room_types` | `stay_listing_id, status` | composite index |
 | `stay_room_types` | `stay_listing_id, name` | unique index |
+| `stay_room_type_images` | `stay_room_type_id, position` | unique index |
 | `stay_amenities` | `code WHERE tenant_id IS NULL` | partial unique index |
 | `stay_amenities` | `tenant_id, code WHERE tenant_id IS NOT NULL` | partial unique index |
 | `stay_amenities` | `active, scope, category` | composite index |
