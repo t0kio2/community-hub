@@ -2,7 +2,7 @@
 
 求人応募または宿泊予約に関する、一般ユーザーとテナントユーザーの会話を管理する。
 
-求人応募については [`02-job-application.md`](./02-job-application.md)、宿泊予約については [`03-stay-reservation.md`](./03-stay-reservation.md) を参照する。
+求人応募については [`n-job-application.md`](./n-job-application.md)、宿泊予約については [`02-stay-reservation.md`](./02-stay-reservation.md) を参照する。
 
 ## 全体関連図
 
