@@ -5,6 +5,7 @@ import {
   buildStayPreview,
   canPublish,
   createBlankStayListing,
+  createStayReservation,
   inventoryForDate,
   normalizeWorkspace,
   physicalInventory,
@@ -183,6 +184,48 @@ test("追加した宿泊施設は独立した空のListingとして作成する"
   assert.equal(listing.stay.timeZone, "Asia/Tokyo");
 });
 
+test("承認制の予約申請は料金を固定してRoomを仮確保する", () => {
+  const workspace = reservationWorkspace("approval_required", "private_room");
+  const reservation = createStayReservation(workspace, reservationInput(), new Date("2026-08-01T00:00:00Z"));
+
+  assert.equal(reservation.status, "requested");
+  assert.equal(reservation.totalAmount, 25_000);
+  assert.equal(reservation.priceSnapshot.nights.length, 2);
+  assert.deepEqual(reservation.roomAssignments.map((item) => item.stayRoomId), ["room-1"]);
+  assert.deepEqual(reservation.bedAssignments, []);
+  assert.equal(workspace.stayReservations.length, 1);
+});
+
+test("即時確定の相部屋予約は人数分のBedを割り当てる", () => {
+  const workspace = reservationWorkspace("instant", "shared_room");
+  const reservation = createStayReservation(workspace, reservationInput(), new Date("2026-08-01T00:00:00Z"));
+
+  assert.equal(reservation.status, "confirmed");
+  assert.equal(reservation.approvalExpiresAt, null);
+  assert.equal(reservation.quantity, 2);
+  assert.deepEqual(reservation.bedAssignments.map((item) => item.stayBedId), ["bed-1", "bed-2"]);
+});
+
+test("同じ期間の後続予約で物理在庫が不足する場合は保存しない", () => {
+  const workspace = reservationWorkspace("instant", "private_room");
+  createStayReservation(workspace, reservationInput(), new Date("2026-08-01T00:00:00Z"));
+
+  assert.throws(
+    () => createStayReservation(workspace, reservationInput(), new Date("2026-08-01T01:00:00Z")),
+    /在庫が不足/,
+  );
+  assert.equal(workspace.stayReservations.length, 1);
+});
+
+test("登録する宿泊者数が予約人数を超える場合は予約を保存しない", () => {
+  const workspace = reservationWorkspace("instant", "private_room");
+  const input = reservationInput();
+  input.guestCount = 1;
+
+  assert.throws(() => createStayReservation(workspace, input), /宿泊人数を超えています/);
+  assert.equal(workspace.stayReservations.length, 0);
+});
+
 function completeState() {
   return {
     title: "テスト施設",
@@ -217,5 +260,48 @@ function previewState() {
       pricePerNightAmount: 10_000,
       dailyPrices: [{ stayDate: "2026-08-15", priceAmount: 15_000 }],
     }],
+  };
+}
+
+function reservationWorkspace(mode, roomKind) {
+  const roomType = {
+    id: "private",
+    name: roomKind === "shared_room" ? "ドミトリー" : "個室",
+    roomKind,
+    capacity: roomKind === "shared_room" ? 1 : 2,
+    status: "published",
+    amenityIds: ["wifi"],
+    rooms: roomKind === "shared_room"
+      ? [{ id: "room-1", active: true, beds: [{ id: "bed-1", active: true }, { id: "bed-2", active: true }] }]
+      : [{ id: "room-1", active: true, beds: [] }],
+    dailySalesControls: [],
+  };
+  return {
+    schemaVersion: 2,
+    tenant: { id: "tenant", name: "テナント" },
+    amenities: [{ id: "wifi", name: "Wi-Fi", active: true }],
+    stayListings: [{
+      id: "listing",
+      status: "published",
+      stay: { bookingConfirmationMode: mode, approvalDeadlineHours: 24, checkInTime: "15:00", timeZone: "Asia/Tokyo", stayAvailableStartsOn: "2026-08-01", stayAvailableEndsOn: "2026-09-01", facilityAmenityIds: ["wifi"] },
+      roomTypes: [roomType],
+      ratePlans: [{ id: "standard", name: "素泊まり", description: "", mealType: "room_only", cancellationPolicyType: "standard", status: "published" }],
+      roomTypeRates: [{ id: "rate", roomTypeId: "private", ratePlanId: "standard", active: true, pricePerNightAmount: 10_000, dailyPrices: [{ stayDate: "2026-08-15", priceAmount: 15_000 }] }],
+    }],
+    stayReservations: [],
+  };
+}
+
+function reservationInput() {
+  return {
+    listingId: "listing",
+    roomTypeId: "private",
+    rateId: "rate",
+    checkInDate: "2026-08-15",
+    checkOutDate: "2026-08-17",
+    guestCount: 2,
+    primaryGuest: { name: "田中太郎", email: "taro@example.com", phone: "090-0000-0000" },
+    companionNames: ["田中花子"],
+    message: "よろしくお願いします",
   };
 }

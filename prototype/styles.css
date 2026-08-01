@@ -74,6 +74,9 @@ h3 { margin: 0; font-size: 16px; }
 .status-published { color: var(--green); background: var(--green-soft); }
 .status-draft { color: var(--amber); background: var(--amber-soft); }
 .status-inactive { color: var(--muted); background: #edf0ed; }
+.status-requested { color: var(--amber); background: var(--amber-soft); }
+.status-confirmed { color: var(--green); background: var(--green-soft); }
+.status-canceled { color: var(--muted); background: #edf0ed; }
 .progress { height: 7px; border-radius: 99px; background: #e8ece8; overflow: hidden; }
 .progress > span { height: 100%; display: block; border-radius: inherit; background: var(--green); }
 .check-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
