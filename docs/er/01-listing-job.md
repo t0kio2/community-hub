@@ -73,7 +73,7 @@ erDiagram
 | `salary_max_amount` | integer | ○ | NULL | NULLまたは`salary_min_amount`以上 |
 | `currency` | string | × | `JPY` | 初期仕様では`JPY`のみ |
 | `transportation_fee` | integer | × | `0` | 0以上、整数の円単位 |
-| `salary_notes` | text | ○ | NULL | 最大文字数は要定義 |
+| `salary_notes` | text | ○ | NULL | 最大1,000文字 |
 | `work_starts_at` | datetime | ○ | NULL | `spot`の公開時は必須、`work_ends_at`より前 |
 | `work_ends_at` | datetime | ○ | NULL | `spot`の公開時は必須、`work_starts_at`より後 |
 | `application_deadline` | datetime | ○ | NULL | `spot`の公開時は必須、`work_starts_at`以前 |
@@ -98,8 +98,8 @@ erDiagram
 | --- | --- | :---: | --- | --- |
 | `id` | bigint | × | 自動採番 | 主キー |
 | `code` | string | × | なし | 一意、作成後変更不可 |
-| `name` | string | × | なし | 画面に表示するカテゴリー名、最大文字数は要定義 |
-| `description` | text | ○ | NULL | 運営向けの説明、最大文字数は要定義 |
+| `name` | string | × | なし | 画面に表示するカテゴリー名、最大100文字 |
+| `description` | text | ○ | NULL | 運営向けの説明、最大1,000文字 |
 | `position` | integer | × | なし | 0以上、同順位はID昇順 |
 | `active` | boolean | × | `true` | 新規選択と公開に使用できるか |
 | `created_by_admin_id` | bigint | ○ | 操作中の管理者 | `admins.id`への外部キー、管理者削除時はNULL |

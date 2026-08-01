@@ -199,8 +199,8 @@ erDiagram
 | --- | --- | :---: | --- | --- |
 | `id` | bigint | × | 自動採番 | 主キー |
 | `stay_listing_id` | bigint | × | なし | `stay_listings.id`への外部キー |
-| `name` | string | × | なし | 利用者向け名称、施設内の一意性は要定義 |
-| `description` | text | ○ | NULL | Room Typeの説明 |
+| `name` | string | × | なし | 利用者向け名称、最大100文字、施設内で一意 |
+| `description` | text | ○ | NULL | Room Typeの説明、最大5,000文字 |
 | `room_kind` | string | × | なし | `entire_place / private_room / shared_room` |
 | `capacity` | integer | ○ | NULL | 1販売在庫単位の最大宿泊人数。公開時は必須かつ1以上、`shared_room`では1固定 |
 | `status` | string | × | `draft` | `draft / published / inactive` |
@@ -214,7 +214,7 @@ erDiagram
 | `id` | bigint | × | 自動採番 | 主キー |
 | `tenant_id` | bigint | ○ | NULL | `tenants.id`への外部キー。NULLはシステム共通、値ありはそのテナント固有 |
 | `code` | string | × | システム生成 | 変更不可の識別子。共通内およびテナント内で一意、共通コードとの衝突不可 |
-| `name` | string | × | なし | 利用者向け表示名 |
+| `name` | string | × | なし | 利用者向け表示名、最大100文字 |
 | `scope` | string | × | なし | `facility / room_type / both`、関連作成後は変更不可 |
 | `category` | string | × | `other` | `connectivity / climate / bathroom / kitchen / bedding / accessibility / safety / parking / service / other` |
 | `active` | boolean | × | `true` | 新規選択、現在の表示および検索に使用できるか |
@@ -311,8 +311,8 @@ erDiagram
 | --- | --- | :---: | --- | --- |
 | `id` | bigint | × | 自動採番 | 主キー |
 | `stay_listing_id` | bigint | × | なし | `stay_listings.id`への外部キー |
-| `name` | string | × | なし | テナントが設定する利用者向けプラン名 |
-| `description` | text | ○ | NULL | プランの説明 |
+| `name` | string | × | なし | テナントが設定する利用者向けプラン名、最大100文字、施設内で一意 |
+| `description` | text | ○ | NULL | プランの説明、最大2,000文字 |
 | `meal_type` | string | × | `room_only` | `room_only / breakfast / dinner / breakfast_and_dinner / other` |
 | `cancellation_policy_type` | string | × | `standard` | `standard / non_refundable` |
 | `status` | string | × | `draft` | `draft / published / inactive` |
@@ -367,6 +367,7 @@ Room TypeとRate Planは`status = published`の場合だけ新規予約の候補
 | --- | --- | --- |
 | `stay_listings` | `listing_id` | unique index |
 | `stay_room_types` | `stay_listing_id, status` | composite index |
+| `stay_room_types` | `stay_listing_id, name` | unique index |
 | `stay_amenities` | `code WHERE tenant_id IS NULL` | partial unique index |
 | `stay_amenities` | `tenant_id, code WHERE tenant_id IS NOT NULL` | partial unique index |
 | `stay_amenities` | `active, scope, category` | composite index |
@@ -378,5 +379,6 @@ Room TypeとRate Planは`status = published`の場合だけ新規予約の候補
 | `stay_bed_blocks` | `stay_bed_id, starts_on, ends_on` | composite index |
 | `stay_room_type_daily_sales_controls` | `stay_room_type_id, stay_date` | unique index |
 | `stay_rate_plans` | `stay_listing_id, status` | composite index |
+| `stay_rate_plans` | `stay_listing_id, name` | unique index |
 | `stay_room_type_rates` | `stay_room_type_id, stay_rate_plan_id` | unique index |
 | `stay_room_type_rate_daily_prices` | `stay_room_type_rate_id, stay_date` | unique index |

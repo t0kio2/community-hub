@@ -79,8 +79,8 @@ erDiagram
 | `created_by_tenant_member_id` | bigint | ○ | 操作中のメンバー | `tenant_members.id`への外部キー、メンバー削除時はNULL |
 | `updated_by_tenant_member_id` | bigint | ○ | 操作中のメンバー | `tenant_members.id`への外部キー、メンバー削除時はNULL |
 | `listing_type` | string | × | なし | `job / stay`、作成後変更不可 |
-| `title` | string | × | なし | 最大文字数は要定義 |
-| `description` | text | ○ | NULL | 入力形式と最大文字数は要定義 |
+| `title` | string | × | なし | 最大120文字 |
+| `description` | text | ○ | NULL | プレーンテキスト、最大10,000文字、公開時必須 |
 | `status` | string | × | `draft` | `draft / published / closed / archived` |
 | `published_at` | datetime | ○ | NULL | 初回公開日時 |
 | `last_published_at` | datetime | ○ | NULL | 最新公開日時 |
@@ -148,7 +148,6 @@ erDiagram
     listing_images {
         bigint id PK
         bigint listing_id FK
-        string image_url
         integer position
         string alt_text
         datetime created_at
@@ -162,11 +161,12 @@ erDiagram
 | --- | --- | :---: | --- | --- |
 | `id` | bigint | × | 自動採番 | 主キー |
 | `listing_id` | bigint | × | なし | `listings.id`への外部キー |
-| `image_url` | string | × | なし | 画像の参照先 |
 | `position` | integer | × | なし | 1以上、Listing内で一意 |
-| `alt_text` | string | ○ | NULL | 画像の代替テキスト |
+| `alt_text` | string | ○ | NULL | 最大200文字 |
 | `created_at` | datetime | × | 自動設定 | 作成日時 |
 | `updated_at` | datetime | × | 自動設定 | 更新日時 |
+
+画像本体はActive Storageの`has_one_attached :image`で保持する。Active Storage標準テーブルはフレームワーク管理のため、この業務ER図には展開しない。
 
 ## favorites
 
