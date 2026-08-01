@@ -23,18 +23,15 @@
 
 `要定義` の項目は、仕様確定時に具体的な値へ置き換える。
 
-## TODO
+## 共通入力規則
 
-- [ ] Listing共通項目の公開必須条件を決める
-- [ ] Listingを物理削除するか、`archived` で保持するか決める
-- [ ] `draft` のみ物理削除を許可するか決める
-- [ ] 応募、予約、チャットが存在する場合の削除可否を決める
-- [ ] Listing削除後に関連データを保持する期間を決める
-- [ ] 画像の保存方式を決める
-- [ ] 登録可能な最大枚数、ファイルサイズ、形式を決める
-- [ ] 一覧や詳細で使用する代表画像の決定方法を決める
-- [ ] 画像削除・並び替え時の `position` の扱いを決める
-- [ ] `description` の必須条件、最大文字数、改行や装飾の扱いを決める
+文字項目は前後の空白を除去し、任意項目の空文字はNULLとして扱う。説明文はプレーンテキストのみとし、HTMLとMarkdownは解釈せず、改行だけを表示へ反映する。
+
+| 項目 | 最大文字数 |
+| --- | ---: |
+| Listingタイトル | 120 |
+| Listing説明 | 10,000 |
+| 画像代替テキスト | 200 |
 
 ## listings
 
@@ -45,8 +42,8 @@
 | `created_by_tenant_member_id` | bigint | × | ログイン中メンバー | 作成したテナントメンバー | メンバー削除時はNULL |
 | `updated_by_tenant_member_id` | bigint | × | ログイン中メンバー | 最後に更新したテナントメンバー | 更新操作ごとに設定、メンバー削除時はNULL |
 | `listing_type` | string | ○ | なし | Listingの種別 | `job / stay`、作成後変更不可 |
-| `title` | string | ○ | なし | 一覧・詳細に表示するタイトル | 最大文字数: 要定義 |
-| `description` | text | × | NULL | Listingの説明本文 | 記法・最大文字数: 要定義 |
+| `title` | string | ○ | なし | 一覧・詳細に表示するタイトル | 最大120文字、前後空白を除去 |
+| `description` | text | × | NULL | Listingの説明本文 | プレーンテキスト、最大10,000文字、公開時は必須 |
 | `status` | string | ○ | `draft` | 公開・受付状態 | `draft / published / closed / archived` |
 | `published_at` | datetime | × | NULL | 初回公開日時 | 初回公開時のみ設定し、再公開時は変更しない |
 | `last_published_at` | datetime | × | NULL | 最新公開日時 | 初回公開・再公開のたびに更新する |
@@ -62,10 +59,10 @@
 
 | 項目 | 定義 |
 | --- | --- |
-| 入力形式 | 要定義: プレーンテキスト / Markdown |
-| 最大文字数 | 要定義 |
-| HTMLの許可 | 要定義 |
-| 改行の表示方法 | 要定義 |
+| 入力形式 | プレーンテキスト |
+| 最大文字数 | 10,000文字 |
+| HTMLの許可 | 許可しない。入力値をテキストとしてエスケープ表示する |
+| 改行の表示方法 | 入力された改行を保持して表示する |
 
 ## listing_images
 
@@ -73,19 +70,20 @@
 | --- | --- | :---: | --- | --- | --- |
 | `id` | bigint | ○ | 自動採番 | 画像の識別子 | 作成後変更不可 |
 | `listing_id` | bigint | ○ | なし | 対応するListing | Listing削除時に連動削除 |
-| `image_url` | string | ○ | なし | 画像の参照先 | Active Storage / 外部URL: 要定義 |
 | `position` | integer | ○ | なし | 表示順 | 1以上、Listing内で一意 |
-| `alt_text` | string | × | NULL | 画像の代替テキスト | 必須性・最大文字数: 要定義 |
+| `alt_text` | string | × | NULL | 画像の代替テキスト | 最大200文字 |
 | `created_at` | datetime | ○ | 自動設定 | 作成日時 | アプリケーションから変更しない |
 | `updated_at` | datetime | ○ | 自動設定 | 更新日時 | 保存時に自動更新 |
 
 | 項目 | 定義 |
 | --- | --- |
-| 画像数上限 | 要定義 |
-| 対応形式 | 要定義 |
-| 最大ファイルサイズ | 要定義 |
-| 推奨解像度 | 要定義 |
-| 画像削除時のposition | 要定義 |
+| 保存方式 | Active Storageの`has_one_attached :image`。メタデータを`listing_images`に保持する |
+| 画像数上限 | 1つのListingにつき20件 |
+| 対応形式 | JPEG、PNG、WebP。SVGとアニメーションGIFは受け付けない |
+| 最大ファイルサイズ | 1ファイル10MB |
+| 推奨解像度 | 1,200×800px以上 |
+| 代表画像 | `position`が最小の画像。専用フラグは持たない |
+| 画像削除・並び替え時のposition | 1から始まる欠番なしの連番へ、トランザクション内で振り直す |
 
 画像の公開必須性はListing種別ごとに定義する。滞在Listingは1件以上を必須とし、求人Listingは任意とする。下書きでは種別によらず画像なしで保存できる。画像を任意とするListingの一覧・詳細画面では、未登録時にListing種別ごとのプレースホルダー画像を表示する。
 
@@ -101,9 +99,10 @@
 
 | 項目 | 定義 |
 | --- | --- |
-| 非公開Listingの表示 | 要定義 |
-| closed Listingの表示 | 要定義 |
-| Listing削除時 | favoritesを連動削除 |
+| 非公開Listingの表示 | お気に入り一覧には表示しない。再公開時に再表示する |
+| closed Listingの表示 | お気に入り一覧には表示しない。再公開時に再表示する |
+| Listingアーカイブ時 | お気に入りを保持するが一覧には表示しない |
+| Listing物理削除時 | favoritesを連動削除 |
 | User削除時 | favoritesを連動削除 |
 
 ## Listing状態遷移
@@ -180,7 +179,7 @@ Listingと詳細は同じトランザクションで保存する。どちらか�
 | 条件 | job | stay |
 | --- | :---: | :---: |
 | titleが設定されている | ○ | ○ |
-| descriptionが設定されている | 要定義 | ○ |
+| descriptionが設定されている | ○ | ○ |
 | 種別詳細が存在する | ○ | ○ |
 | 画像が1件以上存在する | 任意 | ○ |
 | 種別固有の公開条件を満たす | [`求人仕様`](./02-listing-job.md) | [`滞在仕様`](./02-listing-stay.md) |
@@ -196,8 +195,8 @@ Listingと詳細は同じトランザクションで保存する。どちらか�
 | 更新 | ○ | ○ | 自テナントのListing |
 | 公開 | ○ | ○ | 共通および種別固有の公開条件を満たす |
 | 受付終了 | ○ | ○ | 対象がpublished |
-| アーカイブ | ○ | 要定義 | 要定義 |
-| 削除 | ○ | × | 削除可否・条件: 要定義 |
+| アーカイブ | ○ | ○ | 自テナントのListing |
+| 削除 | ○ | × | 一度も公開していないdraftかつ参照データがない場合のみ |
 
 認可の共通方針は [`01-authorization.md`](./01-authorization.md) を参照する。
 
@@ -205,14 +204,16 @@ Listingと詳細は同じトランザクションで保存する。どちらか�
 
 | 対象 | 削除方式 | 関連データの扱い |
 | --- | --- | --- |
-| Listing | 要定義: 物理削除 / archivedによる論理削除 | 要定義 |
+| Listing | 原則`archived`。限定条件を満たす下書きだけ物理削除 | 取引・監査データから参照されるListingは保持 |
 | job_listing | Listingと連動 | Listing削除時に削除 |
 | stay_listing | Listingと連動 | Listing削除時に削除 |
 | listing_location | Listingと連動 | Listing削除時に削除 |
-| listing_images | Listingと連動 | 画像本体の削除方法: 要定義 |
-| favorites | Listing・Userと連動 | 物理削除 |
+| listing_images | Listingと連動 | Active Storageの添付ファイルとBlobを連動削除 |
+| favorites | Listing・Userと連動 | アーカイブ時は保持、物理削除時は連動削除 |
 
-応募・予約が存在するListingの削除可否は、[`../er/n-job-application.md`](../er/n-job-application.md) と [`../er/02-stay-reservation.md`](../er/02-stay-reservation.md) の要件と合わせて定義する。
+物理削除は、`status = draft`、`published_at IS NULL`であり、応募、予約、チャット、お気に入りが1件も存在しない場合に限りownerへ許可する。それ以外はアーカイブする。物理削除時は種別詳細、位置情報、画像、画像Blob、その他の所有子レコードを同一処理で連動削除する。
+
+公開履歴または取引データがあるListingは、保持期間を定める法務・運用要件が確定するまで無期限に保持する。将来の保持期限処理はListingを直接削除せず、応募・予約・決済・メッセージの保持要件と合わせた専用ジョブとして設計する。
 
 ## インデックス
 
