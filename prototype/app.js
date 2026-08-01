@@ -1,39 +1,48 @@
 import {
+  availableLastNightOn,
+  buildStayPreview,
   canPublish,
+  createBlankStayListing,
   inventoryForDate,
   makeId,
+  normalizeWorkspace,
   physicalInventory,
   priceForDate,
   publicationChecks,
+  stayAvailableEndsOn,
 } from "./domain.js";
 
 const STORAGE_KEY = "community-hub:stay-listing-prototype:v1";
 const viewTitles = {
+  listings: "宿泊施設一覧",
   overview: "概要",
   facility: "施設情報",
   rooms: "部屋と在庫",
   rates: "料金プラン",
   calendar: "日別設定",
+  preview: "宿泊者プレビュー",
   publish: "公開確認",
 };
 
-let initialState;
+let initialWorkspace;
+let workspace;
 let state;
-let currentView = location.hash.slice(1) || "overview";
+let currentView = location.hash.slice(1) || "listings";
+let selectedListingId;
 let selectedRoomTypeId;
 let selectedRatePlanId;
 let calendarDate = "2026-08-15";
+let previewConditions = { checkInDate: "2026-08-15", checkOutDate: "2026-08-17", guestCount: 2 };
 
 const content = document.querySelector("#content");
 const modal = document.querySelector("#modal");
 const modalForm = document.querySelector("#modal-form");
 
 async function initialize() {
-  initialState = await fetch("./data/stay-listing.json").then((response) => response.json());
+  initialWorkspace = normalizeWorkspace(await fetch("./data/stay-listing.json").then((response) => response.json()));
   const stored = localStorage.getItem(STORAGE_KEY);
-  state = stored ? JSON.parse(stored) : structuredClone(initialState);
-  selectedRoomTypeId = state.roomTypes[0]?.id;
-  selectedRatePlanId = state.ratePlans[0]?.id;
+  workspace = stored ? normalizeWorkspace(JSON.parse(stored)) : structuredClone(initialWorkspace);
+  activateListing(workspace.stayListings[0]?.id);
   bindGlobalEvents();
   render();
 }
@@ -48,13 +57,16 @@ function bindGlobalEvents() {
   });
 
   window.addEventListener("hashchange", () => {
-    currentView = location.hash.slice(1) || "overview";
+    currentView = location.hash.slice(1) || "listings";
     render();
   });
 
   document.querySelector("#reset-button").addEventListener("click", () => {
     if (!confirm("入力内容を破棄して初期データへ戻しますか？")) return;
-    state = structuredClone(initialState);
+    workspace = structuredClone(initialWorkspace);
+    activateListing(workspace.stayListings[0]?.id);
+    currentView = "listings";
+    location.hash = currentView;
     persist("初期データへ戻しました");
     render();
   });
@@ -67,22 +79,38 @@ function bindGlobalEvents() {
 }
 
 function render() {
-  document.querySelector("#listing-id").textContent = state.id;
-  document.querySelector("#page-title").textContent = viewTitles[currentView] || viewTitles.overview;
+  if (currentView !== "listings" && !state) currentView = "listings";
+  document.querySelector("#listing-id").textContent = currentView === "listings" ? workspace.tenant.name : state.id;
+  document.querySelector("#page-title").textContent = viewTitles[currentView] || viewTitles.listings;
+  document.querySelector("#active-listing-name").textContent = state?.title || "施設未選択";
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === currentView);
   });
-  document.querySelector("#publish-button").textContent = state.status === "published" ? "公開中" : "公開する";
+  document.querySelector("#publish-button").hidden = currentView === "listings";
+  document.querySelector("#publish-button").textContent = state?.status === "published" ? "公開中" : "公開する";
 
   const renderView = {
+    listings: renderListings,
     overview: renderOverview,
     facility: renderFacility,
     rooms: renderRooms,
     rates: renderRates,
     calendar: renderCalendar,
+    preview: renderPreview,
     publish: renderPublish,
-  }[currentView] || renderOverview;
+  }[currentView] || renderListings;
   content.innerHTML = renderView();
+}
+
+function renderListings() {
+  return `
+    <section class="page-lead"><div><h2>宿泊施設</h2><p>${escapeHtml(workspace.tenant.name)}が管理する宿泊Listingです。</p></div><button class="button button-primary" data-modal="listing">宿泊施設を追加</button></section>
+    <div class="facility-grid">${workspace.stayListings.map((listing) => {
+      const checks = publicationChecks(listing);
+      const passed = checks.filter((check) => check.passed).length;
+      return `<article class="card facility-card"><div class="facility-card-image">${escapeHtml(listing.images[0]?.name || "画像未登録")}</div><div class="facility-card-body"><div class="card-header"><div><h3>${escapeHtml(listing.title)}</h3><p>${escapeHtml([listing.location.prefecture, listing.location.city].filter(Boolean).join(" ") || "所在地未設定")}</p></div><span class="status status-${listing.status}">${listing.status}</span></div><div class="facility-stats"><span>Room Type <strong>${listing.roomTypes.length}</strong></span><span>Rate Plan <strong>${listing.ratePlans.length}</strong></span><span>公開準備 <strong>${passed}/${checks.length}</strong></span></div><button class="button button-primary" data-select-listing="${listing.id}">この施設を管理</button></div></article>`;
+    }).join("")}</div>
+    ${workspace.stayListings.length ? "" : `<div class="empty">宿泊施設がありません。「宿泊施設を追加」から作成してください。</div>`}`;
 }
 
 function renderOverview() {
@@ -113,7 +141,7 @@ function renderOverview() {
 }
 
 function renderFacility() {
-  const facilityAmenities = state.amenities.filter((item) => ["facility", "both"].includes(item.scope) && item.active);
+  const facilityAmenities = workspace.amenities.filter((item) => ["facility", "both"].includes(item.scope) && item.active);
   return `
     <section class="page-lead"><div><h2>施設情報</h2><p>Listing共通情報とStay固有の予約受付設定を編集します。</p></div></section>
     <div class="grid grid-main">
@@ -146,8 +174,9 @@ function renderFacility() {
             ${field("受付開始（日前）", "stay.bookingOpenDaysBefore", state.stay.bookingOpenDaysBefore, "number")}
             ${field("チェックイン", "stay.checkInTime", state.stay.checkInTime, "time")}
             ${field("チェックアウト", "stay.checkOutTime", state.stay.checkOutTime, "time")}
-            ${field("宿泊開始日", "stay.stayAvailableStartsOn", state.stay.stayAvailableStartsOn, "date")}
-            ${field("最遅チェックアウト日", "stay.stayAvailableEndsOn", state.stay.stayAvailableEndsOn, "date")}
+            <div class="field field-wide"><label>宿泊提供期間</label><small class="muted">空欄の場合、その方向の期間を制限しません</small></div>
+            ${field("最初に宿泊できる日", "stay.stayAvailableStartsOn", state.stay.stayAvailableStartsOn, "date")}
+            ${field("最後に宿泊できる日", "stay.availableLastNightOn", availableLastNightOn(state.stay.stayAvailableEndsOn), "date")}
           </div>
         </section>
         <section class="card"><div class="card-header"><div><h3>施設Amenities</h3><p>公開条件には含まれません</p></div></div>
@@ -171,7 +200,7 @@ function renderRooms() {
 }
 
 function renderRoomTypeEditor(roomType) {
-  const roomAmenities = state.amenities.filter((item) => ["room_type", "both"].includes(item.scope) && item.active);
+  const roomAmenities = workspace.amenities.filter((item) => ["room_type", "both"].includes(item.scope) && item.active);
   return `<div class="grid">
     <section class="card"><div class="card-header"><div><h3>${escapeHtml(roomType.name)}</h3><p>販売単位: ${roomKindLabel(roomType.roomKind)}</p></div><span class="status status-${roomType.status}">${roomType.status}</span></div>
       <div class="field-grid">
@@ -223,6 +252,35 @@ function renderCalendar() {
     </tbody></table></section>`;
 }
 
+function renderPreview() {
+  const preview = buildStayPreview(state, previewConditions);
+  const sellableRooms = preview.roomTypes.filter((item) => item.sellable);
+  const facilityAmenities = workspace.amenities.filter((item) => state.stay.facilityAmenityIds.includes(item.id) && item.active);
+  return `
+    <section class="page-lead"><div><h2>宿泊者プレビュー</h2><p>現在の設定が指定日程で宿泊者にどう販売されるか確認します。</p></div><span class="preview-badge">プレビュー</span></section>
+    <section class="card preview-search"><div class="field-grid">
+      ${previewField("チェックイン", "checkInDate", previewConditions.checkInDate, "date")}
+      ${previewField("チェックアウト", "checkOutDate", previewConditions.checkOutDate, "date")}
+      ${previewField("宿泊人数", "guestCount", previewConditions.guestCount, "number")}
+    </div></section>
+    <section class="preview-hero">
+      <div><span class="eyebrow">STAY</span><h2>${escapeHtml(state.title)}</h2><p>${escapeHtml(state.description)}</p><div class="amenities">${facilityAmenities.map((item) => `<span class="amenity selected">${escapeHtml(item.name)}</span>`).join("")}</div></div>
+      <div class="preview-image"><span>${escapeHtml(state.images[0]?.name || "施設画像なし")}</span></div>
+    </section>
+    <div class="preview-section-title"><div><h2>選択できる客室</h2><p>${preview.dates.length}泊・${previewConditions.guestCount}名</p></div><strong>${sellableRooms.length}件</strong></div>
+    <div class="grid preview-results">
+      ${sellableRooms.length ? sellableRooms.map(renderPreviewRoom).join("") : `<section class="card empty"><strong>この日程で予約できる客室はありません</strong><p>日程または宿泊人数を変更してお試しください。</p></section>`}
+    </div>`;
+}
+
+function renderPreviewRoom(item) {
+  const amenities = workspace.amenities.filter((amenity) => item.roomType.amenityIds.includes(amenity.id) && amenity.active);
+  return `<article class="card preview-room"><div class="preview-room-image">ROOM TYPE</div><div><div class="card-header"><div><h3>${escapeHtml(item.roomType.name)}</h3><p>${escapeHtml(item.roomType.description)}</p></div><span class="remaining">残り${item.availableUnits}${item.roomType.roomKind === "shared_room" ? "ベッド" : "室"}</span></div>
+    <div class="amenities">${amenities.map((amenity) => `<span class="amenity">${escapeHtml(amenity.name)}</span>`).join("")}</div>
+    <div class="preview-rates">${item.rates.filter((rate) => rate.sellable).map((rate) => `<section class="preview-rate"><div class="preview-rate-header"><div><strong>${escapeHtml(rate.plan.name)}</strong><small>${escapeHtml(rate.plan.description || "")} · ${mealLabel(rate.plan.mealType)} · ${policyLabel(rate.plan.cancellationPolicyType)}</small></div><div class="preview-price"><strong>${yen(rate.totalAmount)}</strong><small>${previewConditions.guestCount}名・${rate.nights.length}泊の宿泊料金合計</small></div></div><div class="nightly-breakdown">${rate.nights.map((night) => `<div><span>${formatStayDate(night.stayDate)}</span><span>${yen(night.unitAmount)} × ${night.quantity}${item.roomType.roomKind === "shared_room" ? "ベッド" : "室"}</span><strong>${yen(night.subtotalAmount)}</strong></div>`).join("")}</div><button class="button button-primary preview-select" type="button">このプランを選ぶ</button></section>`).join("")}</div>
+  </div></article>`;
+}
+
 function renderPublish() {
   const checks = publicationChecks(state);
   return `<section class="page-lead"><div><h2>公開確認</h2><p>Listing・施設・Room Type・Rate Plan・料金の境界を横断して検証します。</p></div><button class="button button-primary" data-publish>${state.status === "published" ? "公開済み" : "条件を確認して公開"}</button></section>
@@ -235,6 +293,11 @@ function handleInput(event) {
   if (input.id === "calendar-date") {
     calendarDate = input.value;
     render();
+    return;
+  }
+  if (input.dataset.preview) {
+    previewConditions[input.dataset.preview] = input.type === "number" ? Number(input.value) : input.value;
+    if (event.type === "change") render();
     return;
   }
   if (input.dataset.path) {
@@ -255,6 +318,7 @@ function handleClick(event) {
   const target = event.target.closest("button");
   if (!target) return;
   if (target.dataset.go) { currentView = target.dataset.go; location.hash = currentView; render(); }
+  if (target.dataset.selectListing) { activateListing(target.dataset.selectListing); currentView = "overview"; location.hash = currentView; render(); }
   if (target.dataset.selectRoomType) { selectedRoomTypeId = target.dataset.selectRoomType; render(); }
   if (target.dataset.selectRatePlan) { selectedRatePlanId = target.dataset.selectRatePlan; render(); }
   if (target.dataset.modal) openModal(target.dataset.modal, target.dataset.roomId);
@@ -267,6 +331,7 @@ function handleClick(event) {
 
 function openModal(type, roomId) {
   const definitions = {
+    listing: ["宿泊施設を追加", field("施設名", "modal.name", "")],
     "room-type": ["Room Typeを追加", `${field("名称", "modal.name", "")}${selectField("販売形態", "modal.kind", "private_room", [["private_room", "個室"], ["shared_room", "相部屋"], ["entire_place", "一棟貸し"]])}${field("定員", "modal.capacity", 2, "number")}`],
     room: ["物理Roomを追加", field("管理名", "modal.name", "")],
     bed: ["Bedを追加", field("管理名", "modal.name", "")],
@@ -291,7 +356,13 @@ function submitModal(event) {
   const type = modalForm.dataset.type;
   const name = values["modal.name"]?.trim();
   if (!name) return;
-  if (type === "room-type") {
+  if (type === "listing") {
+    const listing = createBlankStayListing(name);
+    workspace.stayListings.push(listing);
+    activateListing(listing.id);
+    currentView = "facility";
+    location.hash = currentView;
+  } else if (type === "room-type") {
     const id = makeId("room-type");
     state.roomTypes.push({ id, name, description: "", roomKind: values["modal.kind"], capacity: values["modal.kind"] === "shared_room" ? 1 : Number(values["modal.capacity"]), status: "draft", amenityIds: [], rooms: [], dailySalesControls: [] });
     selectedRoomTypeId = id;
@@ -312,6 +383,10 @@ function submitModal(event) {
 function setPath(path, value) {
   if (path === "images.length") {
     state.images = Array.from({ length: Math.max(0, value) }, (_, index) => state.images[index] || { id: makeId("image"), name: `sample-${index + 1}.jpg`, position: index + 1, altText: "" });
+    return;
+  }
+  if (path === "stay.availableLastNightOn") {
+    state.stay.stayAvailableEndsOn = stayAvailableEndsOn(value);
     return;
   }
   const parts = path.split(".");
@@ -368,16 +443,16 @@ function publish() {
 }
 
 function exportJson() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(workspace, null, 2)], { type: "application/json" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `${state.id}.json`;
+  link.download = `${workspace.tenant.id}-stay-listings.json`;
   link.click();
   URL.revokeObjectURL(link.href);
 }
 
 function persist(message) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
   const saveState = document.querySelector("#save-state");
   saveState.textContent = "保存中…";
   setTimeout(() => { saveState.textContent = "このブラウザに保存済み"; }, 250);
@@ -394,9 +469,16 @@ function showNotice(message, error = false) {
 }
 
 function selectedRoomType() { return state.roomTypes.find((item) => item.id === selectedRoomTypeId); }
+function activateListing(listingId) {
+  selectedListingId = listingId;
+  state = workspace.stayListings.find((listing) => listing.id === selectedListingId);
+  selectedRoomTypeId = state?.roomTypes[0]?.id;
+  selectedRatePlanId = state?.ratePlans[0]?.id;
+}
 function metric(label, value, note) { return `<section class="card metric"><span class="metric-label">${label}</span><strong>${value}</strong><small>${note}</small></section>`; }
 function checkRow(check) { return `<li class="check-item ${check.passed ? "" : "failed"}"><span class="check-icon">${check.passed ? "✓" : "!"}</span>${escapeHtml(check.label)}</li>`; }
 function field(label, path, value, type = "text", className = "") { return `<div class="field ${className}"><label>${label}</label><input name="${path}" data-path="${path}" type="${type}" value="${escapeHtml(String(value ?? ""))}" /></div>`; }
+function previewField(label, key, value, type) { return `<div class="field"><label>${label}</label><input data-preview="${key}" type="${type}" min="${type === "number" ? "1" : ""}" value="${escapeHtml(String(value ?? ""))}" /></div>`; }
 function textarea(label, path, value, className = "") { return `<div class="field ${className}"><label>${label}</label><textarea name="${path}" data-path="${path}">${escapeHtml(value || "")}</textarea></div>`; }
 function selectField(label, path, value, options, className = "") { return `<div class="field ${className}"><label>${label}</label><select name="${path}" data-path="${path}">${options.map(([optionValue, optionLabel]) => `<option value="${optionValue}" ${optionValue === value ? "selected" : ""}>${optionLabel}</option>`).join("")}</select></div>`; }
 function amenityButton(amenity, selected, target) { return `<button class="amenity ${selected ? "selected" : ""}" data-amenity="${amenity.id}" data-target="${target}">${selected ? "✓ " : "+ "}${escapeHtml(amenity.name)}</button>`; }
@@ -404,6 +486,7 @@ function roomKindLabel(value) { return { entire_place: "一棟貸し / Room", pr
 function mealLabel(value) { return { room_only: "素泊まり", breakfast: "朝食", dinner: "夕食", breakfast_and_dinner: "朝夕食" }[value] || value; }
 function policyLabel(value) { return value === "non_refundable" ? "返金不可" : "キャンセル可"; }
 function yen(value) { return new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" }).format(value); }
+function formatStayDate(value) { return new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", weekday: "short", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`)); }
 function escapeHtml(value) { return value.replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]); }
 
 initialize().catch((error) => {

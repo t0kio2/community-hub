@@ -1,4 +1,17 @@
 {
+  "schemaVersion": 2,
+  "tenant": {
+    "id": "tenant-community-stay",
+    "name": "Community Stay"
+  },
+  "amenities": [
+    { "id": "amenity-wifi", "name": "Wi-Fi", "scope": "both", "category": "connectivity", "source": "common", "active": true },
+    { "id": "amenity-kitchen", "name": "共用キッチン", "scope": "facility", "category": "kitchen", "source": "common", "active": true },
+    { "id": "amenity-aircon", "name": "エアコン", "scope": "room_type", "category": "climate", "source": "common", "active": true },
+    { "id": "amenity-locker", "name": "専用ロッカー", "scope": "room_type", "category": "service", "source": "tenant", "active": true }
+  ],
+  "stayListings": [
+  {
   "schemaVersion": 1,
   "id": "listing-kamakura-guesthouse",
   "listingType": "stay",
@@ -31,12 +44,6 @@
     "houseRules": "館内禁煙です。22時以降は静かにお過ごしください。",
     "facilityAmenityIds": ["amenity-wifi", "amenity-kitchen"]
   },
-  "amenities": [
-    { "id": "amenity-wifi", "name": "Wi-Fi", "scope": "both", "category": "connectivity", "source": "common", "active": true },
-    { "id": "amenity-kitchen", "name": "共用キッチン", "scope": "facility", "category": "kitchen", "source": "common", "active": true },
-    { "id": "amenity-aircon", "name": "エアコン", "scope": "room_type", "category": "climate", "source": "common", "active": true },
-    { "id": "amenity-locker", "name": "専用ロッカー", "scope": "room_type", "category": "service", "source": "tenant", "active": true }
-  ],
   "roomTypes": [
     {
       "id": "room-type-dorm",
@@ -89,5 +96,7 @@
     { "id": "rate-dorm-breakfast", "roomTypeId": "room-type-dorm", "ratePlanId": "plan-breakfast", "pricePerNightAmount": 5800, "currency": "JPY", "active": true, "dailyPrices": [] },
     { "id": "rate-private-room-only", "roomTypeId": "room-type-private", "ratePlanId": "plan-room-only", "pricePerNightAmount": 12000, "currency": "JPY", "active": true, "dailyPrices": [{ "stayDate": "2026-08-15", "priceAmount": 16000 }] },
     { "id": "rate-private-breakfast", "roomTypeId": "room-type-private", "ratePlanId": "plan-breakfast", "pricePerNightAmount": 14600, "currency": "JPY", "active": true, "dailyPrices": [] }
+  ]
+  }
   ]
 }

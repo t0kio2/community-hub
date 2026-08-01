@@ -19,6 +19,7 @@ erDiagram
     job_categories o|--o{ job_listings : "職種を分類する"
     listings ||--o| stay_listings : "宿泊詳細を持つ"
     stay_listings ||--o{ stay_room_types : "部屋タイプを持つ"
+    stay_room_types ||--o{ stay_room_type_images : "販売用画像を持つ"
     tenants o|--o{ stay_amenities : "固有設備を持つ"
     stay_listings ||--o{ stay_listing_amenities : "施設設備を設定する"
     stay_amenities ||--o{ stay_listing_amenities : "施設へ設定される"

@@ -12,17 +12,20 @@
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <a class="brand" href="#overview" aria-label="Stay Listing Studio">
+        <a class="brand" href="#listings" aria-label="Stay Listing Studio">
           <span class="brand-mark">S</span>
           <span><strong>Stay Studio</strong><small>Listing prototype</small></span>
         </a>
         <nav id="navigation" class="navigation" aria-label="施設設定">
-          <button data-view="overview"><span>01</span>概要</button>
-          <button data-view="facility"><span>02</span>施設情報</button>
-          <button data-view="rooms"><span>03</span>部屋と在庫</button>
-          <button data-view="rates"><span>04</span>料金プラン</button>
-          <button data-view="calendar"><span>05</span>日別設定</button>
-          <button data-view="publish"><span>06</span>公開確認</button>
+          <button data-view="listings"><span>01</span>宿泊施設一覧</button>
+          <div class="navigation-context"><small>選択中の施設</small><strong id="active-listing-name">施設未選択</strong></div>
+          <button data-view="overview"><span>02</span>概要</button>
+          <button data-view="facility"><span>03</span>施設情報</button>
+          <button data-view="rooms"><span>04</span>部屋と在庫</button>
+          <button data-view="rates"><span>05</span>料金プラン</button>
+          <button data-view="calendar"><span>06</span>日別設定</button>
+          <button data-view="preview"><span>07</span>宿泊者プレビュー</button>
+          <button data-view="publish"><span>08</span>公開確認</button>
         </nav>
         <div class="prototype-note">
           <span class="pulse"></span>
