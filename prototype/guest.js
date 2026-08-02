@@ -1,4 +1,4 @@
-import { buildStayPreview, createStayReservation, normalizeWorkspace } from "./domain.js";
+import { arrivalTimeOptions, buildStayPreview, createStayReservation, normalizeWorkspace } from "./domain.js";
 
 const STORAGE_KEY = "community-hub:stay-listing-prototype:v1";
 const content = document.querySelector("#guest-content");
@@ -66,7 +66,8 @@ function renderRoom(item) {
 function renderCheckout(error = "") {
   const offer = selectedPreviewOffer();
   if (!offer) return renderListing();
-  content.innerHTML = `<button class="button" data-listing="${currentListing.id}">← プラン選択</button><section class="guest-section"><h1>予約情報の入力</h1><div class="guest-checkout"><form id="reservation-form" class="card guest-form">${error ? `<div class="guest-error">${escapeHtml(error)}</div>` : ""}<h2>代表宿泊者</h2><label>氏名<input name="name" required /></label><label>メールアドレス<input name="email" type="email" required /></label><label>電話番号<input name="phone" type="tel" required /></label><label>同行者名（任意・カンマ区切り）<input name="companions" /></label><label>施設へのメッセージ（任意）<textarea name="message"></textarea></label><button class="button button-primary" type="submit">${currentListing.stay.bookingConfirmationMode === "instant" ? "予約を確定する" : "予約を申請する"}</button></form>${summary(offer)}</div></section>`;
+  const arrivalOptions = arrivalTimeOptions(currentListing.stay.checkInTime, currentListing.stay.latestCheckInTime);
+  content.innerHTML = `<button class="button" data-listing="${currentListing.id}">← プラン選択</button><section class="guest-section"><h1>予約情報の入力</h1><div class="guest-checkout"><form id="reservation-form" class="card guest-form">${error ? `<div class="guest-error">${escapeHtml(error)}</div>` : ""}<h2>代表宿泊者</h2><label>氏名<input name="name" required /></label><label>メールアドレス<input name="email" type="email" required /></label><label>電話番号<input name="phone" type="tel" required /></label><label>到着予定時刻（任意）<select name="expectedArrivalTime"><option value="">未定</option>${arrivalOptions.map((time) => `<option value="${time}">${time}</option>`).join("")}</select><small>チェックイン受付は${escapeHtml(currentListing.stay.checkInTime)}〜${escapeHtml(currentListing.stay.latestCheckInTime)}です。</small></label><label>同行者名（任意・カンマ区切り）<input name="companions" /></label><label>施設へのメッセージ（任意）<textarea name="message"></textarea></label><button class="button button-primary" type="submit">${currentListing.stay.bookingConfirmationMode === "instant" ? "予約を確定する" : "予約を申請する"}</button></form>${summary(offer)}</div></section>`;
 }
 
 function submitReservation(event) {
@@ -81,6 +82,7 @@ function submitReservation(event) {
       ...conditions,
       primaryGuest: { name: values.name.trim(), email: values.email.trim(), phone: values.phone.trim() },
       companionNames: values.companions.split(",").map((name) => name.trim()).filter(Boolean),
+      expectedArrivalAt: values.expectedArrivalTime ? `${conditions.checkInDate}T${values.expectedArrivalTime}` : null,
       message: values.message.trim(),
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
@@ -92,7 +94,7 @@ function submitReservation(event) {
 
 function renderComplete() {
   const requested = completedReservation.status === "requested";
-  content.innerHTML = `<section class="card guest-complete"><div class="guest-complete-mark">✓</div><p>${requested ? "予約申請を受け付けました" : "予約が確定しました"}</p><h1>${requested ? "施設からの回答をお待ちください" : "ご予約ありがとうございます"}</h1><p>予約番号: ${escapeHtml(completedReservation.id)}</p><p>${escapeHtml(currentListing.title)}<br>${completedReservation.checkInDate} — ${completedReservation.checkOutDate}</p><div class="guest-total">${yen(completedReservation.totalAmount)}</div>${requested ? `<p>回答期限: ${formatDateTime(completedReservation.approvalExpiresAt)}</p>` : ""}<button class="button button-primary" data-reservations>予約履歴を見る</button></section>`;
+  content.innerHTML = `<section class="card guest-complete"><div class="guest-complete-mark">✓</div><p>${requested ? "予約申請を受け付けました" : "予約が確定しました"}</p><h1>${requested ? "施設からの回答をお待ちください" : "ご予約ありがとうございます"}</h1><p>予約番号: ${escapeHtml(completedReservation.id)}</p><p>${escapeHtml(currentListing.title)}<br>${completedReservation.checkInDate} — ${completedReservation.checkOutDate}</p><p>到着予定: ${completedReservation.expectedArrivalAt ? formatDateTime(completedReservation.expectedArrivalAt) : "未定"}</p><div class="guest-total">${yen(completedReservation.totalAmount)}</div>${requested ? `<p>回答期限: ${formatDateTime(completedReservation.approvalExpiresAt)}</p>` : ""}<button class="button button-primary" data-reservations>予約履歴を見る</button></section>`;
 }
 
 function renderReservations() {

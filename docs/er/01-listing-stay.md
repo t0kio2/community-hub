@@ -21,6 +21,7 @@ erDiagram
         string booking_confirmation_mode
         integer approval_deadline_hours
         time check_in_time
+        time latest_check_in_time
         time check_out_time
         string time_zone
         date stay_available_starts_on
@@ -193,6 +194,7 @@ erDiagram
 | `booking_confirmation_mode` | string | × | `approval_required` | `instant / approval_required` |
 | `approval_deadline_hours` | integer | × | `24` | 1〜72時間、`instant`では設定値を使用しない |
 | `check_in_time` | time | ○ | NULL | チェックイン時刻、予約を受け付ける場合は必須 |
+| `latest_check_in_time` | time | ○ | NULL | 到着予定として選択できる最終チェックイン時刻。予約を受け付ける場合は必須、`check_in_time`より後 |
 | `check_out_time` | time | ○ | NULL | チェックアウト時刻 |
 | `time_zone` | string | × | `Asia/Tokyo` | 施設のIANAタイムゾーン名 |
 | `stay_available_starts_on` | date | ○ | NULL | 宿泊可能期間の開始日、対象に含む |
