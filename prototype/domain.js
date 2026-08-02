@@ -33,6 +33,21 @@ export function addDays(date, days) {
   return value.toISOString().slice(0, 10);
 }
 
+export function arrivalTimeOptions(checkInTime, latestCheckInTime) {
+  const toMinutes = (value) => {
+    const match = /^(\d{2}):(\d{2})$/.exec(value || "");
+    if (!match) return null;
+    return Number(match[1]) * 60 + Number(match[2]);
+  };
+  const startsAt = toMinutes(checkInTime);
+  const endsAt = toMinutes(latestCheckInTime);
+  if (startsAt === null || endsAt === null || startsAt >= endsAt) return [];
+  const format = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  const options = [];
+  for (let minutes = startsAt; minutes <= endsAt; minutes += 60) options.push(format(minutes));
+  return options;
+}
+
 export function availableLastNightOn(stayAvailableEndsOn) {
   return addDays(stayAvailableEndsOn, -1);
 }
@@ -116,13 +131,19 @@ export function normalizeWorkspace(data) {
     workspace.tenant ||= { id: "tenant-prototype", name: "Prototype Tenant" };
     workspace.amenities ||= workspace.stayListings[0]?.amenities || [];
     workspace.stayReservations ||= [];
-    workspace.stayListings.forEach((listing) => { delete listing.amenities; });
+    workspace.stayListings.forEach((listing) => {
+      delete listing.amenities;
+      listing.stay ||= {};
+      listing.stay.latestCheckInTime ||= "22:00";
+    });
     return workspace;
   }
 
   const listing = structuredClone(data);
   const amenities = listing.amenities || [];
   delete listing.amenities;
+  listing.stay ||= {};
+  listing.stay.latestCheckInTime ||= "22:00";
   return {
     schemaVersion: 2,
     tenant: { id: "tenant-prototype", name: "Prototype Tenant" },
@@ -130,6 +151,172 @@ export function normalizeWorkspace(data) {
     stayListings: [listing],
     stayReservations: [],
   };
+}
+
+export function reservationDashboard(workspace, listingId, businessDate) {
+  const reservations = (workspace.stayReservations || []).filter((reservation) => reservation.listingId === listingId);
+  const confirmed = reservations.filter((reservation) => reservation.status === "confirmed");
+  const byCreatedAtDesc = (left, right) => String(right.createdAt || "").localeCompare(String(left.createdAt || ""));
+
+  return {
+    pending: reservations
+      .filter((reservation) => reservation.status === "requested")
+      .sort((left, right) => String(left.approvalExpiresAt || "9999").localeCompare(String(right.approvalExpiresAt || "9999"))),
+    arrivals: confirmed.filter((reservation) => reservation.checkInDate === businessDate).sort((left, right) => {
+      if (!left.expectedArrivalAt && !right.expectedArrivalAt) return byCreatedAtDesc(left, right);
+      if (!left.expectedArrivalAt) return 1;
+      if (!right.expectedArrivalAt) return -1;
+      return left.expectedArrivalAt.localeCompare(right.expectedArrivalAt);
+    }),
+    departures: confirmed.filter((reservation) => reservation.checkOutDate === businessDate).sort(byCreatedAtDesc),
+    staying: confirmed
+      .filter((reservation) => reservation.checkInDate <= businessDate && businessDate < reservation.checkOutDate)
+      .sort((left, right) => left.checkOutDate.localeCompare(right.checkOutDate)),
+    recent: reservations.slice().sort(byCreatedAtDesc).slice(0, 8),
+  };
+}
+
+export function transitionStayReservation(workspace, input, now = new Date()) {
+  const reservation = (workspace.stayReservations || []).find((item) => item.id === input.reservationId);
+  if (!reservation) throw new Error("対象の予約が見つかりません");
+
+  const definitions = {
+    approve: { from: ["requested"], to: "confirmed", eventType: "approved", reasonCodes: [] },
+    reject: {
+      from: ["requested"],
+      to: "rejected",
+      eventType: "rejected",
+      reasonCodes: ["unable_to_accommodate", "request_not_acceptable", "facility_unavailable", "other"],
+    },
+    cancel: {
+      from: ["requested", "confirmed"],
+      to: "canceled",
+      eventType: "canceled_by_tenant",
+      reasonCodes: ["facility_unavailable", "maintenance", "overbooking", "safety", "other"],
+    },
+  };
+  const definition = definitions[input.action];
+  if (!definition || !definition.from.includes(reservation.status)) throw new Error("現在の予約状態ではこの操作を実行できません");
+
+  const reasonCode = input.reasonCode || null;
+  const reasonDetail = input.reasonDetail?.trim() || null;
+  const internalNote = input.internalNote?.trim() || null;
+  if (definition.reasonCodes.length && !definition.reasonCodes.includes(reasonCode)) throw new Error("操作理由を選択してください");
+  if (reasonCode === "other" && !reasonDetail) throw new Error("その他の理由では利用者向け説明が必要です");
+
+  const occurredAt = now.toISOString();
+  const fromStatus = reservation.status;
+  const event = {
+    id: makeId("reservation-event"),
+    stayReservationId: reservation.id,
+    tenantMemberId: input.tenantMemberId || "tenant-member-prototype",
+    eventType: definition.eventType,
+    fromStatus,
+    toStatus: definition.to,
+    actorType: "tenant_member",
+    reasonCode,
+    reasonDetail,
+    internalNote,
+    cancellationPenaltyAmount: input.action === "cancel" ? 0 : null,
+    occurredAt,
+    createdAt: occurredAt,
+  };
+
+  const notifications = input.action === "cancel"
+    ? tenantCancellationNotifications(reservation, event, now)
+    : [];
+
+  workspace.stayReservationEvents ||= [];
+  workspace.stayReservationNotifications ||= [];
+  reservation.status = definition.to;
+  reservation.updatedAt = occurredAt;
+  workspace.stayReservationEvents.push(event);
+  workspace.stayReservationNotifications.push(...notifications);
+  return { reservation, event, notifications };
+}
+
+export function availableAssignmentCandidates(workspace, reservationId, now = new Date()) {
+  const reservation = (workspace.stayReservations || []).find((item) => item.id === reservationId);
+  const listing = reservation && workspace.stayListings.find((item) => item.id === reservation.listingId);
+  const roomType = listing?.roomTypes.find((item) => item.id === reservation.roomTypeId);
+  if (!reservation || !roomType) return [];
+
+  const overlapping = (workspace.stayReservations || []).filter((item) =>
+    item.id !== reservation.id &&
+    item.listingId === reservation.listingId &&
+    ["requested", "confirmed"].includes(item.status) &&
+    item.checkInDate < reservation.checkOutDate &&
+    item.checkOutDate > reservation.checkInDate &&
+    (item.status !== "requested" || !item.approvalExpiresAt || item.approvalExpiresAt > now.toISOString()),
+  );
+  const usedRoomIds = new Set(overlapping.flatMap((item) => (item.roomAssignments || []).map((assignment) => assignment.stayRoomId)));
+  const usedBedIds = new Set(overlapping.flatMap((item) => (item.bedAssignments || []).map((assignment) => assignment.stayBedId)));
+  const currentIds = new Set([
+    ...(reservation.roomAssignments || []).map((item) => item.stayRoomId),
+    ...(reservation.bedAssignments || []).map((item) => item.stayBedId),
+  ]);
+
+  if (roomType.roomKind === "shared_room") {
+    return roomType.rooms.filter((room) => room.active).flatMap((room) => room.beds
+      .filter((bed) => bed.active && !usedBedIds.has(bed.id) && !currentIds.has(bed.id))
+      .map((bed) => ({ id: bed.id, name: `${room.name} / ${bed.name}`, kind: "bed" })));
+  }
+  return roomType.rooms
+    .filter((room) => room.active && !usedRoomIds.has(room.id) && !currentIds.has(room.id))
+    .map((room) => ({ id: room.id, name: room.name, kind: "room" }));
+}
+
+export function reassignReservationInventory(workspace, input, now = new Date()) {
+  const reservation = (workspace.stayReservations || []).find((item) => item.id === input.reservationId);
+  if (!reservation) throw new Error("対象の予約が見つかりません");
+  if (reservation.status !== "confirmed") throw new Error("確定済み予約だけ割り当てを変更できます");
+
+  const roomAssignment = (reservation.roomAssignments || []).find((item) => item.stayRoomId === input.currentInventoryId);
+  const bedAssignment = (reservation.bedAssignments || []).find((item) => item.stayBedId === input.currentInventoryId);
+  const assignment = roomAssignment || bedAssignment;
+  if (!assignment) throw new Error("現在の割り当てが予約に含まれていません");
+
+  const candidate = availableAssignmentCandidates(workspace, reservation.id, now).find((item) => item.id === input.newInventoryId);
+  if (!candidate || (roomAssignment && candidate.kind !== "room") || (bedAssignment && candidate.kind !== "bed")) {
+    throw new Error("変更先のRoomまたはBedを利用できません");
+  }
+
+  if (roomAssignment) assignment.stayRoomId = candidate.id;
+  else assignment.stayBedId = candidate.id;
+  assignment.assignedByTenantMemberId = input.tenantMemberId || "tenant-member-prototype";
+  assignment.assignedAt = now.toISOString();
+  reservation.updatedAt = now.toISOString();
+  return assignment;
+}
+
+function tenantCancellationNotifications(reservation, event, now) {
+  const primaryGuest = reservation.guests?.find((guest) => guest.guestRole === "primary");
+  const createdAt = now.toISOString();
+  const payloadSnapshot = {
+    version: 1,
+    reservation_number: reservation.reservationNumber || reservation.id,
+    check_in_date: reservation.checkInDate,
+    check_out_date: reservation.checkOutDate,
+    room_type_name: reservation.priceSnapshot?.room_type?.name || null,
+    rate_plan_name: reservation.priceSnapshot?.rate_plan?.name || null,
+    reason_code: event.reasonCode,
+    reason_detail: event.reasonDetail,
+    cancellation_penalty_amount: 0,
+  };
+  const common = {
+    stayReservationId: reservation.id,
+    stayReservationEventId: event.id,
+    notificationType: "canceled_by_tenant",
+    status: "pending",
+    attemptCount: 0,
+    payloadSnapshot,
+    createdAt,
+    updatedAt: createdAt,
+  };
+  return [
+    { ...common, id: makeId("notification"), channel: "in_app", recipientType: "booking_user", userId: reservation.userId, destination: null, status: "sent", sentAt: createdAt },
+    { ...common, id: makeId("notification"), channel: "email", recipientType: "primary_guest", userId: null, destination: primaryGuest?.email || null, sentAt: null },
+  ];
 }
 
 export function createStayReservation(workspace, input, now = new Date()) {
@@ -178,6 +365,18 @@ export function createStayReservation(workspace, input, now = new Date()) {
   const approvalExpiresAt = status === "requested"
     ? new Date(Math.min(approvalDeadline, checkInDeadline)).toISOString()
     : null;
+  const checkInAt = `${input.checkInDate}T${listing.stay.checkInTime}:00`;
+  const checkOutAt = `${input.checkOutDate}T${listing.stay.checkOutTime}:00`;
+  const expectedArrivalAt = input.expectedArrivalAt
+    ? `${input.expectedArrivalAt}${input.expectedArrivalAt.length === 16 ? ":00" : ""}`
+    : null;
+  const validArrivalTimes = arrivalTimeOptions(listing.stay.checkInTime, listing.stay.latestCheckInTime);
+  if (expectedArrivalAt && (
+    expectedArrivalAt.slice(0, 10) !== input.checkInDate ||
+    !validArrivalTimes.includes(expectedArrivalAt.slice(11, 16))
+  )) {
+    throw new Error("到着予定時刻は施設が提示する選択肢から選んでください");
+  }
   const activeAmenities = workspace.amenities.filter((amenity) => amenity.active);
   const amenitySnapshot = (ids) => activeAmenities.filter((amenity) => ids.includes(amenity.id)).map((amenity) => ({ id: amenity.id, name: amenity.name }));
   const nights = previewRate.nights.map((night) => ({ stay_date: night.stayDate, unit_amount: night.unitAmount, quantity: night.quantity, subtotal_amount: night.subtotalAmount }));
@@ -190,7 +389,9 @@ export function createStayReservation(workspace, input, now = new Date()) {
     status,
     checkInDate: input.checkInDate,
     checkOutDate: input.checkOutDate,
-    checkInAt: `${input.checkInDate}T${listing.stay.checkInTime}:00`,
+    checkInAt,
+    checkOutAt,
+    expectedArrivalAt,
     timeZone: listing.stay.timeZone,
     quantity: previewRoom.requiredQuantity,
     guestCount: Number(input.guestCount),
@@ -232,8 +433,9 @@ export function createStayReservation(workspace, input, now = new Date()) {
 }
 
 function cancellationPolicySnapshot(type) {
-  if (type === "non_refundable") return { type, basis: "accommodation_subtotal", penalty_rate: 100, no_show_penalty_rate: 100 };
+  if (type === "non_refundable") return { version: 1, type, basis: "accommodation_subtotal", penalty_rate: 100, no_show_penalty_rate: 100 };
   return {
+    version: 1,
     type: "standard",
     basis: "accommodation_subtotal",
     rules: [
@@ -260,6 +462,7 @@ export function createBlankStayListing(title) {
       bookingConfirmationMode: "approval_required",
       approvalDeadlineHours: 24,
       checkInTime: "15:00",
+      latestCheckInTime: "22:00",
       checkOutTime: "10:00",
       timeZone: "Asia/Tokyo",
       stayAvailableStartsOn: "",
@@ -299,7 +502,7 @@ export function publicationChecks(state) {
           Number.isFinite(Number(state.location.longitude)),
       ),
     },
-    { id: "check_in", label: "チェックイン時刻が設定されている", passed: Boolean(state.stay.checkInTime) },
+    { id: "check_in", label: "チェックイン受付時間が正しく設定されている", passed: arrivalTimeOptions(state.stay.checkInTime, state.stay.latestCheckInTime).length > 0 && Boolean(state.stay.checkOutTime) },
     {
       id: "booking_window",
       label: "予約受付期間が正しい",

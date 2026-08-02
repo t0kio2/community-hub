@@ -1,4 +1,5 @@
 import {
+  availableAssignmentCandidates,
   availableLastNightOn,
   buildStayPreview,
   canPublish,
@@ -9,12 +10,18 @@ import {
   physicalInventory,
   priceForDate,
   publicationChecks,
+  reservationDashboard,
+  reassignReservationInventory,
+  transitionStayReservation,
   stayAvailableEndsOn,
 } from "./domain.js";
 
 const STORAGE_KEY = "community-hub:stay-listing-prototype:v1";
 const viewTitles = {
   listings: "宿泊施設一覧",
+  "reservation-dashboard": "予約ダッシュボード",
+  reservations: "予約一覧",
+  "reservation-detail": "予約詳細",
   overview: "概要",
   facility: "施設情報",
   rooms: "部屋と在庫",
@@ -31,7 +38,11 @@ let currentView = location.hash.slice(1) || "listings";
 let selectedListingId;
 let selectedRoomTypeId;
 let selectedRatePlanId;
+let selectedReservationId;
+let reservationReturnView = "reservations";
+let reservationFilters = { query: "", status: "all", checkInDate: "" };
 let calendarDate = "2026-08-15";
+let dashboardDate = "2026-08-15";
 let previewConditions = { checkInDate: "2026-08-15", checkOutDate: "2026-08-17", guestCount: 2 };
 
 const content = document.querySelector("#content");
@@ -80,17 +91,21 @@ function bindGlobalEvents() {
 
 function render() {
   if (currentView !== "listings" && !state) currentView = "listings";
+  if (currentView === "reservation-detail" && !selectedReservation()) currentView = "reservations";
   document.querySelector("#listing-id").textContent = currentView === "listings" ? workspace.tenant.name : state.id;
   document.querySelector("#page-title").textContent = viewTitles[currentView] || viewTitles.listings;
   document.querySelector("#active-listing-name").textContent = state?.title || "施設未選択";
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === currentView);
   });
-  document.querySelector("#publish-button").hidden = currentView === "listings";
+  document.querySelector("#publish-button").hidden = ["listings", "reservation-dashboard", "reservations", "reservation-detail"].includes(currentView);
   document.querySelector("#publish-button").textContent = state?.status === "published" ? "公開中" : "公開する";
 
   const renderView = {
     listings: renderListings,
+    "reservation-dashboard": renderReservationDashboard,
+    reservations: renderReservations,
+    "reservation-detail": renderReservationDetail,
     overview: renderOverview,
     facility: renderFacility,
     rooms: renderRooms,
@@ -140,6 +155,121 @@ function renderOverview() {
     </div>`;
 }
 
+function renderReservationDashboard() {
+  const dashboard = reservationDashboard(workspace, state.id, dashboardDate);
+  const reservationIds = new Set((workspace.stayReservations || []).filter((item) => item.listingId === state.id).map((item) => item.id));
+  const events = (workspace.stayReservationEvents || []).filter((event) => reservationIds.has(event.stayReservationId)).slice().sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)).slice(0, 8);
+  return `
+    <section class="page-lead dashboard-lead"><div><p class="eyebrow">DAILY OPERATIONS</p><h2>${escapeHtml(state.title)}の予約業務</h2><p>承認待ちと当日の到着・出発を、施設単位で確認します。</p></div><div class="field dashboard-date"><label>業務日</label><input id="dashboard-date" type="date" value="${dashboardDate}" /></div></section>
+    <div class="grid grid-4 dashboard-metrics">
+      ${dashboardMetric("承認待ち", dashboard.pending.length, "回答が必要な予約申請", "attention")}
+      ${dashboardMetric("本日の到着", dashboard.arrivals.length, `${dashboard.arrivals.reduce((sum, item) => sum + item.guestCount, 0)}名`, "arrival")}
+      ${dashboardMetric("本日の出発", dashboard.departures.length, `${dashboard.departures.reduce((sum, item) => sum + item.guestCount, 0)}名`, "departure")}
+      ${dashboardMetric("滞在中", dashboard.staying.length, `${dashboard.staying.reduce((sum, item) => sum + item.guestCount, 0)}名`, "staying")}
+    </div>
+    <div class="grid dashboard-layout">
+      <section class="card"><div class="card-header"><div><h3>承認待ち</h3><p>承認期限が近い順</p></div><span class="dashboard-count">${dashboard.pending.length}件</span></div>${reservationTable(dashboard.pending, { deadline: true, actions: true })}</section>
+      <section class="card"><div class="card-header"><div><h3>${formatStayDate(dashboardDate)}の到着</h3><p>確定済みのチェックイン予定</p></div><span class="dashboard-count">${dashboard.arrivals.length}件</span></div>${reservationList(dashboard.arrivals, "arrival")}</section>
+      <section class="card"><div class="card-header"><div><h3>${formatStayDate(dashboardDate)}の出発</h3><p>確定済みのチェックアウト予定</p></div><span class="dashboard-count">${dashboard.departures.length}件</span></div>${reservationList(dashboard.departures, "departure")}</section>
+      <section class="card"><div class="card-header"><div><h3>最近の予約</h3><p>状態を含む直近8件</p></div></div>${reservationTable(dashboard.recent, { actions: true })}</section>
+      <section class="card dashboard-history"><div class="card-header"><div><h3>最近の操作履歴</h3><p>担当者、理由、変更前後の状態</p></div></div>${reservationEventList(events)}</section>
+    </div>`;
+}
+
+function renderReservations() {
+  const reservations = (workspace.stayReservations || [])
+    .filter((reservation) => reservation.listingId === state.id)
+    .filter((reservation) => reservationFilters.status === "all" || reservation.status === reservationFilters.status)
+    .filter((reservation) => !reservationFilters.checkInDate || reservation.checkInDate === reservationFilters.checkInDate)
+    .filter((reservation) => {
+      const query = reservationFilters.query.trim().toLowerCase();
+      if (!query) return true;
+      const primaryGuest = reservation.guests?.find((guest) => guest.guestRole === "primary");
+      return `${reservation.reservationNumber || reservation.id} ${primaryGuest?.name || ""}`.toLowerCase().includes(query);
+    })
+    .sort((left, right) => String(right.createdAt || "").localeCompare(String(left.createdAt || "")));
+  return `
+    <section class="page-lead"><div><p class="eyebrow">RESERVATIONS</p><h2>予約一覧</h2><p>${escapeHtml(state.title)}の予約を検索・確認します。</p></div><span class="dashboard-count">${reservations.length}件</span></section>
+    <section class="card reservation-filter-card"><div class="reservation-filters">
+      <div class="field"><label>予約番号・宿泊者</label><input data-reservation-filter="query" value="${escapeHtml(reservationFilters.query)}" placeholder="検索" /></div>
+      <div class="field"><label>状態</label><select data-reservation-filter="status">${[["all", "すべて"], ["requested", "承認待ち"], ["confirmed", "予約確定"], ["rejected", "拒否"], ["canceled", "キャンセル"], ["expired", "期限切れ"], ["completed", "宿泊完了"], ["no_show", "無断不泊"]].map(([value, label]) => `<option value="${value}" ${reservationFilters.status === value ? "selected" : ""}>${label}</option>`).join("")}</select></div>
+      <div class="field"><label>チェックイン日</label><input data-reservation-filter="checkInDate" type="date" value="${reservationFilters.checkInDate}" /></div>
+      <button class="button" data-clear-reservation-filters>条件をクリア</button>
+    </div></section>
+    <section class="card reservation-list-card">${reservationListTable(reservations)}</section>`;
+}
+
+function reservationListTable(reservations) {
+  if (!reservations.length) return `<div class="empty">条件に一致する予約はありません</div>`;
+  return `<div class="table-scroll"><table class="table reservation-list-table"><thead><tr><th>予約・宿泊者</th><th>Room Type</th><th>宿泊日程</th><th>到着予定</th><th>人数</th><th>合計</th><th>状態</th><th></th></tr></thead><tbody>${reservations.map((reservation) => {
+    const guest = reservation.guests?.find((item) => item.guestRole === "primary");
+    return `<tr><td><strong>${escapeHtml(reservation.reservationNumber || reservation.id)}</strong><small>${escapeHtml(guest?.name || "宿泊者未登録")}</small></td><td>${escapeHtml(reservation.priceSnapshot?.room_type?.name || roomTypeName(reservation.roomTypeId))}</td><td>${reservation.checkInDate}<small>→ ${reservation.checkOutDate}</small></td><td>${reservation.expectedArrivalAt ? expectedArrivalLabel(reservation.expectedArrivalAt) : `<span class="deadline">未定</span>`}</td><td>${reservation.guestCount}名</td><td class="price">${yen(reservation.totalAmount)}</td><td><span class="status status-${reservation.status}">${statusLabel(reservation.status)}</span></td><td><button class="button button-small" data-open-reservation="${reservation.id}" data-return-view="reservations">詳細</button></td></tr>`;
+  }).join("")}</tbody></table></div>`;
+}
+
+function renderReservationDetail() {
+  const reservation = selectedReservation();
+  const primaryGuest = reservation.guests?.find((guest) => guest.guestRole === "primary");
+  const companions = reservation.guests?.filter((guest) => guest.guestRole === "companion") || [];
+  const events = (workspace.stayReservationEvents || []).filter((event) => event.stayReservationId === reservation.id).slice().sort((left, right) => right.occurredAt.localeCompare(left.occurredAt));
+  const nights = reservation.priceSnapshot?.nights || [];
+  return `
+    <section class="detail-head"><div><button class="button button-small" data-back-reservations>← ${reservationReturnView === "reservation-dashboard" ? "ダッシュボード" : "予約一覧"}</button><p class="eyebrow">${escapeHtml(reservation.reservationNumber || reservation.id)}</p><div class="detail-title"><h2>${escapeHtml(primaryGuest?.name || "宿泊者未登録")}</h2><span class="status status-${reservation.status}">${statusLabel(reservation.status)}</span></div><p>${reservation.checkInDate} → ${reservation.checkOutDate}・${reservation.guestCount}名</p></div><div class="detail-actions">${reservationActionButtons(reservation)}</div></section>
+    <div class="grid detail-layout">
+      <div class="grid">
+        <section class="card"><div class="card-header"><div><h3>宿泊内容</h3><p>予約時点の販売条件</p></div><strong class="detail-total">${yen(reservation.totalAmount)}</strong></div><dl class="definition-grid"><div><dt>Room Type</dt><dd>${escapeHtml(reservation.priceSnapshot?.room_type?.name || roomTypeName(reservation.roomTypeId))}</dd></div><div><dt>Rate Plan</dt><dd>${escapeHtml(reservation.priceSnapshot?.rate_plan?.name || "—")}</dd></div><div><dt>到着予定</dt><dd>${reservation.expectedArrivalAt ? formatDateTime(reservation.expectedArrivalAt) : "未定"}</dd></div><div><dt>数量</dt><dd>${reservation.quantity}${reservation.priceSnapshot?.pricing_unit === "bed" ? "ベッド" : "室"}</dd></div></dl>${nights.length ? `<div class="nightly-breakdown">${nights.map((night) => `<div><span>${night.stay_date}</span><span>${yen(night.unit_amount)} × ${night.quantity}</span><strong>${yen(night.subtotal_amount)}</strong></div>`).join("")}</div>` : ""}</section>
+        <section class="card"><div class="card-header"><div><h3>物理Room／Bed割り当て</h3><p>同じRoom Typeの空き在庫へ変更できます</p></div></div>${assignmentEditor(reservation)}</section>
+        <section class="card"><div class="card-header"><div><h3>操作履歴</h3><p>追記専用の状態変更履歴</p></div></div>${reservationEventList(events)}</section>
+      </div>
+      <aside class="grid detail-side">
+        <section class="card"><div class="card-header"><div><h3>宿泊者</h3><p>代表宿泊者と同行者</p></div></div><dl class="stacked-definition"><div><dt>代表宿泊者</dt><dd>${escapeHtml(primaryGuest?.name || "—")}</dd></div><div><dt>メール</dt><dd>${escapeHtml(primaryGuest?.email || "—")}</dd></div><div><dt>電話番号</dt><dd>${escapeHtml(primaryGuest?.phone || "—")}</dd></div><div><dt>同行者</dt><dd>${companions.length ? companions.map((guest) => escapeHtml(guest.name)).join("、") : "未登録"}</dd></div></dl></section>
+        <section class="card"><div class="card-header"><div><h3>キャンセル条件</h3><p>予約時スナップショット</p></div></div>${cancellationPolicyView(reservation.cancellationPolicySnapshot)}</section>
+        <section class="card"><div class="card-header"><div><h3>利用者メッセージ</h3></div></div><p class="detail-message">${escapeHtml(reservation.message || "メッセージはありません")}</p></section>
+      </aside>
+    </div>`;
+}
+
+function assignmentEditor(reservation) {
+  const assignments = [
+    ...(reservation.roomAssignments || []).map((item) => ({ ...item, id: item.stayRoomId, kind: "room" })),
+    ...(reservation.bedAssignments || []).map((item) => ({ ...item, id: item.stayBedId, kind: "bed" })),
+  ];
+  if (!assignments.length) return `<div class="empty">物理在庫は割り当てられていません</div>`;
+  const candidates = reservation.status === "confirmed" ? availableAssignmentCandidates(workspace, reservation.id) : [];
+  return `<div class="assignment-list">${assignments.map((assignment) => `<div class="assignment-row"><div><span class="assignment-kind">${assignment.kind === "bed" ? "BED" : "ROOM"}</span><strong>${escapeHtml(inventoryName(assignment.id))}</strong><small>${assignment.assignedAt ? `更新 ${formatDateTime(assignment.assignedAt)}` : ""}</small></div>${reservation.status === "confirmed" ? `<select aria-label="変更先"><option value="">変更先を選択</option>${candidates.filter((candidate) => candidate.kind === assignment.kind).map((candidate) => `<option value="${candidate.id}">${escapeHtml(candidate.name)}</option>`).join("")}</select><button class="button button-small" data-reassign-inventory="${assignment.id}">変更</button>` : `<span class="muted">確定予約のみ変更可能</span>`}</div>`).join("")}</div>`;
+}
+
+function cancellationPolicyView(snapshot) {
+  if (!snapshot) return `<p class="muted">スナップショットがありません</p>`;
+  if (snapshot.type === "non_refundable") return `<div class="policy-callout"><strong>返金不可</strong><span>予約確定後 ${snapshot.penalty_rate}%</span></div>`;
+  return `<div class="policy-rules">${(snapshot.rules || []).map((rule) => `<div><span>${rule.hours_before_check_in}時間前から</span><strong>${rule.penalty_rate}%</strong></div>`).join("") || `<p class="muted">標準キャンセル条件</p>`}<div><span>無断不泊</span><strong>${snapshot.no_show_penalty_rate ?? 100}%</strong></div></div>`;
+}
+
+function reservationEventList(events) {
+  if (!events.length) return `<div class="empty dashboard-empty">操作履歴はまだありません</div>`;
+  return `<div class="event-list">${events.map((event) => {
+    const reservation = workspace.stayReservations.find((item) => item.id === event.stayReservationId);
+    return `<article class="event-item"><div><strong>${eventLabel(event.eventType)}</strong><small>${escapeHtml(reservation?.reservationNumber || event.stayReservationId)}・${formatDateTime(event.occurredAt)}</small></div><div><span>${statusLabel(event.fromStatus)} → ${statusLabel(event.toStatus)}</span><small>${event.reasonCode ? reasonLabel(event.reasonCode) : "理由入力なし"}・${escapeHtml(event.tenantMemberId || "システム")}</small></div></article>`;
+  }).join("")}</div>`;
+}
+
+function reservationTable(reservations, options = {}) {
+  if (!reservations.length) return `<div class="empty dashboard-empty">該当する予約はありません</div>`;
+  return `<div class="table-scroll"><table class="table reservation-table"><thead><tr><th>予約・宿泊者</th><th>宿泊内容</th><th>${options.deadline ? "承認期限" : "状態"}</th><th>金額</th>${options.actions ? "<th>操作</th>" : ""}</tr></thead><tbody>${reservations.map((reservation) => {
+    const guest = reservation.guests?.find((item) => item.guestRole === "primary");
+    return `<tr><td><button class="table-link" data-open-reservation="${reservation.id}" data-return-view="reservation-dashboard"><strong>${escapeHtml(guest?.name || "宿泊者未登録")}</strong><small>${escapeHtml(reservation.reservationNumber || reservation.id)}</small></button></td><td><strong>${escapeHtml(reservation.priceSnapshot?.room_type?.name || roomTypeName(reservation.roomTypeId))}</strong><small>${reservation.checkInDate} → ${reservation.checkOutDate}・${reservation.guestCount}名</small></td><td>${options.deadline ? `<strong class="deadline">${formatDateTime(reservation.approvalExpiresAt)}</strong>` : `<span class="status status-${reservation.status}">${statusLabel(reservation.status)}</span>`}</td><td class="price">${yen(reservation.totalAmount)}</td>${options.actions ? `<td>${reservationActionButtons(reservation)}</td>` : ""}</tr>`;
+  }).join("")}</tbody></table></div>`;
+}
+
+function reservationList(reservations, type) {
+  if (!reservations.length) return `<div class="empty dashboard-empty">予定はありません</div>`;
+  return `<div class="operation-list">${reservations.map((reservation) => {
+    const guest = reservation.guests?.find((item) => item.guestRole === "primary");
+    const time = type === "arrival" ? expectedArrivalLabel(reservation.expectedArrivalAt) : state.stay.checkOutTime;
+    return `<article class="operation-item"><time class="${type === "arrival" && !reservation.expectedArrivalAt ? "time-undecided" : ""}">${escapeHtml(time)}</time><div><strong>${escapeHtml(guest?.name || "宿泊者未登録")}</strong><small>${escapeHtml(reservation.priceSnapshot?.room_type?.name || roomTypeName(reservation.roomTypeId))}・${reservation.guestCount}名</small></div><span>${escapeHtml(assignmentLabel(reservation))}</span></article>`;
+  }).join("")}</div>`;
+}
+
 function renderFacility() {
   const facilityAmenities = workspace.amenities.filter((item) => ["facility", "both"].includes(item.scope) && item.active);
   return `
@@ -173,6 +303,7 @@ function renderFacility() {
             ${field("承認期限（時間）", "stay.approvalDeadlineHours", state.stay.approvalDeadlineHours, "number")}
             ${field("受付開始（日前）", "stay.bookingOpenDaysBefore", state.stay.bookingOpenDaysBefore, "number")}
             ${field("チェックイン", "stay.checkInTime", state.stay.checkInTime, "time")}
+            ${field("最終チェックイン", "stay.latestCheckInTime", state.stay.latestCheckInTime, "time")}
             ${field("チェックアウト", "stay.checkOutTime", state.stay.checkOutTime, "time")}
             <div class="field field-wide"><label>宿泊提供期間</label><small class="muted">空欄の場合、その方向の期間を制限しません</small></div>
             ${field("最初に宿泊できる日", "stay.stayAvailableStartsOn", state.stay.stayAvailableStartsOn, "date")}
@@ -290,6 +421,16 @@ function renderPublish() {
 
 function handleInput(event) {
   const input = event.target;
+  if (input.dataset.reservationFilter) {
+    reservationFilters[input.dataset.reservationFilter] = input.value;
+    if (event.type === "change") render();
+    return;
+  }
+  if (input.id === "dashboard-date") {
+    dashboardDate = input.value;
+    render();
+    return;
+  }
   if (input.id === "calendar-date") {
     calendarDate = input.value;
     render();
@@ -318,7 +459,7 @@ function handleClick(event) {
   const target = event.target.closest("button");
   if (!target) return;
   if (target.dataset.go) { currentView = target.dataset.go; location.hash = currentView; render(); }
-  if (target.dataset.selectListing) { activateListing(target.dataset.selectListing); currentView = "overview"; location.hash = currentView; render(); }
+  if (target.dataset.selectListing) { activateListing(target.dataset.selectListing); currentView = "reservation-dashboard"; location.hash = currentView; render(); }
   if (target.dataset.selectRoomType) { selectedRoomTypeId = target.dataset.selectRoomType; render(); }
   if (target.dataset.selectRatePlan) { selectedRatePlanId = target.dataset.selectRatePlan; render(); }
   if (target.dataset.modal) openModal(target.dataset.modal, target.dataset.roomId);
@@ -326,6 +467,17 @@ function handleClick(event) {
   if (target.dataset.toggleBed) toggleBed(target.dataset.toggleBed);
   if (target.dataset.toggleRate) toggleRate(target.dataset.toggleRate);
   if (target.dataset.amenity) toggleAmenity(target.dataset.amenity, target.dataset.target);
+  if (target.dataset.openReservation) {
+    selectedReservationId = target.dataset.openReservation;
+    reservationReturnView = target.dataset.returnView || currentView;
+    currentView = "reservation-detail";
+    location.hash = currentView;
+    render();
+  }
+  if (target.hasAttribute("data-back-reservations")) { currentView = reservationReturnView; location.hash = currentView; render(); }
+  if (target.hasAttribute("data-clear-reservation-filters")) { reservationFilters = { query: "", status: "all", checkInDate: "" }; render(); }
+  if (target.dataset.reassignInventory) applyInventoryReassignment(target, target.dataset.reassignInventory);
+  if (target.dataset.reservationAction) openReservationAction(target.dataset.reservationAction, target.dataset.reservationId);
   if (target.hasAttribute("data-publish")) publish();
 }
 
@@ -339,9 +491,31 @@ function openModal(type, roomId) {
   };
   const [title, body] = definitions[type];
   document.querySelector("#modal-title").textContent = title;
+  document.querySelector("#modal-submit").textContent = "追加する";
   document.querySelector("#modal-body").innerHTML = `<div class="field-grid">${body}</div>`;
   modalForm.dataset.type = type;
   modalForm.dataset.roomId = roomId || "";
+  modalForm.onsubmit = submitModal;
+  modal.showModal();
+}
+
+function openReservationAction(action, reservationId) {
+  const reservation = workspace.stayReservations.find((item) => item.id === reservationId);
+  if (!reservation) return;
+  if (action === "approve") {
+    if (!confirm(`${reservation.reservationNumber || reservation.id}を承認して予約を確定しますか？`)) return;
+    applyReservationTransition({ reservationId, action });
+    return;
+  }
+  const isReject = action === "reject";
+  const reasonOptions = isReject
+    ? [["", "選択してください"], ["unable_to_accommodate", "受け入れ困難"], ["request_not_acceptable", "要望に対応できない"], ["facility_unavailable", "施設を提供できない"], ["other", "その他"]]
+    : [["", "選択してください"], ["facility_unavailable", "施設を提供できない"], ["maintenance", "設備メンテナンス"], ["overbooking", "オーバーブッキング"], ["safety", "安全上の理由"], ["other", "その他"]];
+  document.querySelector("#modal-title").textContent = isReject ? "予約申請を拒否" : "予約を取り消す";
+  document.querySelector("#modal-body").innerHTML = `<div class="reservation-action-summary"><strong>${escapeHtml(reservation.reservationNumber || reservation.id)}</strong><span>${escapeHtml(reservation.guests?.find((guest) => guest.guestRole === "primary")?.name || "宿泊者未登録")}・${reservation.checkInDate} → ${reservation.checkOutDate}</span></div><div class="field-grid">${selectField("理由", "reasonCode", "", reasonOptions, "field-wide")}${textarea("利用者向け説明", "reasonDetail", "", "field-wide")}${textarea("内部メモ（利用者には表示されません）", "internalNote", "", "field-wide")}</div>`;
+  document.querySelector("#modal-submit").textContent = isReject ? "拒否する" : "予約を取り消す";
+  modalForm.dataset.type = `reservation-${action}`;
+  modalForm.dataset.reservationId = reservationId;
   modalForm.onsubmit = submitModal;
   modal.showModal();
 }
@@ -354,6 +528,16 @@ function submitModal(event) {
   }
   const values = Object.fromEntries(new FormData(modalForm).entries());
   const type = modalForm.dataset.type;
+  if (type.startsWith("reservation-")) {
+    applyReservationTransition({
+      reservationId: modalForm.dataset.reservationId,
+      action: type.replace("reservation-", ""),
+      reasonCode: values.reasonCode,
+      reasonDetail: values.reasonDetail,
+      internalNote: values.internalNote,
+    });
+    return;
+  }
   const name = values["modal.name"]?.trim();
   if (!name) return;
   if (type === "listing") {
@@ -378,6 +562,30 @@ function submitModal(event) {
   modal.close();
   persist(`${name}を追加しました`);
   render();
+}
+
+function applyReservationTransition(input) {
+  try {
+    const result = transitionStayReservation(workspace, input);
+    if (modal.open) modal.close();
+    document.querySelector("#modal-submit").textContent = "追加する";
+    persist(`${result.reservation.reservationNumber || result.reservation.id}を${statusLabel(result.reservation.status)}に更新しました`);
+    render();
+  } catch (error) {
+    showNotice(error.message, true);
+  }
+}
+
+function applyInventoryReassignment(button, currentInventoryId) {
+  const newInventoryId = button.closest(".assignment-row")?.querySelector("select")?.value;
+  if (!newInventoryId) { showNotice("変更先を選択してください。", true); return; }
+  try {
+    reassignReservationInventory(workspace, { reservationId: selectedReservationId, currentInventoryId, newInventoryId });
+    persist(`${inventoryName(currentInventoryId)}から${inventoryName(newInventoryId)}へ割り当てを変更しました`);
+    render();
+  } catch (error) {
+    showNotice(error.message, true);
+  }
 }
 
 function setPath(path, value) {
@@ -469,6 +677,7 @@ function showNotice(message, error = false) {
 }
 
 function selectedRoomType() { return state.roomTypes.find((item) => item.id === selectedRoomTypeId); }
+function selectedReservation() { return (workspace.stayReservations || []).find((item) => item.id === selectedReservationId && item.listingId === state?.id); }
 function activateListing(listingId) {
   selectedListingId = listingId;
   state = workspace.stayListings.find((listing) => listing.id === selectedListingId);
@@ -476,6 +685,12 @@ function activateListing(listingId) {
   selectedRatePlanId = state?.ratePlans[0]?.id;
 }
 function metric(label, value, note) { return `<section class="card metric"><span class="metric-label">${label}</span><strong>${value}</strong><small>${note}</small></section>`; }
+function dashboardMetric(label, value, note, tone) { return `<section class="card dashboard-metric dashboard-metric-${tone}"><span>${label}</span><strong>${value}</strong><small>${note}</small></section>`; }
+function reservationActionButtons(reservation) {
+  if (reservation.status === "requested") return `<div class="reservation-actions"><button class="button button-small button-primary" data-reservation-action="approve" data-reservation-id="${reservation.id}">承認</button><button class="button button-small" data-reservation-action="reject" data-reservation-id="${reservation.id}">拒否</button><button class="button button-small danger" data-reservation-action="cancel" data-reservation-id="${reservation.id}">取消</button></div>`;
+  if (reservation.status === "confirmed") return `<div class="reservation-actions"><button class="button button-small danger" data-reservation-action="cancel" data-reservation-id="${reservation.id}">取消</button></div>`;
+  return `<span class="muted">操作なし</span>`;
+}
 function checkRow(check) { return `<li class="check-item ${check.passed ? "" : "failed"}"><span class="check-icon">${check.passed ? "✓" : "!"}</span>${escapeHtml(check.label)}</li>`; }
 function field(label, path, value, type = "text", className = "") { return `<div class="field ${className}"><label>${label}</label><input name="${path}" data-path="${path}" type="${type}" value="${escapeHtml(String(value ?? ""))}" /></div>`; }
 function previewField(label, key, value, type) { return `<div class="field"><label>${label}</label><input data-preview="${key}" type="${type}" min="${type === "number" ? "1" : ""}" value="${escapeHtml(String(value ?? ""))}" /></div>`; }
@@ -485,7 +700,25 @@ function amenityButton(amenity, selected, target) { return `<button class="ameni
 function roomKindLabel(value) { return { entire_place: "一棟貸し / Room", private_room: "個室 / Room", shared_room: "相部屋 / Bed" }[value] || value; }
 function mealLabel(value) { return { room_only: "素泊まり", breakfast: "朝食", dinner: "夕食", breakfast_and_dinner: "朝夕食" }[value] || value; }
 function policyLabel(value) { return value === "non_refundable" ? "返金不可" : "キャンセル可"; }
+function statusLabel(value) { return { requested: "承認待ち", confirmed: "予約確定", rejected: "拒否", canceled: "キャンセル", expired: "期限切れ", completed: "宿泊完了", no_show: "無断不泊" }[value] || value; }
+function eventLabel(value) { return { approved: "予約を承認", rejected: "予約申請を拒否", canceled_by_tenant: "テナント都合で取消" }[value] || value; }
+function reasonLabel(value) { return { unable_to_accommodate: "受け入れ困難", request_not_acceptable: "要望に対応できない", facility_unavailable: "施設を提供できない", maintenance: "設備メンテナンス", overbooking: "オーバーブッキング", safety: "安全上の理由", other: "その他" }[value] || value; }
+function roomTypeName(id) { return state.roomTypes.find((item) => item.id === id)?.name || "Room Type未設定"; }
+function inventoryName(id) {
+  for (const roomType of state.roomTypes) {
+    const room = roomType.rooms.find((item) => item.id === id);
+    if (room) return room.name;
+    for (const parentRoom of roomType.rooms) {
+      const bed = parentRoom.beds.find((item) => item.id === id);
+      if (bed) return `${parentRoom.name} / ${bed.name}`;
+    }
+  }
+  return id;
+}
+function assignmentLabel(reservation) { const ids = [...(reservation.roomAssignments || []).map((item) => item.stayRoomId), ...(reservation.bedAssignments || []).map((item) => item.stayBedId)]; return ids.length ? ids.join(" / ") : "未割当"; }
 function yen(value) { return new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" }).format(value); }
+function formatDateTime(value) { return value ? new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value)) : "—"; }
+function expectedArrivalLabel(value) { return value ? value.slice(11, 16) : "未定"; }
 function formatStayDate(value) { return new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric", weekday: "short", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`)); }
 function escapeHtml(value) { return value.replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]); }
 
