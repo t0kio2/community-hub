@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  addInventoryBlock,
   availableAssignmentCandidates,
   arrivalTimeOptions,
   availableLastNightOn,
@@ -15,6 +16,7 @@ import {
   publicationChecks,
   reservationDashboard,
   reassignReservationInventory,
+  removeInventoryBlock,
   stayAvailableEndsOn,
   transitionStayReservation,
 } from "../domain.js";
@@ -417,6 +419,37 @@ test("相部屋予約は有効な親Roomに属する空きBedへ再割り当て�
     newInventoryId: "bed-3",
   });
   assert.equal(assignment.stayBedId, "bed-3");
+});
+
+test("予約割り当てと重なるRoom停止期間は登録しない", () => {
+  const workspace = assignmentWorkspace();
+
+  assert.throws(() => addInventoryBlock(workspace, { listingId: "listing-1", inventoryId: "room-1", startsOn: "2026-08-16", endsOn: "2026-08-18", reason: "maintenance" }), /予約割り当て/);
+  assert.deepEqual(workspace.stayListings[0].roomTypes[0].rooms[0].blocks || [], []);
+});
+
+test("予約と重ならない停止期間を追加して解除できる", () => {
+  const workspace = assignmentWorkspace();
+  const block = addInventoryBlock(workspace, { listingId: "listing-1", inventoryId: "room-3", startsOn: "2026-08-20", endsOn: "2026-08-22", reason: "cleaning" });
+
+  assert.equal(workspace.stayListings[0].roomTypes[0].rooms[2].blocks.length, 1);
+  assert.equal(removeInventoryBlock(workspace, { listingId: "listing-1", blockId: block.id }).reason, "cleaning");
+  assert.equal(workspace.stayListings[0].roomTypes[0].rooms[2].blocks.length, 0);
+});
+
+test("停止期間と重なるRoomを再割り当て候補から除外する", () => {
+  const workspace = assignmentWorkspace();
+  workspace.stayListings[0].roomTypes[0].rooms[2].blocks = [{ id: "block-1", startsOn: "2026-08-15", endsOn: "2026-08-17", reason: "maintenance" }];
+
+  assert.deepEqual(availableAssignmentCandidates(workspace, "reservation-current"), []);
+});
+
+test("停止期間中の物理Roomには新規予約を割り当てない", () => {
+  const workspace = reservationWorkspace("instant", "private_room");
+  workspace.stayListings[0].roomTypes[0].rooms[0].blocks = [{ id: "block-1", startsOn: "2026-08-15", endsOn: "2026-08-17", reason: "maintenance" }];
+
+  assert.throws(() => createStayReservation(workspace, reservationInput()), /割り当て可能な物理在庫/);
+  assert.equal(workspace.stayReservations.length, 0);
 });
 
 function assignmentWorkspace() {
