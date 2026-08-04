@@ -85,6 +85,7 @@ erDiagram
 
     stay_rooms {
         bigint id PK
+        bigint stay_listing_id FK
         bigint stay_room_type_id FK
         string name
         boolean active
@@ -174,7 +175,8 @@ erDiagram
     stay_amenities ||--o{ stay_listing_amenities : "施設へ設定される"
     stay_room_types ||--o{ stay_room_type_amenities : "部屋設備を設定する"
     stay_amenities ||--o{ stay_room_type_amenities : "部屋タイプへ設定される"
-    stay_room_types ||--o{ stay_rooms : "物理客室を持つ"
+    stay_listings ||--o{ stay_rooms : "物理客室を持つ"
+    stay_room_types o|--o{ stay_rooms : "販売分類へ任意に所属する"
     stay_rooms ||--o{ stay_beds : "相部屋のベッドを持つ"
     stay_rooms ||--o{ stay_room_blocks : "期間停止を持つ"
     stay_beds ||--o{ stay_bed_blocks : "期間停止を持つ"
@@ -272,8 +274,9 @@ erDiagram
 | カラム | 型 | NULL | 初期値 | 制約・定義 |
 | --- | --- | :---: | --- | --- |
 | `id` | bigint | × | 自動採番 | 主キー |
-| `stay_room_type_id` | bigint | × | なし | `stay_room_types.id`への外部キー |
-| `name` | string | × | なし | 施設内の管理名、Room Type内で一意 |
+| `stay_listing_id` | bigint | × | なし | `stay_listings.id`への外部キー |
+| `stay_room_type_id` | bigint | ○ | NULL | `stay_room_types.id`への外部キー。未分類RoomではNULL |
+| `name` | string | × | なし | 施設内の管理名、施設内で一意 |
 | `active` | boolean | × | `true` | `false`の場合は新規予約へ割り当てない |
 | `notes` | text | ○ | NULL | 一般ユーザーへ表示しない管理メモ |
 | `created_at` | datetime | × | 自動設定 | 作成日時 |
@@ -378,7 +381,9 @@ erDiagram
 
 宿泊可能期間は`[stay_available_starts_on, stay_available_ends_on)`として扱う。両方を設定する場合は`stay_available_starts_on < stay_available_ends_on`とする。予約受付期間は`booking_open_days_before × 24 > booking_close_hours_before`とする。
 
-`stay_room_type_images`、`stay_listing_amenities`、`stay_room_type_amenities`、`stay_rooms`、`stay_beds`、`stay_room_blocks`、`stay_bed_blocks`、`stay_room_type_daily_sales_controls`、`stay_rate_plans`、`stay_room_type_rates`、`stay_room_type_rate_daily_prices`は、関連をたどった`stay_listing_id`または`tenant_id`が一致しなければならない。異なるテナントの固有Amenitiesや異なる施設のレコード同士を紐づけない。
+`stay_room_type_images`、`stay_listing_amenities`、`stay_room_type_amenities`、`stay_rooms`、`stay_beds`、`stay_room_blocks`、`stay_bed_blocks`、`stay_room_type_daily_sales_controls`、`stay_rate_plans`、`stay_room_type_rates`、`stay_room_type_rate_daily_prices`は、関連をたどった`stay_listing_id`または`tenant_id`が一致しなければならない。`stay_rooms.stay_room_type_id`を設定する場合は、そのRoom Typeの`stay_listing_id`がRoom自身の`stay_listing_id`と一致しなければならない。異なるテナントの固有Amenitiesや異なる施設のレコード同士を紐づけない。
+
+Roomは施設直下の物理台帳としてRoom Typeより先に登録できる。`stay_room_type_id IS NULL`の未分類RoomとそのBedは販売在庫、公開条件、予約可能数および自動割り当て候補に含めない。Room Typeへ分類する際は販売形態に対応する構成を満たすこと。将来期間に有効な予約割り当てを持つRoomのRoom Type変更・未分類化は許可しない。
 
 `stay_room_types.capacity` は `entire_place / private_room` では1 Roomあたりの最大宿泊人数とし、`shared_room` では1 Bedあたり1人を表すため1とする。相部屋の物理Room全体の収容人数は、そのRoomに属する有効なBed数から算出する。
 
@@ -401,7 +406,8 @@ Room Typeを`published`へ変更するには、`stay_room_type_images`が1件以
 | `stay_amenities` | `active, scope, category` | composite index |
 | `stay_listing_amenities` | `stay_listing_id, stay_amenity_id` | unique index |
 | `stay_room_type_amenities` | `stay_room_type_id, stay_amenity_id` | unique index |
-| `stay_rooms` | `stay_room_type_id, name` | unique index |
+| `stay_rooms` | `stay_listing_id, name` | unique index |
+| `stay_rooms` | `stay_room_type_id, active` | composite index |
 | `stay_beds` | `stay_room_id, name` | unique index |
 | `stay_room_blocks` | `stay_room_id, starts_on, ends_on` | composite index |
 | `stay_bed_blocks` | `stay_bed_id, starts_on, ends_on` | composite index |
