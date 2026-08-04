@@ -8,6 +8,14 @@ export function physicalInventory(roomType) {
   );
 }
 
+function overlapsPeriod(leftStart, leftEnd, rightStart, rightEnd) {
+  return leftStart < rightEnd && leftEnd > rightStart;
+}
+
+function isBlocked(inventory, startsOn, endsOn) {
+  return (inventory.blocks || []).some((block) => overlapsPeriod(block.startsOn, block.endsOn, startsOn, endsOn));
+}
+
 export function inventoryForDate(roomType, date) {
   const physical = physicalInventory(roomType);
   const control = roomType.dailySalesControls.find((item) => item.stayDate === date);
@@ -135,6 +143,11 @@ export function normalizeWorkspace(data) {
       delete listing.amenities;
       listing.stay ||= {};
       listing.stay.latestCheckInTime ||= "22:00";
+      listing.roomTypes ||= [];
+      listing.roomTypes.forEach((roomType) => roomType.rooms?.forEach((room) => {
+        room.blocks ||= [];
+        room.beds?.forEach((bed) => { bed.blocks ||= []; });
+      }));
     });
     return workspace;
   }
@@ -257,12 +270,12 @@ export function availableAssignmentCandidates(workspace, reservationId, now = ne
   ]);
 
   if (roomType.roomKind === "shared_room") {
-    return roomType.rooms.filter((room) => room.active).flatMap((room) => room.beds
-      .filter((bed) => bed.active && !usedBedIds.has(bed.id) && !currentIds.has(bed.id))
+    return roomType.rooms.filter((room) => room.active && !isBlocked(room, reservation.checkInDate, reservation.checkOutDate)).flatMap((room) => room.beds
+      .filter((bed) => bed.active && !isBlocked(bed, reservation.checkInDate, reservation.checkOutDate) && !usedBedIds.has(bed.id) && !currentIds.has(bed.id))
       .map((bed) => ({ id: bed.id, name: `${room.name} / ${bed.name}`, kind: "bed" })));
   }
   return roomType.rooms
-    .filter((room) => room.active && !usedRoomIds.has(room.id) && !currentIds.has(room.id))
+    .filter((room) => room.active && !isBlocked(room, reservation.checkInDate, reservation.checkOutDate) && !usedRoomIds.has(room.id) && !currentIds.has(room.id))
     .map((room) => ({ id: room.id, name: room.name, kind: "room" }));
 }
 
@@ -287,6 +300,50 @@ export function reassignReservationInventory(workspace, input, now = new Date())
   assignment.assignedAt = now.toISOString();
   reservation.updatedAt = now.toISOString();
   return assignment;
+}
+
+export function addInventoryBlock(workspace, input) {
+  if (!input.startsOn || !input.endsOn || input.startsOn >= input.endsOn) throw new Error("停止期間の開始日と終了日を正しく入力してください");
+  if (!["maintenance", "cleaning", "operator_block", "other"].includes(input.reason)) throw new Error("停止理由を選択してください");
+  const listing = workspace.stayListings.find((item) => item.id === input.listingId);
+  let target;
+  let parentRoom;
+  for (const roomType of listing?.roomTypes || []) {
+    for (const room of roomType.rooms || []) {
+      if (room.id === input.inventoryId) target = room;
+      const bed = (room.beds || []).find((item) => item.id === input.inventoryId);
+      if (bed) { target = bed; parentRoom = room; }
+    }
+  }
+  if (!target) throw new Error("対象のRoomまたはBedが見つかりません");
+
+  const hasConflict = (workspace.stayReservations || []).some((reservation) => {
+    if (reservation.listingId !== input.listingId || !["requested", "confirmed"].includes(reservation.status)) return false;
+    if (!overlapsPeriod(reservation.checkInDate, reservation.checkOutDate, input.startsOn, input.endsOn)) return false;
+    if (parentRoom) return (reservation.bedAssignments || []).some((assignment) => assignment.stayBedId === target.id);
+    const roomAssigned = (reservation.roomAssignments || []).some((assignment) => assignment.stayRoomId === target.id);
+    const childBedIds = new Set((target.beds || []).map((bed) => bed.id));
+    return roomAssigned || (reservation.bedAssignments || []).some((assignment) => childBedIds.has(assignment.stayBedId));
+  });
+  if (hasConflict) throw new Error("予約割り当てと重なる期間は停止できません");
+
+  target.blocks ||= [];
+  const block = { id: makeId("block"), startsOn: input.startsOn, endsOn: input.endsOn, reason: input.reason };
+  target.blocks.push(block);
+  return block;
+}
+
+export function removeInventoryBlock(workspace, input) {
+  const listing = workspace.stayListings.find((item) => item.id === input.listingId);
+  for (const roomType of listing?.roomTypes || []) {
+    for (const room of roomType.rooms || []) {
+      for (const target of [room, ...(room.beds || [])]) {
+        const index = (target.blocks || []).findIndex((block) => block.id === input.blockId);
+        if (index >= 0) return target.blocks.splice(index, 1)[0];
+      }
+    }
+  }
+  throw new Error("停止期間が見つかりません");
 }
 
 function tenantCancellationNotifications(reservation, event, now) {
@@ -352,10 +409,10 @@ export function createStayReservation(workspace, input, now = new Date()) {
   const roomAssignments = [];
   const bedAssignments = [];
   if (roomType.roomKind === "shared_room") {
-    const beds = roomType.rooms.filter((room) => room.active).flatMap((room) => room.beds.filter((bed) => bed.active));
+    const beds = roomType.rooms.filter((room) => room.active && !isBlocked(room, input.checkInDate, input.checkOutDate)).flatMap((room) => room.beds.filter((bed) => bed.active && !isBlocked(bed, input.checkInDate, input.checkOutDate)));
     beds.filter((bed) => !usedBedIds.has(bed.id)).slice(0, previewRoom.requiredQuantity).forEach((bed) => bedAssignments.push({ stayBedId: bed.id, assignedAt }));
   } else {
-    roomType.rooms.filter((room) => room.active && !usedRoomIds.has(room.id)).slice(0, previewRoom.requiredQuantity).forEach((room) => roomAssignments.push({ stayRoomId: room.id, assignedAt }));
+    roomType.rooms.filter((room) => room.active && !isBlocked(room, input.checkInDate, input.checkOutDate) && !usedRoomIds.has(room.id)).slice(0, previewRoom.requiredQuantity).forEach((room) => roomAssignments.push({ stayRoomId: room.id, assignedAt }));
   }
   if (roomAssignments.length + bedAssignments.length !== previewRoom.requiredQuantity) throw new Error("割り当て可能な物理在庫がありません");
 
