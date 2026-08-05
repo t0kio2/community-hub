@@ -5,6 +5,7 @@ import {
   assignRoomType,
   availableAssignmentCandidates,
   arrivalTimeOptions,
+  calendarDates,
   availableLastNightOn,
   buildStayPreview,
   canPublish,
@@ -16,6 +17,7 @@ import {
   priceForDate,
   publicationChecks,
   reservationDashboard,
+  reservationOccupiesDate,
   reassignReservationInventory,
   removeInventoryBlock,
   stayAvailableEndsOn,
@@ -43,6 +45,19 @@ const sharedRoomType = {
   ],
   dailySalesControls: [],
 };
+
+test("両カレンダーで共有する基準日から7日間を生成する", () => {
+  assert.deepEqual(calendarDates("2026-08-29"), [
+    "2026-08-29", "2026-08-30", "2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04",
+  ]);
+});
+
+test("予約の占有日はチェックアウト日を含まない", () => {
+  const reservation = { checkInDate: "2026-08-15", checkOutDate: "2026-08-17" };
+  assert.equal(reservationOccupiesDate(reservation, "2026-08-15"), true);
+  assert.equal(reservationOccupiesDate(reservation, "2026-08-16"), true);
+  assert.equal(reservationOccupiesDate(reservation, "2026-08-17"), false);
+});
 
 test("個室の物理在庫は有効なRoom数から算出する", () => {
   assert.equal(physicalInventory(privateRoomType), 1);

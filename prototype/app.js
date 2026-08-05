@@ -1,9 +1,11 @@
 import {
+  addDays,
   addInventoryBlock,
   assignRoomType,
   availableAssignmentCandidates,
   availableLastNightOn,
   buildStayPreview,
+  calendarDates,
   canPublish,
   createBlankStayListing,
   inventoryForDate,
@@ -12,6 +14,7 @@ import {
   physicalInventory,
   priceForDate,
   publicationChecks,
+  reservationOccupiesDate,
   reservationDashboard,
   reassignReservationInventory,
   removeInventoryBlock,
@@ -26,13 +29,15 @@ const viewTitles = {
   "reservation-dashboard": "予約ダッシュボード",
   reservations: "予約一覧",
   "reservation-detail": "予約詳細",
+  calendar: "販売カレンダー",
   overview: "概要",
   facility: "施設情報",
   rooms: "Room Type管理",
   "room-types": "Room Type管理",
   "physical-inventory": "物理Room／Bed管理",
   rates: "料金プラン",
-  calendar: "日別設定",
+  "reservation-calendar": "予約カレンダー",
+  "sales-calendar": "販売カレンダー",
   preview: "宿泊者プレビュー",
   publish: "公開確認",
 };
@@ -105,7 +110,7 @@ function render() {
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === currentView);
   });
-  document.querySelector("#publish-button").hidden = ["listings", "reservation-dashboard", "reservations", "reservation-detail"].includes(currentView);
+  document.querySelector("#publish-button").hidden = ["listings", "reservation-dashboard", "reservations", "reservation-detail", "reservation-calendar"].includes(currentView);
   document.querySelector("#publish-button").textContent = state?.status === "published" ? "公開中" : "公開する";
 
   const renderView = {
@@ -119,7 +124,9 @@ function render() {
     "room-types": renderRoomTypes,
     "physical-inventory": renderPhysicalInventory,
     rates: renderRates,
-    calendar: renderCalendar,
+    calendar: renderSalesCalendarView,
+    "reservation-calendar": renderReservationCalendarView,
+    "sales-calendar": renderSalesCalendarView,
     preview: renderPreview,
     publish: renderPublish,
   }[currentView] || renderListings;
@@ -223,7 +230,7 @@ function renderReservationDetail() {
   const events = (workspace.stayReservationEvents || []).filter((event) => event.stayReservationId === reservation.id).slice().sort((left, right) => right.occurredAt.localeCompare(left.occurredAt));
   const nights = reservation.priceSnapshot?.nights || [];
   return `
-    <section class="detail-head"><div><button class="button button-small" data-back-reservations>← ${reservationReturnView === "reservation-dashboard" ? "ダッシュボード" : "予約一覧"}</button><p class="eyebrow">${escapeHtml(reservation.reservationNumber || reservation.id)}</p><div class="detail-title"><h2>${escapeHtml(primaryGuest?.name || "宿泊者未登録")}</h2><span class="status status-${reservation.status}">${statusLabel(reservation.status)}</span></div><p>${reservation.checkInDate} → ${reservation.checkOutDate}・${reservation.guestCount}名</p></div><div class="detail-actions">${reservationActionButtons(reservation)}</div></section>
+    <section class="detail-head"><div><button class="button button-small" data-back-reservations>← ${{ "reservation-dashboard": "ダッシュボード", "reservation-calendar": "予約カレンダー" }[reservationReturnView] || "予約一覧"}</button><p class="eyebrow">${escapeHtml(reservation.reservationNumber || reservation.id)}</p><div class="detail-title"><h2>${escapeHtml(primaryGuest?.name || "宿泊者未登録")}</h2><span class="status status-${reservation.status}">${statusLabel(reservation.status)}</span></div><p>${reservation.checkInDate} → ${reservation.checkOutDate}・${reservation.guestCount}名</p></div><div class="detail-actions">${reservationActionButtons(reservation)}</div></section>
     <div class="grid detail-layout">
       <div class="grid">
         <section class="card"><div class="card-header"><div><h3>宿泊内容</h3><p>予約時点の販売条件</p></div><strong class="detail-total">${yen(reservation.totalAmount)}</strong></div><dl class="definition-grid"><div><dt>Room Type</dt><dd>${escapeHtml(reservation.priceSnapshot?.room_type?.name || roomTypeName(reservation.roomTypeId))}</dd></div><div><dt>Rate Plan</dt><dd>${escapeHtml(reservation.priceSnapshot?.rate_plan?.name || "—")}</dd></div><div><dt>到着予定</dt><dd>${reservation.expectedArrivalAt ? formatDateTime(reservation.expectedArrivalAt) : "未定"}</dd></div><div><dt>数量</dt><dd>${reservation.quantity}${reservation.priceSnapshot?.pricing_unit === "bed" ? "ベッド" : "室"}</dd></div></dl>${nights.length ? `<div class="nightly-breakdown">${nights.map((night) => `<div><span>${night.stay_date}</span><span>${yen(night.unit_amount)} × ${night.quantity}</span><strong>${yen(night.subtotal_amount)}</strong></div>`).join("")}</div>` : ""}</section>
@@ -402,11 +409,37 @@ function rateEditorRow(roomType, plan) {
   return `<tr><td><strong>${escapeHtml(roomType.name)}</strong></td><td><input data-rate-amount="${roomType.id}:${plan.id}" type="number" min="1" value="${rate?.pricePerNightAmount ?? ""}" placeholder="未設定" /></td><td><button class="toggle ${rate?.active ? "on" : ""}" data-toggle-rate="${roomType.id}:${plan.id}" aria-label="料金の有効状態"></button></td></tr>`;
 }
 
-function renderCalendar() {
+function renderSalesCalendarView() {
+  const dates = calendarDates(calendarDate);
   return `
-    <section class="page-lead"><div><h2>日別料金・販売上限</h2><p>日付ごとの例外だけを保存し、未設定日は基本料金と物理在庫へフォールバックします。</p></div></section>
-    <section class="card"><div class="calendar-controls"><div class="field"><label>宿泊日</label><input id="calendar-date" type="date" value="${calendarDate}" /></div><div class="muted">選択日の料金と販売可能数を比較します</div></div></section>
-    <section class="card" style="margin-top:18px"><table class="table"><thead><tr><th>Room Type</th><th>物理在庫</th><th>販売上限</th><th>販売可能数</th><th>Rate Plan</th><th>基本料金</th><th>日別料金</th></tr></thead><tbody>
+    <section class="page-lead"><div><p class="eyebrow">SALES CALENDAR</p><h2>販売カレンダー</h2><p>Room Typeごとの販売数と料金を確認・編集します。</p></div></section>
+    ${renderCalendarToolbar()}
+    ${renderSalesCalendar(dates)}`;
+}
+
+function renderReservationCalendarView() {
+  const dates = calendarDates(calendarDate);
+  return `
+    <section class="page-lead"><div><p class="eyebrow">RESERVATION CALENDAR</p><h2>予約カレンダー</h2><p>物理Room／Bedごとの宿泊予定と未割り当て予約を確認します。</p></div></section>
+    ${renderCalendarToolbar()}
+    ${renderAssignmentCalendar(dates)}`;
+}
+
+function renderCalendarToolbar() {
+  return `<section class="card calendar-toolbar"><p class="muted">7日間表示</p><div class="calendar-period"><button class="button button-small" data-calendar-shift="-7">← 前週</button><div class="field"><label>基準日</label><input id="calendar-date" type="date" value="${calendarDate}" /></div><button class="button button-small" data-calendar-shift="7">次週 →</button></div></section>`;
+}
+
+function renderSalesCalendar(dates) {
+  return `<section class="card calendar-board"><div class="calendar-grid calendar-grid-sales"><div class="calendar-corner">Room Type</div>${dates.map(calendarDateHeader).join("")}${state.roomTypes.map((roomType) => `<div class="calendar-row-label"><strong>${escapeHtml(roomType.name)}</strong><small>${roomKindLabel(roomType.roomKind)}</small></div>${dates.map((date) => {
+    const available = inventoryForDate(roomType, date, state);
+    const prices = state.roomTypeRates.filter((rate) => rate.roomTypeId === roomType.id && rate.active).map((rate) => priceForDate(state, roomType.id, rate.ratePlanId, date)).filter(Number.isFinite);
+    const stopped = available === 0;
+    return `<button class="calendar-cell sales-cell ${date === calendarDate ? "selected" : ""} ${stopped ? "stopped" : ""}" data-calendar-select-date="${date}"><span>${stopped ? "販売停止" : `残り ${available}`}</span><strong>${prices.length ? `${yen(Math.min(...prices))}〜` : "料金なし"}</strong><small>${roomType.dailySalesControls.some((item) => item.stayDate === date) ? "日別設定あり" : "基本設定"}</small></button>`;
+  }).join("")}`).join("")}</div></section>${renderDailySalesEditor()}`;
+}
+
+function renderDailySalesEditor() {
+  return `<section class="card calendar-editor"><div class="card-header"><div><h3>${formatStayDate(calendarDate)}の日別設定</h3><p>例外だけを保存し、未設定日は基本料金と物理在庫へフォールバックします。</p></div></div><div class="table-scroll"><table class="table"><thead><tr><th>Room Type</th><th>物理在庫</th><th>販売上限</th><th>販売可能数</th><th>Rate Plan</th><th>基本料金</th><th>日別料金</th></tr></thead><tbody>
       ${state.roomTypes.flatMap((roomType) => {
         const rates = state.roomTypeRates.filter((rate) => rate.roomTypeId === roomType.id && rate.active);
         return (rates.length ? rates : [null]).map((rate, index) => {
@@ -416,8 +449,27 @@ function renderCalendar() {
           return `<tr>${index === 0 ? `<td rowspan="${rates.length || 1}"><strong>${escapeHtml(roomType.name)}</strong></td><td rowspan="${rates.length || 1}">${physicalInventory(roomType, state)}</td><td rowspan="${rates.length || 1}"><input data-sales-limit="${roomType.id}" type="number" min="0" value="${control?.salesLimit ?? ""}" placeholder="制限なし" /></td><td rowspan="${rates.length || 1}"><strong>${inventoryForDate(roomType, calendarDate, state)}</strong></td>` : ""}<td>${plan ? escapeHtml(plan.name) : "料金なし"}</td><td class="price">${rate ? yen(rate.pricePerNightAmount) : "—"}</td><td>${rate ? `<input data-daily-price="${rate.id}" type="number" min="1" value="${daily?.priceAmount ?? ""}" placeholder="${priceForDate(state, roomType.id, plan.id, calendarDate)}" />` : "—"}</td></tr>`;
         });
       }).join("")}
-    </tbody></table></section>`;
+    </tbody></table></div></section>`;
 }
+
+function renderAssignmentCalendar(dates) {
+  const terminal = new Set(["rejected", "canceled", "expired", "completed", "no_show"]);
+  const reservations = (workspace.stayReservations || []).filter((item) => item.listingId === state.id && !terminal.has(item.status));
+  const inventoryRows = (state.rooms || []).filter((room) => room.roomTypeId).flatMap((room) => {
+    const roomType = state.roomTypes.find((item) => item.id === room.roomTypeId);
+    return roomType?.roomKind === "shared_room" ? room.beds.filter((bed) => bed.active).map((bed) => ({ id: bed.id, label: `${room.name} / ${bed.name}`, roomType })) : [{ id: room.id, label: room.name, roomType }];
+  });
+  const assignedIds = new Set(inventoryRows.map((item) => item.id));
+  const unassigned = reservations.filter((reservation) => ![...(reservation.roomAssignments || []).map((item) => item.stayRoomId), ...(reservation.bedAssignments || []).map((item) => item.stayBedId)].some((id) => assignedIds.has(id)));
+  const row = (inventory) => `<div class="calendar-row-label"><strong>${escapeHtml(inventory.label)}</strong><small>${escapeHtml(inventory.roomType?.name || "物理在庫未割当")}</small></div>${dates.map((date) => {
+    const matches = inventory.id === "unassigned" ? unassigned.filter((item) => reservationOccupiesDate(item, date)) : reservations.filter((reservation) => reservationOccupiesDate(reservation, date) && [...(reservation.roomAssignments || []).map((item) => item.stayRoomId), ...(reservation.bedAssignments || []).map((item) => item.stayBedId)].includes(inventory.id));
+    return `<div class="calendar-cell assignment-cell">${matches.map((reservation) => calendarReservationChip(reservation)).join("") || "<span class=\"calendar-empty-mark\">—</span>"}</div>`;
+  }).join("")}`;
+  return `<section class="card calendar-board"><div class="calendar-grid calendar-grid-assignments"><div class="calendar-corner">Room / Bed</div>${dates.map(calendarDateHeader).join("")}${inventoryRows.map(row).join("")}${unassigned.length ? row({ id: "unassigned", label: "未割り当て", roomType: null }) : ""}</div></section><p class="calendar-note">予約を選ぶと詳細画面で部屋・ベッドを再割り当てできます。チェックアウト日は占有日に含みません。</p>`;
+}
+
+function calendarDateHeader(date) { return `<button class="calendar-date-head ${date === calendarDate ? "selected" : ""}" data-calendar-select-date="${date}"><strong>${formatStayDate(date)}</strong><small>${date}</small></button>`; }
+function calendarReservationChip(reservation) { const guest = reservation.guests?.find((item) => item.guestRole === "primary"); return `<button class="reservation-chip status-${reservation.status}" data-open-reservation="${reservation.id}" data-return-view="reservation-calendar"><strong>${escapeHtml(guest?.name || "宿泊者未登録")}</strong><small>${statusLabel(reservation.status)}</small></button>`; }
 
 function renderPreview() {
   const preview = buildStayPreview(state, previewConditions);
@@ -510,6 +562,8 @@ function handleClick(event) {
   const target = event.target.closest("button");
   if (!target) return;
   if (target.dataset.go) { currentView = target.dataset.go; location.hash = currentView; render(); }
+  if (target.dataset.calendarShift) { calendarDate = addDays(calendarDate, Number(target.dataset.calendarShift)); render(); }
+  if (target.dataset.calendarSelectDate) { calendarDate = target.dataset.calendarSelectDate; render(); }
   if (target.dataset.selectListing) { activateListing(target.dataset.selectListing); currentView = "reservation-dashboard"; location.hash = currentView; render(); }
   if (target.dataset.selectRoomType) { selectedRoomTypeId = target.dataset.selectRoomType; render(); }
   if (target.dataset.selectRatePlan) { selectedRatePlanId = target.dataset.selectRatePlan; render(); }

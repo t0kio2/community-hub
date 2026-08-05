@@ -50,6 +50,15 @@ export function addDays(date, days) {
   return value.toISOString().slice(0, 10);
 }
 
+export function calendarDates(startsOn, length = 7) {
+  if (!startsOn || !Number.isInteger(length) || length < 1) return [];
+  return Array.from({ length }, (_, index) => addDays(startsOn, index)).filter(Boolean);
+}
+
+export function reservationOccupiesDate(reservation, date) {
+  return Boolean(date && reservation?.checkInDate <= date && date < reservation?.checkOutDate);
+}
+
 export function arrivalTimeOptions(checkInTime, latestCheckInTime) {
   const toMinutes = (value) => {
     const match = /^(\d{2}):(\d{2})$/.exec(value || "");
