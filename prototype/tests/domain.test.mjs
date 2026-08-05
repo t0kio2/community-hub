@@ -2,8 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   addInventoryBlock,
+  assignRoomType,
   availableAssignmentCandidates,
   arrivalTimeOptions,
+  calendarDates,
   availableLastNightOn,
   buildStayPreview,
   canPublish,
@@ -15,6 +17,7 @@ import {
   priceForDate,
   publicationChecks,
   reservationDashboard,
+  reservationOccupiesDate,
   reassignReservationInventory,
   removeInventoryBlock,
   stayAvailableEndsOn,
@@ -42,6 +45,19 @@ const sharedRoomType = {
   ],
   dailySalesControls: [],
 };
+
+test("両カレンダーで共有する基準日から7日間を生成する", () => {
+  assert.deepEqual(calendarDates("2026-08-29"), [
+    "2026-08-29", "2026-08-30", "2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04",
+  ]);
+});
+
+test("予約の占有日はチェックアウト日を含まない", () => {
+  const reservation = { checkInDate: "2026-08-15", checkOutDate: "2026-08-17" };
+  assert.equal(reservationOccupiesDate(reservation, "2026-08-15"), true);
+  assert.equal(reservationOccupiesDate(reservation, "2026-08-16"), true);
+  assert.equal(reservationOccupiesDate(reservation, "2026-08-17"), false);
+});
 
 test("個室の物理在庫は有効なRoom数から算出する", () => {
   assert.equal(physicalInventory(privateRoomType), 1);
@@ -188,7 +204,33 @@ test("追加した宿泊施設は独立した空のListingとして作成する"
   assert.equal(listing.status, "draft");
   assert.deepEqual(listing.roomTypes, []);
   assert.deepEqual(listing.ratePlans, []);
+  assert.deepEqual(listing.rooms, []);
   assert.equal(listing.stay.timeZone, "Asia/Tokyo");
+});
+
+test("旧形式のRoom Type配下Roomを施設直下へ変換する", () => {
+  const workspace = normalizeWorkspace({
+    id: "listing-1",
+    title: "旧施設",
+    roomTypes: [{ id: "room-type-1", rooms: [{ id: "room-1", name: "101", active: true, beds: [] }] }],
+    ratePlans: [],
+    roomTypeRates: [],
+  });
+
+  assert.equal(workspace.stayListings[0].rooms[0].roomTypeId, "room-type-1");
+  assert.equal("rooms" in workspace.stayListings[0].roomTypes[0], false);
+});
+
+test("未分類RoomはRoom Typeの物理在庫へ含めない", () => {
+  const listing = {
+    rooms: [
+      { id: "classified", roomTypeId: "room-type-1", active: true, beds: [] },
+      { id: "unclassified", roomTypeId: null, active: true, beds: [] },
+    ],
+  };
+  const roomType = { id: "room-type-1", roomKind: "private_room" };
+
+  assert.equal(physicalInventory(roomType, listing), 1);
 });
 
 test("承認制の予約申請は料金を固定してRoomを仮確保する", () => {
@@ -425,31 +467,55 @@ test("予約割り当てと重なるRoom停止期間は登録しない", () => {
   const workspace = assignmentWorkspace();
 
   assert.throws(() => addInventoryBlock(workspace, { listingId: "listing-1", inventoryId: "room-1", startsOn: "2026-08-16", endsOn: "2026-08-18", reason: "maintenance" }), /予約割り当て/);
-  assert.deepEqual(workspace.stayListings[0].roomTypes[0].rooms[0].blocks || [], []);
+  assert.deepEqual(workspace.stayListings[0].rooms[0].blocks || [], []);
 });
 
 test("予約と重ならない停止期間を追加して解除できる", () => {
   const workspace = assignmentWorkspace();
   const block = addInventoryBlock(workspace, { listingId: "listing-1", inventoryId: "room-3", startsOn: "2026-08-20", endsOn: "2026-08-22", reason: "cleaning" });
 
-  assert.equal(workspace.stayListings[0].roomTypes[0].rooms[2].blocks.length, 1);
+  assert.equal(workspace.stayListings[0].rooms[2].blocks.length, 1);
   assert.equal(removeInventoryBlock(workspace, { listingId: "listing-1", blockId: block.id }).reason, "cleaning");
-  assert.equal(workspace.stayListings[0].roomTypes[0].rooms[2].blocks.length, 0);
+  assert.equal(workspace.stayListings[0].rooms[2].blocks.length, 0);
 });
 
 test("停止期間と重なるRoomを再割り当て候補から除外する", () => {
   const workspace = assignmentWorkspace();
-  workspace.stayListings[0].roomTypes[0].rooms[2].blocks = [{ id: "block-1", startsOn: "2026-08-15", endsOn: "2026-08-17", reason: "maintenance" }];
+  workspace.stayListings[0].rooms[2].blocks = [{ id: "block-1", startsOn: "2026-08-15", endsOn: "2026-08-17", reason: "maintenance" }];
 
   assert.deepEqual(availableAssignmentCandidates(workspace, "reservation-current"), []);
 });
 
 test("停止期間中の物理Roomには新規予約を割り当てない", () => {
   const workspace = reservationWorkspace("instant", "private_room");
-  workspace.stayListings[0].roomTypes[0].rooms[0].blocks = [{ id: "block-1", startsOn: "2026-08-15", endsOn: "2026-08-17", reason: "maintenance" }];
+  workspace.stayListings[0].rooms[0].blocks = [{ id: "block-1", startsOn: "2026-08-15", endsOn: "2026-08-17", reason: "maintenance" }];
 
   assert.throws(() => createStayReservation(workspace, reservationInput()), /割り当て可能な物理在庫/);
   assert.equal(workspace.stayReservations.length, 0);
+});
+
+test("予約割り当てがないRoomはRoom Typeへ分類し未分類へ戻せる", () => {
+  const workspace = assignmentWorkspace();
+  workspace.stayListings[0].rooms.push({ id: "room-unclassified", roomTypeId: null, name: "105", active: true, beds: [] });
+
+  assert.equal(assignRoomType(workspace, { listingId: "listing-1", roomId: "room-unclassified", roomTypeId: "room-type-1" }).roomTypeId, "room-type-1");
+  assert.equal(assignRoomType(workspace, { listingId: "listing-1", roomId: "room-unclassified", roomTypeId: null }).roomTypeId, null);
+});
+
+test("有効な予約割り当てを持つRoomはRoom Type変更や未分類化ができない", () => {
+  const workspace = assignmentWorkspace();
+
+  assert.throws(() => assignRoomType(workspace, { listingId: "listing-1", roomId: "room-1", roomTypeId: null }), /予約割り当て/);
+  assert.equal(workspace.stayListings[0].rooms[0].roomTypeId, "room-type-1");
+});
+
+test("Bedを持つRoomは個室Room Typeへ分類できない", () => {
+  const workspace = bedAssignmentWorkspace();
+  workspace.stayListings[0].roomTypes.push({ id: "private-type", roomKind: "private_room" });
+  workspace.stayReservations = [];
+
+  assert.throws(() => assignRoomType(workspace, { listingId: "listing-1", roomId: "room-201", roomTypeId: "private-type" }), /相部屋/);
+  assert.equal(workspace.stayListings[0].rooms[0].roomTypeId, "room-type-bed");
 });
 
 function assignmentWorkspace() {
@@ -459,13 +525,13 @@ function assignmentWorkspace() {
       roomTypes: [{
         id: "room-type-1",
         roomKind: "private_room",
-        rooms: [
-          { id: "room-1", name: "101", active: true, beds: [] },
-          { id: "room-2", name: "102", active: true, beds: [] },
-          { id: "room-3", name: "103", active: true, beds: [] },
-          { id: "room-4", name: "104", active: false, beds: [] },
-        ],
       }],
+      rooms: [
+        { id: "room-1", roomTypeId: "room-type-1", name: "101", active: true, beds: [] },
+        { id: "room-2", roomTypeId: "room-type-1", name: "102", active: true, beds: [] },
+        { id: "room-3", roomTypeId: "room-type-1", name: "103", active: true, beds: [] },
+        { id: "room-4", roomTypeId: "room-type-1", name: "104", active: false, beds: [] },
+      ],
     }],
     stayReservations: [
       { id: "reservation-current", listingId: "listing-1", roomTypeId: "room-type-1", status: "confirmed", checkInDate: "2026-08-15", checkOutDate: "2026-08-17", roomAssignments: [{ stayRoomId: "room-1" }], bedAssignments: [] },
@@ -481,8 +547,10 @@ function bedAssignmentWorkspace() {
       roomTypes: [{
         id: "room-type-bed",
         roomKind: "shared_room",
-        rooms: [{
+      }],
+      rooms: [{
           id: "room-201",
+          roomTypeId: "room-type-bed",
           name: "201",
           active: true,
           beds: [
@@ -491,7 +559,6 @@ function bedAssignmentWorkspace() {
             { id: "bed-3", name: "C", active: true },
           ],
         }],
-      }],
     }],
     stayReservations: [{
       id: "reservation-bed",
@@ -582,9 +649,6 @@ function reservationWorkspace(mode, roomKind) {
     capacity: roomKind === "shared_room" ? 1 : 2,
     status: "published",
     amenityIds: ["wifi"],
-    rooms: roomKind === "shared_room"
-      ? [{ id: "room-1", active: true, beds: [{ id: "bed-1", active: true }, { id: "bed-2", active: true }] }]
-      : [{ id: "room-1", active: true, beds: [] }],
     dailySalesControls: [],
   };
   return {
@@ -596,6 +660,9 @@ function reservationWorkspace(mode, roomKind) {
       status: "published",
       stay: { bookingConfirmationMode: mode, approvalDeadlineHours: 24, checkInTime: "15:00", latestCheckInTime: "22:00", checkOutTime: "10:00", timeZone: "Asia/Tokyo", stayAvailableStartsOn: "2026-08-01", stayAvailableEndsOn: "2026-09-01", facilityAmenityIds: ["wifi"] },
       roomTypes: [roomType],
+      rooms: roomKind === "shared_room"
+        ? [{ id: "room-1", roomTypeId: "private", active: true, beds: [{ id: "bed-1", active: true }, { id: "bed-2", active: true }] }]
+        : [{ id: "room-1", roomTypeId: "private", active: true, beds: [] }],
       ratePlans: [{ id: "standard", name: "素泊まり", description: "", mealType: "room_only", cancellationPolicyType: "standard", status: "published" }],
       roomTypeRates: [{ id: "rate", roomTypeId: "private", ratePlanId: "standard", active: true, pricePerNightAmount: 10_000, dailyPrices: [{ stayDate: "2026-08-15", priceAmount: 15_000 }] }],
     }],

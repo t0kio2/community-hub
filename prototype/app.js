@@ -1,8 +1,11 @@
 import {
+  addDays,
   addInventoryBlock,
+  assignRoomType,
   availableAssignmentCandidates,
   availableLastNightOn,
   buildStayPreview,
+  calendarDates,
   canPublish,
   createBlankStayListing,
   inventoryForDate,
@@ -11,9 +14,11 @@ import {
   physicalInventory,
   priceForDate,
   publicationChecks,
+  reservationOccupiesDate,
   reservationDashboard,
   reassignReservationInventory,
   removeInventoryBlock,
+  roomsForRoomType,
   transitionStayReservation,
   stayAvailableEndsOn,
 } from "./domain.js";
@@ -24,13 +29,15 @@ const viewTitles = {
   "reservation-dashboard": "予約ダッシュボード",
   reservations: "予約一覧",
   "reservation-detail": "予約詳細",
+  calendar: "販売カレンダー",
   overview: "概要",
   facility: "施設情報",
   rooms: "Room Type管理",
   "room-types": "Room Type管理",
   "physical-inventory": "物理Room／Bed管理",
   rates: "料金プラン",
-  calendar: "日別設定",
+  "reservation-calendar": "予約カレンダー",
+  "sales-calendar": "販売カレンダー",
   preview: "宿泊者プレビュー",
   publish: "公開確認",
 };
@@ -103,7 +110,7 @@ function render() {
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === currentView);
   });
-  document.querySelector("#publish-button").hidden = ["listings", "reservation-dashboard", "reservations", "reservation-detail"].includes(currentView);
+  document.querySelector("#publish-button").hidden = ["listings", "reservation-dashboard", "reservations", "reservation-detail", "reservation-calendar"].includes(currentView);
   document.querySelector("#publish-button").textContent = state?.status === "published" ? "公開中" : "公開する";
 
   const renderView = {
@@ -117,7 +124,9 @@ function render() {
     "room-types": renderRoomTypes,
     "physical-inventory": renderPhysicalInventory,
     rates: renderRates,
-    calendar: renderCalendar,
+    calendar: renderSalesCalendarView,
+    "reservation-calendar": renderReservationCalendarView,
+    "sales-calendar": renderSalesCalendarView,
     preview: renderPreview,
     publish: renderPublish,
   }[currentView] || renderListings;
@@ -138,7 +147,7 @@ function renderListings() {
 function renderOverview() {
   const checks = publicationChecks(state);
   const passed = checks.filter((check) => check.passed).length;
-  const physical = state.roomTypes.reduce((sum, roomType) => sum + physicalInventory(roomType), 0);
+  const physical = state.roomTypes.reduce((sum, roomType) => sum + physicalInventory(roomType, state), 0);
   return `
     <section class="page-lead"><div><h2>${escapeHtml(state.title)}</h2><p>設計上の関連を保ったまま、施設の販売準備状況を確認します。</p></div><span class="status status-${state.status}">${state.status}</span></section>
     <div class="grid grid-3">
@@ -150,7 +159,7 @@ function renderOverview() {
       <section class="card">
         <div class="card-header"><div><h3>販売構成</h3><p>Room Typeごとに在庫と料金プランを横断確認</p></div><button class="button button-small" data-go="room-types">編集する</button></div>
         <table class="table"><thead><tr><th>Room Type</th><th>販売単位</th><th>物理在庫</th><th>料金プラン</th><th>状態</th></tr></thead><tbody>
-          ${state.roomTypes.map((roomType) => `<tr><td><strong>${escapeHtml(roomType.name)}</strong></td><td>${roomKindLabel(roomType.roomKind)}</td><td>${physicalInventory(roomType)}</td><td>${state.roomTypeRates.filter((rate) => rate.roomTypeId === roomType.id && rate.active).length}</td><td><span class="status status-${roomType.status}">${roomType.status}</span></td></tr>`).join("")}
+          ${state.roomTypes.map((roomType) => `<tr><td><strong>${escapeHtml(roomType.name)}</strong></td><td>${roomKindLabel(roomType.roomKind)}</td><td>${physicalInventory(roomType, state)}</td><td>${state.roomTypeRates.filter((rate) => rate.roomTypeId === roomType.id && rate.active).length}</td><td><span class="status status-${roomType.status}">${roomType.status}</span></td></tr>`).join("")}
         </tbody></table>
       </section>
       <section class="card">
@@ -221,7 +230,7 @@ function renderReservationDetail() {
   const events = (workspace.stayReservationEvents || []).filter((event) => event.stayReservationId === reservation.id).slice().sort((left, right) => right.occurredAt.localeCompare(left.occurredAt));
   const nights = reservation.priceSnapshot?.nights || [];
   return `
-    <section class="detail-head"><div><button class="button button-small" data-back-reservations>← ${reservationReturnView === "reservation-dashboard" ? "ダッシュボード" : "予約一覧"}</button><p class="eyebrow">${escapeHtml(reservation.reservationNumber || reservation.id)}</p><div class="detail-title"><h2>${escapeHtml(primaryGuest?.name || "宿泊者未登録")}</h2><span class="status status-${reservation.status}">${statusLabel(reservation.status)}</span></div><p>${reservation.checkInDate} → ${reservation.checkOutDate}・${reservation.guestCount}名</p></div><div class="detail-actions">${reservationActionButtons(reservation)}</div></section>
+    <section class="detail-head"><div><button class="button button-small" data-back-reservations>← ${{ "reservation-dashboard": "ダッシュボード", "reservation-calendar": "予約カレンダー" }[reservationReturnView] || "予約一覧"}</button><p class="eyebrow">${escapeHtml(reservation.reservationNumber || reservation.id)}</p><div class="detail-title"><h2>${escapeHtml(primaryGuest?.name || "宿泊者未登録")}</h2><span class="status status-${reservation.status}">${statusLabel(reservation.status)}</span></div><p>${reservation.checkInDate} → ${reservation.checkOutDate}・${reservation.guestCount}名</p></div><div class="detail-actions">${reservationActionButtons(reservation)}</div></section>
     <div class="grid detail-layout">
       <div class="grid">
         <section class="card"><div class="card-header"><div><h3>宿泊内容</h3><p>予約時点の販売条件</p></div><strong class="detail-total">${yen(reservation.totalAmount)}</strong></div><dl class="definition-grid"><div><dt>Room Type</dt><dd>${escapeHtml(reservation.priceSnapshot?.room_type?.name || roomTypeName(reservation.roomTypeId))}</dd></div><div><dt>Rate Plan</dt><dd>${escapeHtml(reservation.priceSnapshot?.rate_plan?.name || "—")}</dd></div><div><dt>到着予定</dt><dd>${reservation.expectedArrivalAt ? formatDateTime(reservation.expectedArrivalAt) : "未定"}</dd></div><div><dt>数量</dt><dd>${reservation.quantity}${reservation.priceSnapshot?.pricing_unit === "bed" ? "ベッド" : "室"}</dd></div></dl>${nights.length ? `<div class="nightly-breakdown">${nights.map((night) => `<div><span>${night.stay_date}</span><span>${yen(night.unit_amount)} × ${night.quantity}</span><strong>${yen(night.subtotal_amount)}</strong></div>`).join("")}</div>` : ""}</section>
@@ -331,7 +340,7 @@ function renderRoomTypes() {
     <section class="page-lead"><div><h2>Room Type管理</h2><p>利用者が選択する客室の販売分類を管理します。</p></div><button class="button button-primary" data-modal="room-type">Room Typeを追加</button></section>
     <div class="grid grid-main">
       <section class="card"><div class="card-header"><div><h3>Room Types</h3><p>施設固有の販売分類</p></div></div>
-        <div class="entity-list">${state.roomTypes.map((roomType) => `<button class="entity-row ${roomType.id === selected?.id ? "selected" : ""}" data-select-room-type="${roomType.id}"><span><strong>${escapeHtml(roomType.name)}</strong><small>${roomKindLabel(roomType.roomKind)} · 在庫 ${physicalInventory(roomType)}</small></span><span class="status status-${roomType.status}">${roomType.status}</span></button>`).join("")}</div>
+        <div class="entity-list">${state.roomTypes.map((roomType) => `<button class="entity-row ${roomType.id === selected?.id ? "selected" : ""}" data-select-room-type="${roomType.id}"><span><strong>${escapeHtml(roomType.name)}</strong><small>${roomKindLabel(roomType.roomKind)} · 在庫 ${physicalInventory(roomType, state)}</small></span><span class="status status-${roomType.status}">${roomType.status}</span></button>`).join("")}</div>
       </section>
       ${selected ? renderRoomTypeEditor(selected) : `<section class="card empty">Room Typeを追加してください</section>`}
     </div>`;
@@ -350,18 +359,18 @@ function renderRoomTypeEditor(roomType) {
       </div>
       <div class="amenities" style="margin-top:16px">${roomAmenities.map((amenity) => amenityButton(amenity, roomType.amenityIds.includes(amenity.id), `room-amenity:${roomType.id}`)).join("")}</div>
     </section>
-    <section class="card inventory-summary"><div><span>物理Room</span><strong>${roomType.rooms.length}</strong></div><div><span>販売在庫</span><strong>${physicalInventory(roomType)}</strong></div><button class="button button-primary" data-go="physical-inventory">物理Room／Bedを管理</button></section>
+    <section class="card inventory-summary"><div><span>分類済みRoom</span><strong>${roomsForRoomType(state, roomType.id).length}</strong></div><div><span>販売在庫</span><strong>${physicalInventory(roomType, state)}</strong></div><button class="button button-primary" data-go="physical-inventory">物理Room／Bedを管理</button></section>
   </div>`;
 }
 
 function renderPhysicalInventory() {
-  const allRooms = state.roomTypes.flatMap((roomType) => roomType.rooms.map((room) => ({ roomType, room })));
+  const allRooms = (state.rooms || []).map((room) => ({ roomType: state.roomTypes.find((item) => item.id === room.roomTypeId) || null, room }));
   let selected = allRooms.find((item) => item.room.id === selectedPhysicalRoomId) || allRooms[0];
-  if (selected) { selectedPhysicalRoomId = selected.room.id; selectedRoomTypeId = selected.roomType.id; }
+  if (selected) { selectedPhysicalRoomId = selected.room.id; selectedRoomTypeId = selected.roomType?.id || selectedRoomTypeId; }
   return `
     <section class="page-lead"><div><h2>物理Room／Bed管理</h2><p>施設内の全物理在庫、割り当て、停止期間を横断管理します。</p></div><button class="button button-primary" data-modal="room">Roomを登録</button></section>
     <div class="grid inventory-layout">
-      <section class="card"><div class="card-header"><div><h3>全Room</h3><p>${allRooms.length}件</p></div></div><div class="inventory-room-list">${allRooms.map(({ roomType, room }) => `<button class="inventory-room-row ${room.id === selected?.room.id ? "selected" : ""}" data-select-physical-room="${room.id}" data-room-type-id="${roomType.id}"><span><strong>${escapeHtml(room.name)}</strong><small>${escapeHtml(roomType.name)}・${roomType.roomKind === "shared_room" ? `${room.beds.length} Beds` : roomKindLabel(roomType.roomKind)}</small></span><span class="status status-${room.active ? "published" : "inactive"}">${room.active ? "active" : "inactive"}</span></button>`).join("") || `<div class="empty">Roomがありません</div>`}</div></section>
+      <section class="card"><div class="card-header"><div><h3>全Room</h3><p>${allRooms.length}件・未分類 ${allRooms.filter((item) => !item.roomType).length}件</p></div></div><div class="inventory-room-list">${allRooms.map(({ roomType, room }) => `<button class="inventory-room-row ${room.id === selected?.room.id ? "selected" : ""}" data-select-physical-room="${room.id}" data-room-type-id="${roomType?.id || ""}"><span><strong>${escapeHtml(room.name)}</strong><small>${roomType ? `${escapeHtml(roomType.name)}・${roomType.roomKind === "shared_room" ? `${room.beds.length} Beds` : roomKindLabel(roomType.roomKind)}` : "未分類・販売対象外"}</small></span><span class="status status-${room.active ? "published" : "inactive"}">${room.active ? "active" : "inactive"}</span></button>`).join("") || `<div class="empty">Roomがありません</div>`}</div></section>
       ${selected ? renderPhysicalRoomDetail(selected.roomType, selected.room) : `<section class="card empty">Roomを登録してください</section>`}
     </div>`;
 }
@@ -370,8 +379,8 @@ function renderPhysicalRoomDetail(roomType, room) {
   const bedIds = new Set(room.beds.map((bed) => bed.id));
   const reservations = (workspace.stayReservations || []).filter((reservation) => reservation.listingId === state.id && ["requested", "confirmed"].includes(reservation.status) && ((reservation.roomAssignments || []).some((item) => item.stayRoomId === room.id) || (reservation.bedAssignments || []).some((item) => bedIds.has(item.stayBedId)))).sort((left, right) => left.checkInDate.localeCompare(right.checkInDate));
   return `<div class="grid">
-    <section class="card"><div class="card-header"><div><h3>${escapeHtml(room.name)}</h3><p>${escapeHtml(roomType.name)}</p></div><button class="toggle ${room.active ? "on" : ""}" data-toggle-room="${room.id}" aria-label="Roomの有効状態"></button></div><div class="field-grid">${field("管理名", `physicalRoom.${roomType.id}.${room.id}.name`, room.name)}<div class="field"><label>所属Room Type</label><input value="${escapeHtml(roomType.name)}" disabled /></div>${textarea("管理メモ", `physicalRoom.${roomType.id}.${room.id}.notes`, room.notes, "field-wide")}</div><p class="form-note">所属Room Typeの変更は予約・販売条件へ影響するため、このプロトタイプでは表示のみです。</p></section>
-    ${roomType.roomKind === "shared_room" ? `<section class="card"><div class="card-header"><div><h3>Bed構成</h3><p>Roomに属する物理Bed</p></div><button class="button button-small" data-modal="bed" data-room-id="${room.id}">Bedを追加</button></div><div class="bed-list">${room.beds.map((bed) => `<div class="bed-row"><input data-bed-name="${roomType.id}:${room.id}:${bed.id}" value="${escapeHtml(bed.name)}" /><button class="toggle ${bed.active ? "on" : ""}" data-toggle-bed="${room.id}:${bed.id}" aria-label="Bedの有効状態"></button><button class="button button-small" data-modal="block" data-inventory-id="${bed.id}">停止期間</button>${blockList(bed)}</div>`).join("") || `<div class="empty">Bedがありません</div>`}</div></section>` : ""}
+    <section class="card"><div class="card-header"><div><h3>${escapeHtml(room.name)}</h3><p>${roomType ? escapeHtml(roomType.name) : "未分類・販売対象外"}</p></div><button class="toggle ${room.active ? "on" : ""}" data-toggle-room="${room.id}" aria-label="Roomの有効状態"></button></div><div class="field-grid">${field("管理名", `physicalRoom.${room.id}.name`, room.name)}<div class="field"><label>所属Room Type</label><select data-assign-room-type="${room.id}"><option value="">未分類</option>${state.roomTypes.map((item) => `<option value="${item.id}" ${room.roomTypeId === item.id ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}</select></div>${textarea("管理メモ", `physicalRoom.${room.id}.notes`, room.notes, "field-wide")}</div><p class="form-note">未分類Roomは物理台帳に保持されますが、販売・予約割り当てには使用されません。</p></section>
+    ${!roomType || roomType.roomKind === "shared_room" ? `<section class="card"><div class="card-header"><div><h3>Bed構成</h3><p>${roomType ? "相部屋として販売する物理Bed" : "未分類Roomの物理Bed"}</p></div><button class="button button-small" data-modal="bed" data-room-id="${room.id}">Bedを追加</button></div><div class="bed-list">${room.beds.map((bed) => `<div class="bed-row"><input data-bed-name="${room.id}:${bed.id}" value="${escapeHtml(bed.name)}" /><button class="toggle ${bed.active ? "on" : ""}" data-toggle-bed="${room.id}:${bed.id}" aria-label="Bedの有効状態"></button><button class="button button-small" data-modal="block" data-inventory-id="${bed.id}">停止期間</button>${blockList(bed)}</div>`).join("") || `<div class="empty">Bedがありません</div>`}</div></section>` : ""}
     <section class="card"><div class="card-header"><div><h3>Room停止期間</h3><p>一時停止。恒久停止は有効状態を変更</p></div><button class="button button-small" data-modal="block" data-inventory-id="${room.id}">停止期間を追加</button></div>${blockList(room, true)}</section>
     <section class="card"><div class="card-header"><div><h3>現在・未来の予約割り当て</h3><p>このRoomまたは配下Bedを使用する予約</p></div></div>${reservations.length ? `<div class="assignment-reservations">${reservations.map((reservation) => `<button class="inventory-reservation" data-open-reservation="${reservation.id}" data-return-view="physical-inventory"><span><strong>${escapeHtml(reservation.reservationNumber || reservation.id)}</strong><small>${reservation.checkInDate} → ${reservation.checkOutDate}</small></span><span class="status status-${reservation.status}">${statusLabel(reservation.status)}</span></button>`).join("")}</div>` : `<div class="empty">割り当て予定はありません</div>`}</section>
   </div>`;
@@ -400,22 +409,67 @@ function rateEditorRow(roomType, plan) {
   return `<tr><td><strong>${escapeHtml(roomType.name)}</strong></td><td><input data-rate-amount="${roomType.id}:${plan.id}" type="number" min="1" value="${rate?.pricePerNightAmount ?? ""}" placeholder="未設定" /></td><td><button class="toggle ${rate?.active ? "on" : ""}" data-toggle-rate="${roomType.id}:${plan.id}" aria-label="料金の有効状態"></button></td></tr>`;
 }
 
-function renderCalendar() {
+function renderSalesCalendarView() {
+  const dates = calendarDates(calendarDate);
   return `
-    <section class="page-lead"><div><h2>日別料金・販売上限</h2><p>日付ごとの例外だけを保存し、未設定日は基本料金と物理在庫へフォールバックします。</p></div></section>
-    <section class="card"><div class="calendar-controls"><div class="field"><label>宿泊日</label><input id="calendar-date" type="date" value="${calendarDate}" /></div><div class="muted">選択日の料金と販売可能数を比較します</div></div></section>
-    <section class="card" style="margin-top:18px"><table class="table"><thead><tr><th>Room Type</th><th>物理在庫</th><th>販売上限</th><th>販売可能数</th><th>Rate Plan</th><th>基本料金</th><th>日別料金</th></tr></thead><tbody>
+    <section class="page-lead"><div><p class="eyebrow">SALES CALENDAR</p><h2>販売カレンダー</h2><p>Room Typeごとの販売数と料金を確認・編集します。</p></div></section>
+    ${renderCalendarToolbar()}
+    ${renderSalesCalendar(dates)}`;
+}
+
+function renderReservationCalendarView() {
+  const dates = calendarDates(calendarDate);
+  return `
+    <section class="page-lead"><div><p class="eyebrow">RESERVATION CALENDAR</p><h2>予約カレンダー</h2><p>物理Room／Bedごとの宿泊予定と未割り当て予約を確認します。</p></div></section>
+    ${renderCalendarToolbar()}
+    ${renderAssignmentCalendar(dates)}`;
+}
+
+function renderCalendarToolbar() {
+  return `<section class="card calendar-toolbar"><p class="muted">7日間表示</p><div class="calendar-period"><button class="button button-small" data-calendar-shift="-7">← 前週</button><div class="field"><label>基準日</label><input id="calendar-date" type="date" value="${calendarDate}" /></div><button class="button button-small" data-calendar-shift="7">次週 →</button></div></section>`;
+}
+
+function renderSalesCalendar(dates) {
+  return `<section class="card calendar-board"><div class="calendar-grid calendar-grid-sales"><div class="calendar-corner">Room Type</div>${dates.map(calendarDateHeader).join("")}${state.roomTypes.map((roomType) => `<div class="calendar-row-label"><strong>${escapeHtml(roomType.name)}</strong><small>${roomKindLabel(roomType.roomKind)}</small></div>${dates.map((date) => {
+    const available = inventoryForDate(roomType, date, state);
+    const prices = state.roomTypeRates.filter((rate) => rate.roomTypeId === roomType.id && rate.active).map((rate) => priceForDate(state, roomType.id, rate.ratePlanId, date)).filter(Number.isFinite);
+    const stopped = available === 0;
+    return `<button class="calendar-cell sales-cell ${date === calendarDate ? "selected" : ""} ${stopped ? "stopped" : ""}" data-calendar-select-date="${date}"><span>${stopped ? "販売停止" : `残り ${available}`}</span><strong>${prices.length ? `${yen(Math.min(...prices))}〜` : "料金なし"}</strong><small>${roomType.dailySalesControls.some((item) => item.stayDate === date) ? "日別設定あり" : "基本設定"}</small></button>`;
+  }).join("")}`).join("")}</div></section>${renderDailySalesEditor()}`;
+}
+
+function renderDailySalesEditor() {
+  return `<section class="card calendar-editor"><div class="card-header"><div><h3>${formatStayDate(calendarDate)}の日別設定</h3><p>例外だけを保存し、未設定日は基本料金と物理在庫へフォールバックします。</p></div></div><div class="table-scroll"><table class="table"><thead><tr><th>Room Type</th><th>物理在庫</th><th>販売上限</th><th>販売可能数</th><th>Rate Plan</th><th>基本料金</th><th>日別料金</th></tr></thead><tbody>
       ${state.roomTypes.flatMap((roomType) => {
         const rates = state.roomTypeRates.filter((rate) => rate.roomTypeId === roomType.id && rate.active);
         return (rates.length ? rates : [null]).map((rate, index) => {
           const control = roomType.dailySalesControls.find((item) => item.stayDate === calendarDate);
           const plan = rate && state.ratePlans.find((item) => item.id === rate.ratePlanId);
           const daily = rate?.dailyPrices.find((item) => item.stayDate === calendarDate);
-          return `<tr>${index === 0 ? `<td rowspan="${rates.length || 1}"><strong>${escapeHtml(roomType.name)}</strong></td><td rowspan="${rates.length || 1}">${physicalInventory(roomType)}</td><td rowspan="${rates.length || 1}"><input data-sales-limit="${roomType.id}" type="number" min="0" value="${control?.salesLimit ?? ""}" placeholder="制限なし" /></td><td rowspan="${rates.length || 1}"><strong>${inventoryForDate(roomType, calendarDate)}</strong></td>` : ""}<td>${plan ? escapeHtml(plan.name) : "料金なし"}</td><td class="price">${rate ? yen(rate.pricePerNightAmount) : "—"}</td><td>${rate ? `<input data-daily-price="${rate.id}" type="number" min="1" value="${daily?.priceAmount ?? ""}" placeholder="${priceForDate(state, roomType.id, plan.id, calendarDate)}" />` : "—"}</td></tr>`;
+          return `<tr>${index === 0 ? `<td rowspan="${rates.length || 1}"><strong>${escapeHtml(roomType.name)}</strong></td><td rowspan="${rates.length || 1}">${physicalInventory(roomType, state)}</td><td rowspan="${rates.length || 1}"><input data-sales-limit="${roomType.id}" type="number" min="0" value="${control?.salesLimit ?? ""}" placeholder="制限なし" /></td><td rowspan="${rates.length || 1}"><strong>${inventoryForDate(roomType, calendarDate, state)}</strong></td>` : ""}<td>${plan ? escapeHtml(plan.name) : "料金なし"}</td><td class="price">${rate ? yen(rate.pricePerNightAmount) : "—"}</td><td>${rate ? `<input data-daily-price="${rate.id}" type="number" min="1" value="${daily?.priceAmount ?? ""}" placeholder="${priceForDate(state, roomType.id, plan.id, calendarDate)}" />` : "—"}</td></tr>`;
         });
       }).join("")}
-    </tbody></table></section>`;
+    </tbody></table></div></section>`;
 }
+
+function renderAssignmentCalendar(dates) {
+  const terminal = new Set(["rejected", "canceled", "expired", "completed", "no_show"]);
+  const reservations = (workspace.stayReservations || []).filter((item) => item.listingId === state.id && !terminal.has(item.status));
+  const inventoryRows = (state.rooms || []).filter((room) => room.roomTypeId).flatMap((room) => {
+    const roomType = state.roomTypes.find((item) => item.id === room.roomTypeId);
+    return roomType?.roomKind === "shared_room" ? room.beds.filter((bed) => bed.active).map((bed) => ({ id: bed.id, label: `${room.name} / ${bed.name}`, roomType })) : [{ id: room.id, label: room.name, roomType }];
+  });
+  const assignedIds = new Set(inventoryRows.map((item) => item.id));
+  const unassigned = reservations.filter((reservation) => ![...(reservation.roomAssignments || []).map((item) => item.stayRoomId), ...(reservation.bedAssignments || []).map((item) => item.stayBedId)].some((id) => assignedIds.has(id)));
+  const row = (inventory) => `<div class="calendar-row-label"><strong>${escapeHtml(inventory.label)}</strong><small>${escapeHtml(inventory.roomType?.name || "物理在庫未割当")}</small></div>${dates.map((date) => {
+    const matches = inventory.id === "unassigned" ? unassigned.filter((item) => reservationOccupiesDate(item, date)) : reservations.filter((reservation) => reservationOccupiesDate(reservation, date) && [...(reservation.roomAssignments || []).map((item) => item.stayRoomId), ...(reservation.bedAssignments || []).map((item) => item.stayBedId)].includes(inventory.id));
+    return `<div class="calendar-cell assignment-cell">${matches.map((reservation) => calendarReservationChip(reservation)).join("") || "<span class=\"calendar-empty-mark\">—</span>"}</div>`;
+  }).join("")}`;
+  return `<section class="card calendar-board"><div class="calendar-grid calendar-grid-assignments"><div class="calendar-corner">Room / Bed</div>${dates.map(calendarDateHeader).join("")}${inventoryRows.map(row).join("")}${unassigned.length ? row({ id: "unassigned", label: "未割り当て", roomType: null }) : ""}</div></section><p class="calendar-note">予約を選ぶと詳細画面で部屋・ベッドを再割り当てできます。チェックアウト日は占有日に含みません。</p>`;
+}
+
+function calendarDateHeader(date) { return `<button class="calendar-date-head ${date === calendarDate ? "selected" : ""}" data-calendar-select-date="${date}"><strong>${formatStayDate(date)}</strong><small>${date}</small></button>`; }
+function calendarReservationChip(reservation) { const guest = reservation.guests?.find((item) => item.guestRole === "primary"); return `<button class="reservation-chip status-${reservation.status}" data-open-reservation="${reservation.id}" data-return-view="reservation-calendar"><strong>${escapeHtml(guest?.name || "宿泊者未登録")}</strong><small>${statusLabel(reservation.status)}</small></button>`; }
 
 function renderPreview() {
   const preview = buildStayPreview(state, previewConditions);
@@ -461,9 +515,18 @@ function handleInput(event) {
     return;
   }
   if (input.dataset.bedName) {
-    const [roomTypeId, roomId, bedId] = input.dataset.bedName.split(":");
-    state.roomTypes.find((item) => item.id === roomTypeId).rooms.find((item) => item.id === roomId).beds.find((item) => item.id === bedId).name = input.value;
+    const [roomId, bedId] = input.dataset.bedName.split(":");
+    state.rooms.find((item) => item.id === roomId).beds.find((item) => item.id === bedId).name = input.value;
     persist();
+    return;
+  }
+  if (input.dataset.assignRoomType) {
+    try {
+      assignRoomType(workspace, { listingId: state.id, roomId: input.dataset.assignRoomType, roomTypeId: input.value || null });
+      selectedRoomTypeId = input.value || selectedRoomTypeId;
+      persist(input.value ? "Room Typeへ分類しました" : "Roomを未分類に変更しました");
+      render();
+    } catch (error) { showNotice(error.message, true); render(); }
     return;
   }
   if (input.id === "dashboard-date") {
@@ -499,6 +562,8 @@ function handleClick(event) {
   const target = event.target.closest("button");
   if (!target) return;
   if (target.dataset.go) { currentView = target.dataset.go; location.hash = currentView; render(); }
+  if (target.dataset.calendarShift) { calendarDate = addDays(calendarDate, Number(target.dataset.calendarShift)); render(); }
+  if (target.dataset.calendarSelectDate) { calendarDate = target.dataset.calendarSelectDate; render(); }
   if (target.dataset.selectListing) { activateListing(target.dataset.selectListing); currentView = "reservation-dashboard"; location.hash = currentView; render(); }
   if (target.dataset.selectRoomType) { selectedRoomTypeId = target.dataset.selectRoomType; render(); }
   if (target.dataset.selectRatePlan) { selectedRatePlanId = target.dataset.selectRatePlan; render(); }
@@ -527,7 +592,7 @@ function openModal(type, roomId, inventoryId) {
   const definitions = {
     listing: ["宿泊施設を追加", field("施設名", "modal.name", "")],
     "room-type": ["Room Typeを追加", `${field("名称", "modal.name", "")}${selectField("販売形態", "modal.kind", "private_room", [["private_room", "個室"], ["shared_room", "相部屋"], ["entire_place", "一棟貸し"]])}${field("定員", "modal.capacity", 2, "number")}`],
-    room: ["物理Roomを登録", `${selectField("所属Room Type", "modal.roomTypeId", selectedRoomTypeId || state.roomTypes[0]?.id, state.roomTypes.map((item) => [item.id, item.name]), "field-wide")}${field("管理名", "modal.name", "", "text", "field-wide")}`],
+    room: ["物理Roomを登録", `${selectField("所属Room Type", "modal.roomTypeId", "", [["", "未分類（販売対象外）"], ...state.roomTypes.map((item) => [item.id, item.name])], "field-wide")}${field("管理名", "modal.name", "", "text", "field-wide")}`],
     bed: ["Bedを追加", field("管理名", "modal.name", "")],
     "rate-plan": ["Rate Planを追加", `${field("名称", "modal.name", "")}${selectField("食事", "modal.meal", "room_only", [["room_only", "素泊まり"], ["breakfast", "朝食"], ["dinner", "夕食"], ["breakfast_and_dinner", "朝夕食"]])}${selectField("キャンセル", "modal.policy", "standard", [["standard", "標準"], ["non_refundable", "返金不可"]])}`],
     block: ["停止期間を追加", `${field("開始日", "modal.startsOn", "", "date")}${field("終了日", "modal.endsOn", "", "date")}${selectField("理由", "modal.reason", "maintenance", [["maintenance", "メンテナンス"], ["cleaning", "清掃"], ["operator_block", "運営都合"], ["other", "その他"]], "field-wide")}`],
@@ -601,19 +666,18 @@ function submitModal(event) {
     location.hash = currentView;
   } else if (type === "room-type") {
     const id = makeId("room-type");
-    state.roomTypes.push({ id, name, description: "", roomKind: values["modal.kind"], capacity: values["modal.kind"] === "shared_room" ? 1 : Number(values["modal.capacity"]), status: "draft", amenityIds: [], rooms: [], dailySalesControls: [] });
+    state.roomTypes.push({ id, name, description: "", roomKind: values["modal.kind"], capacity: values["modal.kind"] === "shared_room" ? 1 : Number(values["modal.capacity"]), status: "draft", amenityIds: [], dailySalesControls: [] });
     selectedRoomTypeId = id;
   } else if (type === "room") {
-    const roomType = state.roomTypes.find((item) => item.id === values["modal.roomTypeId"]);
-    if (!roomType) { showNotice("先にRoom Typeを登録してください。", true); return; }
     const id = makeId("room");
-    roomType.rooms.push({ id, name, active: true, notes: "", blocks: [], beds: [] });
-    selectedRoomTypeId = roomType.id;
+    const roomTypeId = values["modal.roomTypeId"] || null;
+    state.rooms.push({ id, roomTypeId, name, active: true, notes: "", blocks: [], beds: [] });
+    selectedRoomTypeId = roomTypeId || selectedRoomTypeId;
     selectedPhysicalRoomId = id;
     currentView = "physical-inventory";
     location.hash = currentView;
   } else if (type === "bed") {
-    selectedRoomType().rooms.find((room) => room.id === modalForm.dataset.roomId).beds.push({ id: makeId("bed"), name, active: true, blocks: [] });
+    state.rooms.find((room) => room.id === modalForm.dataset.roomId).beds.push({ id: makeId("bed"), name, active: true, blocks: [] });
   } else if (type === "rate-plan") {
     const id = makeId("plan");
     state.ratePlans.push({ id, name, description: "", mealType: values["modal.meal"], cancellationPolicyType: values["modal.policy"], status: "draft" });
@@ -665,7 +729,7 @@ function setPath(path, value) {
     return;
   }
   if (parts[0] === "physicalRoom") {
-    state.roomTypes.find((roomType) => roomType.id === parts[1]).rooms.find((room) => room.id === parts[2])[parts[3]] = value;
+    state.rooms.find((room) => room.id === parts[1])[parts[2]] = value;
     return;
   }
   if (parts[0] === "ratePlan") {
@@ -677,8 +741,8 @@ function setPath(path, value) {
   object[parts.at(-1)] = value;
 }
 
-function toggleRoom(roomId) { const room = selectedRoomType().rooms.find((item) => item.id === roomId); room.active = !room.active; persist(); render(); }
-function toggleBed(key) { const [roomId, bedId] = key.split(":"); const bed = selectedRoomType().rooms.find((room) => room.id === roomId).beds.find((item) => item.id === bedId); bed.active = !bed.active; persist(); render(); }
+function toggleRoom(roomId) { const room = state.rooms.find((item) => item.id === roomId); room.active = !room.active; persist(); render(); }
+function toggleBed(key) { const [roomId, bedId] = key.split(":"); const bed = state.rooms.find((room) => room.id === roomId).beds.find((item) => item.id === bedId); bed.active = !bed.active; persist(); render(); }
 function toggleRate(key) { const [roomTypeId, ratePlanId] = key.split(":"); const rate = upsertRate(roomTypeId, ratePlanId, 1, false); rate.active = !rate.active; persist(); render(); }
 function toggleAmenity(amenityId, target) { const ids = target === "facility-amenity" ? state.stay.facilityAmenityIds : state.roomTypes.find((item) => item.id === target.split(":")[1]).amenityIds; const index = ids.indexOf(amenityId); index >= 0 ? ids.splice(index, 1) : ids.push(amenityId); persist(); render(); }
 
@@ -746,7 +810,7 @@ function activateListing(listingId) {
   selectedListingId = listingId;
   state = workspace.stayListings.find((listing) => listing.id === selectedListingId);
   selectedRoomTypeId = state?.roomTypes[0]?.id;
-  selectedPhysicalRoomId = state?.roomTypes.flatMap((roomType) => roomType.rooms)[0]?.id;
+  selectedPhysicalRoomId = state?.rooms?.[0]?.id;
   selectedRatePlanId = state?.ratePlans[0]?.id;
 }
 function metric(label, value, note) { return `<section class="card metric"><span class="metric-label">${label}</span><strong>${value}</strong><small>${note}</small></section>`; }
@@ -771,13 +835,10 @@ function reasonLabel(value) { return { unable_to_accommodate: "受け入れ困�
 function blockReasonLabel(value) { return { maintenance: "メンテナンス", cleaning: "清掃", operator_block: "運営都合", other: "その他" }[value] || value; }
 function roomTypeName(id) { return state.roomTypes.find((item) => item.id === id)?.name || "Room Type未設定"; }
 function inventoryName(id) {
-  for (const roomType of state.roomTypes) {
-    const room = roomType.rooms.find((item) => item.id === id);
-    if (room) return room.name;
-    for (const parentRoom of roomType.rooms) {
-      const bed = parentRoom.beds.find((item) => item.id === id);
-      if (bed) return `${parentRoom.name} / ${bed.name}`;
-    }
+  for (const room of state.rooms || []) {
+    if (room.id === id) return room.name;
+    const bed = room.beds.find((item) => item.id === id);
+    if (bed) return `${room.name} / ${bed.name}`;
   }
   return id;
 }

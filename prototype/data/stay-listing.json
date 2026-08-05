@@ -54,20 +54,6 @@
       "capacity": 1,
       "status": "published",
       "amenityIds": ["amenity-wifi", "amenity-aircon", "amenity-locker"],
-      "rooms": [
-        {
-          "id": "room-201",
-          "name": "201",
-          "active": true,
-          "notes": "女性専用",
-          "beds": [
-            { "id": "bed-201-a", "name": "A", "active": true },
-            { "id": "bed-201-b", "name": "B", "active": true },
-            { "id": "bed-201-c", "name": "C", "active": true },
-            { "id": "bed-201-d", "name": "D", "active": false }
-          ]
-        }
-      ],
       "dailySalesControls": [
         { "stayDate": "2026-08-15", "salesLimit": 2 }
       ]
@@ -80,12 +66,27 @@
       "capacity": 2,
       "status": "published",
       "amenityIds": ["amenity-wifi", "amenity-aircon"],
-      "rooms": [
-        { "id": "room-101", "name": "101", "active": true, "notes": "", "beds": [] },
-        { "id": "room-102", "name": "102", "active": true, "notes": "", "beds": [] }
-      ],
       "dailySalesControls": []
     }
+  ],
+  "rooms": [
+    {
+      "id": "room-201",
+      "roomTypeId": "room-type-dorm",
+      "name": "201",
+      "active": true,
+      "notes": "女性専用",
+      "blocks": [],
+      "beds": [
+        { "id": "bed-201-a", "name": "A", "active": true, "blocks": [] },
+        { "id": "bed-201-b", "name": "B", "active": true, "blocks": [] },
+        { "id": "bed-201-c", "name": "C", "active": true, "blocks": [] },
+        { "id": "bed-201-d", "name": "D", "active": false, "blocks": [] }
+      ]
+    },
+    { "id": "room-101", "roomTypeId": "room-type-private", "name": "101", "active": true, "notes": "", "blocks": [], "beds": [] },
+    { "id": "room-102", "roomTypeId": "room-type-private", "name": "102", "active": true, "notes": "", "blocks": [], "beds": [] },
+    { "id": "room-storage", "roomTypeId": null, "name": "準備室", "active": true, "notes": "改装後に販売分類を設定予定", "blocks": [], "beds": [] }
   ],
   "ratePlans": [
     { "id": "plan-room-only", "name": "素泊まり・キャンセル可", "description": "食事なしの基本プラン", "mealType": "room_only", "cancellationPolicyType": "standard", "status": "published" },
