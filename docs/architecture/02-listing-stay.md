@@ -8,11 +8,15 @@
 
 ## 宿泊施設・部屋・在庫の単位
 
-1つのListingは、テナントが運営する1つの宿泊施設を表す。施設は1つ以上のRoom Typeを持ち、一般ユーザーは物理的な部屋ではなくRoom Typeを選択する。
+1つのListingは、テナントが運営する1つの宿泊施設を表す。施設は物理Roomと販売上のRoom Typeをそれぞれ持ち、一般ユーザーは物理的な部屋ではなくRoom Typeを選択する。
 
 Room Typeはシステム共通マスターではなく、テナントが自ら所有する宿泊施設ごとに作成する販売上の部屋分類とする。同じ名称でも施設が異なれば別のRoom Typeとして扱う。テナントは自ら所有する施設にのみRoom Typeを作成・更新できる。
 
-物理的な宿泊空間はRoomとして登録し、同じ施設に属する1つのRoom Typeへ紐づける。一般ユーザーにはRoomを選択させない。
+物理的な宿泊空間は施設直下のRoomとして登録する。Room Typeへの所属は任意とし、物理Roomを先に台帳登録してから販売分類を作成・割り当てできる。一般ユーザーにはRoomを選択させない。
+
+Room Type未設定のRoomは「未分類」とし、Roomおよび配下Bedが有効でも販売在庫、公開条件、予約可能数、自動割り当て候補に含めない。Room Typeを設定する場合はRoomと同じ施設に属するものだけを選択できる。
+
+将来期間に`requested / confirmed`予約の割り当てを持つRoomは、予約内容との不整合を防ぐためRoom Type変更・未分類化を禁止する。割り当てがないRoomは、変更先Room Typeの販売形態に構成を合わせたうえで分類を変更できる。
 
 ```text
 Tenant
@@ -30,7 +34,7 @@ Tenant
 | `private_room` | 施設内の個室を貸し切る | Room |
 | `shared_room` | 他の宿泊者と共有する相部屋 | Bed |
 
-1つのRoom TypeでRoom単位とBed単位の販売を混在させない。物理在庫を登録するため、Room Typeに手入力の在庫数は持たない。`entire_place / private_room`の基本在庫は有効なRoom数、`shared_room`は有効なBed数から算出する。一棟貸しは一棟を表すRoomを1件登録する。
+1つのRoom TypeでRoom単位とBed単位の販売を混在させない。物理在庫を登録するため、Room Typeに手入力の在庫数は持たない。`entire_place / private_room`の基本在庫はそのRoom Typeに分類された有効なRoom数、`shared_room`は分類された有効なRoomに属する有効なBed数から算出する。一棟貸しは一棟を表すRoomを1件分類する。未分類Roomは算出対象外とする。
 
 ## 施設画像とRoom Type画像
 
@@ -388,7 +392,10 @@ status = published のRoom Type
 ## テスト条件
 
 - 自テナントの施設にのみRoom Type、Room、Bed、Rate Plan、Room Type別料金を作成・更新できること。
-- Room TypeとRoom、RoomとBedが同じ施設および許可された販売形態で紐づくこと。
+- Roomは必ず施設に属し、Room Type未設定でも登録できること。
+- Room Typeを設定したRoomとRoom Type、RoomとBedが同じ施設および許可された販売形態で紐づくこと。
+- 未分類Room・Bedを販売在庫、公開条件、予約可能数および自動割り当て候補に含めないこと。
+- 将来予約の割り当てを持つRoomを別Room Typeへ変更または未分類化できないこと。
 - 貸切・個室はRoom、相部屋はBedを基本在庫として数えること。
 - Room・Bedの停止期間と予約割り当て期間を重複させられないこと。
 - 日別販売上限が0以上で、Room Typeと宿泊日の組み合わせで一意であること。
