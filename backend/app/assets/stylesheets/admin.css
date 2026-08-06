@@ -1,0 +1,460 @@
+/* Adminデザイントークン */
+.admin-shell {
+  --admin-color-ink: #18202d;
+  --admin-color-muted: #707889;
+  --admin-color-border: #e2e5eb;
+  --admin-color-canvas: #f5f6f8;
+  --admin-color-surface: #ffffff;
+  --admin-color-primary: #6954d9;
+  --admin-color-primary-soft: #eeeafe;
+  --admin-color-danger: #b14848;
+  --admin-color-danger-soft: #fae9e7;
+  --admin-color-sidebar: #151d2c;
+  --admin-sidebar-width: 252px;
+  --admin-radius-small: 8px;
+  --admin-radius-medium: 11px;
+  --admin-radius-large: 15px;
+  --admin-content-width: 1440px;
+
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: var(--admin-sidebar-width) minmax(0, 1fr);
+  color: var(--admin-color-ink);
+  background: var(--admin-color-canvas);
+}
+
+/* アプリケーションシェル */
+.admin-page {
+  min-width: 1024px;
+  margin: 0;
+  background: #f5f6f8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+}
+
+.admin-page *,
+.admin-page *::before,
+.admin-page *::after {
+  box-sizing: border-box;
+}
+
+.admin-page button,
+.admin-page input,
+.admin-page textarea,
+.admin-page select {
+  font: inherit;
+}
+
+.admin-page button {
+  cursor: pointer;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.admin-main {
+  min-width: 0;
+}
+
+/* サイドバー */
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 25px 17px 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #ffffff;
+  background: var(--admin-color-sidebar);
+}
+
+.admin-brand {
+  flex: 0 0 auto;
+  padding: 0 9px 20px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.admin-brand-mark {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--admin-radius-medium);
+  color: #ffffff;
+  background: linear-gradient(140deg, #8b78f1, #5a43c6);
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.admin-brand strong,
+.admin-brand small {
+  display: block;
+}
+
+.admin-brand small {
+  margin-top: 2px;
+  color: #828da1;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.environment-label {
+  margin: 0 5px 15px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgb(139 120 241 / 25%);
+  border-radius: var(--admin-radius-small);
+  color: #aa9df2;
+  background: rgb(105 84 217 / 10%);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.environment-label span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9b87ff;
+  box-shadow: 0 0 0 4px rgb(155 135 255 / 10%);
+}
+
+/* メインナビゲーション */
+.admin-navigation {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  overflow-y: auto;
+}
+
+.admin-navigation p {
+  margin: 14px 10px 5px;
+  color: #687387;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.admin-navigation a {
+  width: 100%;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-radius: var(--admin-radius-small);
+  color: #aeb7c7;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.admin-navigation a > span {
+  width: 18px;
+  color: #778196;
+  text-align: center;
+  font-size: 14px;
+}
+
+.admin-navigation a:hover,
+.admin-navigation a.active {
+  color: #ffffff;
+  background: rgb(255 255 255 / 8%);
+}
+
+.admin-navigation a.active {
+  box-shadow: inset 3px 0 #8b78f1;
+}
+
+.admin-navigation a.active > span {
+  color: #a998ff;
+}
+
+/* ログイン中の運営管理者 */
+.admin-sidebar-footer {
+  flex: 0 0 auto;
+  padding-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-account {
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 4%);
+}
+
+.admin-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: #ffffff;
+  background: var(--admin-color-primary);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-account-copy {
+  min-width: 0;
+}
+
+.admin-account-copy strong,
+.admin-account-copy small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-account-copy strong {
+  font-size: 10px;
+}
+
+.admin-account-copy small {
+  margin-top: 4px;
+  color: #828da1;
+  font-size: 8px;
+}
+
+.admin-sidebar-footer form {
+  margin: 0;
+}
+
+.logout-button {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 9px;
+  color: #98a2b5;
+  background: transparent;
+  font-size: 9px;
+}
+
+.logout-button:hover {
+  color: #ffffff;
+  background: rgb(255 255 255 / 6%);
+}
+
+/* トップバーとページ本文 */
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 96px;
+  padding: 22px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--admin-color-border);
+  background: rgb(245 246 248 / 94%);
+  backdrop-filter: blur(10px);
+}
+
+.admin-breadcrumb {
+  margin: 0 0 5px;
+  color: var(--admin-color-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.admin-topbar h1 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.admin-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.system-health {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--admin-color-muted);
+  font-size: 10px;
+}
+
+.system-health i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--admin-color-primary);
+  box-shadow: 0 0 0 4px rgb(105 84 217 / 10%);
+}
+
+.admin-content {
+  width: min(100%, var(--admin-content-width));
+  margin: 0 auto;
+  padding: 32px 38px 60px;
+}
+
+/* フィードバック表示 */
+.admin-content .flash {
+  margin-bottom: 18px;
+  padding: 12px 15px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.admin-content .flash.notice {
+  color: var(--admin-color-primary);
+  background: var(--admin-color-primary-soft);
+}
+
+.admin-content .flash.alert {
+  color: var(--admin-color-danger);
+  background: var(--admin-color-danger-soft);
+}
+
+/* 既存Admin画面の共通部品 */
+.admin-content :is(.dashboard, .tenant-summary, .empty-state) {
+  padding: 22px;
+  border: 1px solid var(--admin-color-border);
+  border-radius: var(--admin-radius-large);
+  background: var(--admin-color-surface);
+  box-shadow: 0 1px 0 rgb(20 30 50 / 2%);
+}
+
+.admin-content .dashboard {
+  max-width: none;
+}
+
+.admin-content :is(h1, h2, h3) {
+  letter-spacing: -0.02em;
+}
+
+.admin-content p {
+  line-height: 1.7;
+}
+
+.admin-content .toolbar {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-content .toolbar h1 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.admin-content a {
+  color: var(--admin-color-primary);
+}
+
+.admin-content :is(a.button, button) {
+  display: inline-block;
+  padding: 8px 13px;
+  border: 1px solid var(--admin-color-border);
+  border-radius: var(--admin-radius-small);
+  color: var(--admin-color-ink);
+  background: #ffffff;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-content :is(a.button, button):hover {
+  border-color: #a99cec;
+  box-shadow: 0 4px 12px rgb(50 42 100 / 8%);
+}
+
+.admin-content table {
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid var(--admin-color-border);
+  border-spacing: 0;
+  border-radius: 13px;
+  border-collapse: separate;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.admin-content :is(th, td) {
+  padding: 12px 13px;
+  border: 0;
+  border-bottom: 1px solid #eceef2;
+  text-align: left;
+  font-size: 11px;
+}
+
+.admin-content th {
+  color: var(--admin-color-muted);
+  background: #f7f8fa;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-content tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-content :is(input, textarea, select) {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid #d8dbe3;
+  border-radius: 9px;
+  color: var(--admin-color-ink);
+  background: #fbfbfd;
+  outline: none;
+}
+
+.admin-content :is(input, textarea, select):focus {
+  border-color: var(--admin-color-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgb(105 84 217 / 10%);
+}
+
+.admin-content label {
+  color: #42495a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-content .field {
+  margin-bottom: 15px;
+  display: grid;
+  gap: 7px;
+}
+
+.admin-content .inline-form {
+  display: inline-block;
+  margin-left: 6px;
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 1100px) {
+  .admin-content {
+    padding-right: 25px;
+    padding-left: 25px;
+  }
+}
