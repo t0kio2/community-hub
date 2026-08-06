@@ -10,7 +10,7 @@ Listing設計をDB実装前に画面操作で検証する。初期対象は滞�
 
 ```text
 prototype/
-├── index.html
+├── tenant.html
 ├── styles.css
 ├── app.js
 ├── domain.js
@@ -178,7 +178,7 @@ JSONはUIで1施設を編集しやすい集約形式とする。ただし、Room
 
 ```text
 prototype/
-├── index.html
+├── tenant.html
 ├── styles/
 │   ├── base.css
 │   └── components.css
