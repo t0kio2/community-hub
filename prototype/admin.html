@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Community Hub — 運営管理</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./admin.css" />
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <a class="admin-brand" href="#dashboard"><span class="admin-brand-mark">C</span><span><strong>Community Hub</strong><small>OPERATIONS ADMIN</small></span></a>
+        <div class="environment-label"><span></span>運営管理プロトタイプ</div>
+        <nav id="admin-navigation" class="admin-navigation" aria-label="運営管理">
+          <p>OVERVIEW</p>
+          <button data-view="dashboard"><span>⌂</span>ダッシュボード</button>
+          <p>PLATFORM</p>
+          <button data-view="tenants"><span>▣</span>テナント管理 <em id="tenant-nav-count"></em></button>
+          <button data-view="listings"><span>▤</span>掲載管理 <em id="review-nav-count"></em></button>
+          <p>SECURITY</p>
+          <button data-view="admins"><span>♙</span>管理者管理</button>
+          <button data-view="activity"><span>↻</span>アクティビティ</button>
+        </nav>
+        <div class="admin-account">
+          <span class="admin-avatar">SA</span>
+          <span><strong id="admin-account-email">admin@example.com</strong><small id="admin-account-role">super_admin・有効</small></span>
+          <b>•••</b>
+        </div>
+      </aside>
+      <main class="admin-main">
+        <header class="admin-topbar">
+          <div><p class="admin-breadcrumb">ADMIN / <span id="admin-section">OVERVIEW</span></p><h1 id="admin-title">ダッシュボード</h1></div>
+          <div class="admin-top-actions"><span class="system-health"><i></i>システム正常</span><button id="admin-export" class="admin-button">JSON書き出し</button><button id="admin-reset" class="admin-button danger">リセット</button></div>
+        </header>
+        <div id="admin-notice" class="admin-notice" hidden></div>
+        <div id="admin-content" class="admin-content"></div>
+      </main>
+    </div>
+    <script type="module" src="./admin.js"></script>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "adminAccount": { "id": "account-admin-super", "email": "super-admin@community-hub.example.com", "accountType": "admin" },
+  "admin": { "id": "admin-super", "accountId": "account-admin-super", "role": "super_admin", "status": "active" },
+  "tenants": [
+    { "id": "tenant-community-stay", "name": "Community Stay", "kana": "コミュニティステイ", "address": "神奈川県鎌倉市由比ガ浜1-2-3", "status": "active", "createdAt": "2026-04-18T10:20:00+09:00", "ownerAccount": { "id": "account-owner", "email": "owner@community-stay.example.com", "accountType": "tenant" }, "ownerMember": { "id": "tenant-member-owner", "role": "owner", "status": "active" } },
+    { "id": "tenant-mountain-base", "name": "Mountain Base Hakuba", "kana": "マウンテンベースハクバ", "address": "長野県北安曇郡白馬村", "status": "active", "createdAt": "2026-05-02T14:10:00+09:00", "ownerAccount": { "id": "account-mountain", "email": "owner@mountain-base.example.com", "accountType": "tenant" }, "ownerMember": { "id": "tenant-member-mountain", "role": "owner", "status": "active" } },
+    { "id": "tenant-setouchi-works", "name": "Setouchi Works", "kana": "セトウチワークス", "address": "香川県高松市", "status": "reviewing", "createdAt": "2026-08-04T09:35:00+09:00", "ownerAccount": { "id": "account-setouchi", "email": "hello@setouchi-works.example.com", "accountType": "tenant" }, "ownerMember": { "id": "tenant-member-setouchi", "role": "owner", "status": "active" } },
+    { "id": "tenant-old-port", "name": "Old Port Collective", "kana": "オールドポートコレクティブ", "address": "北海道小樽市", "status": "suspended", "createdAt": "2026-02-12T16:45:00+09:00", "ownerAccount": { "id": "account-old-port", "email": "admin@old-port.example.com", "accountType": "tenant" }, "ownerMember": { "id": "tenant-member-old-port", "role": "owner", "status": "inactive" } }
+  ],
+  "listings": [
+    { "id": "listing-kamakura-guesthouse", "tenantId": "tenant-community-stay", "title": "鎌倉 海辺のゲストハウス", "listingType": "stay", "status": "published", "publishedAt": "2026-06-10T10:00:00+09:00", "updatedAt": "2026-08-05T18:20:00+09:00" },
+    { "id": "job-front-desk", "tenantId": "tenant-community-stay", "title": "ゲストハウス運営スタッフ", "listingType": "job", "status": "published", "publishedAt": "2026-07-18T10:00:00+09:00", "updatedAt": "2026-08-03T11:20:00+09:00" },
+    { "id": "job-cafe", "tenantId": "tenant-community-stay", "title": "朝食カフェスタッフ", "listingType": "job", "status": "published", "publishedAt": "2026-07-28T10:00:00+09:00", "updatedAt": "2026-08-02T15:10:00+09:00" },
+    { "id": "listing-hakuba-lodge", "tenantId": "tenant-mountain-base", "title": "白馬 森のロッジ", "listingType": "stay", "status": "published", "publishedAt": "2026-05-20T12:00:00+09:00", "updatedAt": "2026-08-01T09:40:00+09:00" },
+    { "id": "job-outdoor-guide", "tenantId": "tenant-mountain-base", "title": "アウトドアガイド", "listingType": "job", "status": "draft", "publishedAt": null, "updatedAt": "2026-08-05T13:15:00+09:00" },
+    { "id": "job-community-manager", "tenantId": "tenant-setouchi-works", "title": "地域コミュニティマネージャー", "listingType": "job", "status": "reviewing", "publishedAt": null, "updatedAt": "2026-08-06T08:25:00+09:00" },
+    { "id": "listing-old-port-hostel", "tenantId": "tenant-old-port", "title": "小樽旧港ホステル", "listingType": "stay", "status": "closed", "publishedAt": "2026-03-01T10:00:00+09:00", "updatedAt": "2026-07-25T17:00:00+09:00" }
+  ],
+  "admins": [
+    { "id": "admin-super", "accountId": "account-admin-super", "email": "super-admin@community-hub.example.com", "role": "super_admin", "status": "active", "lastLoginAt": "2026-08-06T09:10:00+09:00" },
+    { "id": "admin-operator-1", "accountId": "account-admin-operator-1", "email": "support@community-hub.example.com", "role": "operator", "status": "active", "lastLoginAt": "2026-08-06T08:45:00+09:00" },
+    { "id": "admin-operator-2", "accountId": "account-admin-operator-2", "email": "review@community-hub.example.com", "role": "operator", "status": "inactive", "lastLoginAt": "2026-07-20T16:12:00+09:00" }
+  ],
+  "activities": [
+    { "id": "activity-1", "occurredAt": "2026-08-06T09:18:00+09:00", "actor": "super-admin@community-hub.example.com", "action": "テナント情報を確認", "target": "Setouchi Works", "tone": "review" },
+    { "id": "activity-2", "occurredAt": "2026-08-06T08:52:00+09:00", "actor": "support@community-hub.example.com", "action": "掲載情報を更新", "target": "鎌倉 海辺のゲストハウス", "tone": "update" },
+    { "id": "activity-3", "occurredAt": "2026-08-05T17:40:00+09:00", "actor": "super-admin@community-hub.example.com", "action": "テナントを利用停止", "target": "Old Port Collective", "tone": "alert" },
+    { "id": "activity-4", "occurredAt": "2026-08-05T14:05:00+09:00", "actor": "review@community-hub.example.com", "action": "求人を審査受付", "target": "地域コミュニティマネージャー", "tone": "review" }
+  ]
+}
