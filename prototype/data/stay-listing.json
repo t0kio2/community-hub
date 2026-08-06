@@ -2,8 +2,41 @@
   "schemaVersion": 2,
   "tenant": {
     "id": "tenant-community-stay",
-    "name": "Community Stay"
+    "name": "Community Stay",
+    "profile": {
+      "tagline": "旅と地域の、あたらしい接点をつくる。",
+      "description": "湘南・鎌倉エリアで宿泊施設と地域に根ざした仕事を運営しています。訪れる人と暮らす人が自然につながる場を育てています。",
+      "website": "https://community-stay.example.com",
+      "email": "hello@community-stay.example.com",
+      "phone": "0467-00-1234",
+      "postalCode": "248-0014",
+      "prefecture": "神奈川県",
+      "city": "鎌倉市",
+      "addressLine1": "由比ガ浜1-2-3"
+    }
   },
+  "accounts": [
+    { "id": "account-owner", "email": "owner@community-stay.example.com", "accountType": "tenant", "status": "active" },
+    { "id": "account-stay-staff", "email": "stay-staff@community-stay.example.com", "accountType": "tenant", "status": "active" },
+    { "id": "account-recruit-staff", "email": "recruit@community-stay.example.com", "accountType": "tenant", "status": "active" }
+  ],
+  "tenantMembers": [
+    { "id": "tenant-member-owner", "tenantId": "tenant-community-stay", "accountId": "account-owner", "role": "owner", "status": "active" },
+    { "id": "tenant-member-stay-staff", "tenantId": "tenant-community-stay", "accountId": "account-stay-staff", "role": "staff", "status": "active" },
+    { "id": "tenant-member-recruit-staff", "tenantId": "tenant-community-stay", "accountId": "account-recruit-staff", "role": "staff", "status": "active" }
+  ],
+  "currentAccountId": "account-owner",
+  "jobListings": [
+    { "id": "job-front-desk", "title": "ゲストハウス運営スタッフ", "department": "宿泊事業部", "location": "神奈川県 鎌倉市", "employmentType": "full_time", "status": "published", "publishedAt": "2026-07-18T10:00:00+09:00" },
+    { "id": "job-cafe", "title": "朝食カフェスタッフ", "department": "フード事業部", "location": "神奈川県 鎌倉市", "employmentType": "part_time", "status": "published", "publishedAt": "2026-07-28T10:00:00+09:00" },
+    { "id": "job-community", "title": "地域コミュニティ企画", "department": "コミュニティ事業部", "location": "神奈川県 藤沢市", "employmentType": "contract", "status": "draft", "publishedAt": null }
+  ],
+  "jobApplications": [
+    { "id": "application-1", "jobListingId": "job-front-desk", "applicantName": "伊藤 花", "status": "new", "appliedAt": "2026-08-05T15:20:00+09:00", "note": "ホテル勤務2年。地域に関わる仕事を希望。" },
+    { "id": "application-2", "jobListingId": "job-front-desk", "applicantName": "山田 海斗", "status": "screening", "appliedAt": "2026-08-03T09:15:00+09:00", "note": "英語・中国語での接客が可能。" },
+    { "id": "application-3", "jobListingId": "job-cafe", "applicantName": "佐々木 結衣", "status": "interview", "appliedAt": "2026-07-30T11:40:00+09:00", "note": "8月8日にオンライン面接予定。" },
+    { "id": "application-4", "jobListingId": "job-cafe", "applicantName": "中村 悠", "status": "offered", "appliedAt": "2026-07-22T17:05:00+09:00", "note": "入社条件を確認中。" }
+  ],
   "amenities": [
     { "id": "amenity-wifi", "name": "Wi-Fi", "scope": "both", "category": "connectivity", "source": "common", "active": true },
     { "id": "amenity-kitchen", "name": "共用キッチン", "scope": "facility", "category": "kitchen", "source": "common", "active": true },

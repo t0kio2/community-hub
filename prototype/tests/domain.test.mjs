@@ -22,6 +22,7 @@ import {
   removeInventoryBlock,
   stayAvailableEndsOn,
   transitionStayReservation,
+  tenantDashboard,
 } from "../domain.js";
 
 const privateRoomType = {
@@ -184,6 +185,45 @@ test("旧版の単一Listingをテナントの複数施設形式へ変換する"
   assert.equal(workspace.stayListings[0].title, "旧施設");
   assert.equal("amenities" in workspace.stayListings[0], false);
   assert.deepEqual(workspace.amenities, [{ id: "wifi" }]);
+  assert.deepEqual(workspace.jobListings, []);
+  assert.deepEqual(workspace.jobApplications, []);
+  assert.deepEqual(workspace.tenant.members, []);
+  assert.equal(workspace.currentUser.name, "プロトタイプ管理者");
+});
+
+test("ログインユーザーがない場合は先頭のテナントメンバーを補完する", () => {
+  const workspace = normalizeWorkspace({
+    schemaVersion: 2,
+    tenant: {
+      id: "tenant-1",
+      name: "テナント",
+      members: [{ id: "member-1", name: "運営 花子", email: "hanako@example.com", role: "staff", assignment: "求人担当" }],
+    },
+    stayListings: [],
+  });
+
+  assert.equal(workspace.currentUser.id, "member-1");
+  assert.equal(workspace.currentUser.name, "運営 花子");
+  assert.equal(workspace.currentUser.role, "staff");
+});
+
+test("テナントホーム用に宿泊・求人・応募の対応件数を集計する", () => {
+  const summary = tenantDashboard({
+    stayListings: [{ status: "published" }, { status: "draft" }],
+    jobListings: [{ status: "published" }, { status: "published" }, { status: "draft" }],
+    jobApplications: [{ status: "new" }, { status: "screening" }, { status: "interview" }],
+  });
+
+  assert.deepEqual(summary, { publishedStays: 1, publishedJobs: 2, draftJobs: 1, pendingApplications: 2 });
+});
+
+test("求人と応募が未登録でもテナントホームは0件として集計する", () => {
+  assert.deepEqual(tenantDashboard({ stayListings: [] }), {
+    publishedStays: 0,
+    publishedJobs: 0,
+    draftJobs: 0,
+    pendingApplications: 0,
+  });
 });
 
 test("複数施設形式は施設を分離したまま読み込む", () => {

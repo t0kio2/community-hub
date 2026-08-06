@@ -21,10 +21,12 @@ import {
   roomsForRoomType,
   transitionStayReservation,
   stayAvailableEndsOn,
+  tenantDashboard,
 } from "./domain.js";
 
 const STORAGE_KEY = "community-hub:stay-listing-prototype:v1";
 const viewTitles = {
+  home: "ホーム",
   listings: "宿泊施設一覧",
   "reservation-dashboard": "予約ダッシュボード",
   reservations: "予約一覧",
@@ -40,12 +42,16 @@ const viewTitles = {
   "sales-calendar": "販売カレンダー",
   preview: "宿泊者プレビュー",
   publish: "公開確認",
+  jobs: "求人一覧",
+  applications: "応募者",
+  "tenant-settings": "テナント情報",
+  members: "メンバー管理",
 };
 
 let initialWorkspace;
 let workspace;
 let state;
-let currentView = location.hash.slice(1) || "listings";
+let currentView = location.hash.slice(1) || "home";
 let selectedListingId;
 let selectedRoomTypeId;
 let selectedRatePlanId;
@@ -80,7 +86,7 @@ function bindGlobalEvents() {
   });
 
   window.addEventListener("hashchange", () => {
-    currentView = location.hash.slice(1) || "listings";
+    currentView = location.hash.slice(1) || "home";
     render();
   });
 
@@ -88,7 +94,7 @@ function bindGlobalEvents() {
     if (!confirm("入力内容を破棄して初期データへ戻しますか？")) return;
     workspace = structuredClone(initialWorkspace);
     activateListing(workspace.stayListings[0]?.id);
-    currentView = "listings";
+    currentView = "home";
     location.hash = currentView;
     persist("初期データへ戻しました");
     render();
@@ -102,18 +108,33 @@ function bindGlobalEvents() {
 }
 
 function render() {
-  if (currentView !== "listings" && !state) currentView = "listings";
+  const tenantViews = ["home", "listings", "jobs", "applications", "tenant-settings", "members"];
+  if (!tenantViews.includes(currentView) && !state) currentView = "listings";
   if (currentView === "reservation-detail" && !selectedReservation()) currentView = "reservations";
-  document.querySelector("#listing-id").textContent = currentView === "listings" ? workspace.tenant.name : state.id;
+  const isStayView = !tenantViews.includes(currentView);
+  document.querySelector("#listing-id").textContent = isStayView ? state.id : workspace.tenant.name;
+  document.querySelector("#section-label").textContent = isStayView ? "STAY" : currentView === "jobs" || currentView === "applications" ? "JOBS" : "TENANT";
   document.querySelector("#page-title").textContent = viewTitles[currentView] || viewTitles.listings;
   document.querySelector("#active-listing-name").textContent = state?.title || "施設未選択";
+  const account = currentAccount();
+  const member = currentTenantMember();
+  document.querySelector("#current-user-avatar").textContent = member?.role === "owner" ? "O" : "S";
+  document.querySelector("#current-user-name").textContent = member?.role === "owner" ? "オーナーアカウント" : "スタッフアカウント";
+  document.querySelector("#current-user-role").textContent = `${memberRoleLabel(member?.role)}・${memberStatusLabel(member?.status)}`;
+  document.querySelector("#current-user-email").textContent = account?.email || "メールアドレス未設定";
+  document.querySelector("#job-count").textContent = (workspace.jobListings || []).filter((job) => job.status === "published").length || "";
+  document.querySelector("#application-count").textContent = (workspace.jobApplications || []).filter((application) => ["new", "screening"].includes(application.status)).length || "";
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === currentView);
   });
-  document.querySelector("#publish-button").hidden = ["listings", "reservation-dashboard", "reservations", "reservation-detail", "reservation-calendar"].includes(currentView);
+  document.querySelectorAll("[data-menu-section]").forEach((section) => {
+    section.classList.toggle("has-active", Boolean(section.querySelector("[data-view].active")));
+  });
+  document.querySelector("#publish-button").hidden = tenantViews.includes(currentView) || ["reservation-dashboard", "reservations", "reservation-detail", "reservation-calendar"].includes(currentView);
   document.querySelector("#publish-button").textContent = state?.status === "published" ? "公開中" : "公開する";
 
   const renderView = {
+    home: renderHome,
     listings: renderListings,
     "reservation-dashboard": renderReservationDashboard,
     reservations: renderReservations,
@@ -129,8 +150,71 @@ function render() {
     "sales-calendar": renderSalesCalendarView,
     preview: renderPreview,
     publish: renderPublish,
+    jobs: renderJobs,
+    applications: renderApplications,
+    "tenant-settings": renderTenantSettings,
+    members: renderMembers,
   }[currentView] || renderListings;
   content.innerHTML = renderView();
+}
+
+function renderHome() {
+  const summary = tenantDashboard(workspace);
+  const newApplications = (workspace.jobApplications || []).filter((item) => item.status === "new").slice(0, 3);
+  return `
+    <section class="welcome-panel">
+      <div><p class="eyebrow">GOOD MORNING</p><h2>${escapeHtml(workspace.tenant.name)}の運営状況</h2><p>宿泊と採用、組織情報をひとつのワークスペースで管理できます。</p></div>
+      <span class="welcome-date">2026.08.06<small>THURSDAY</small></span>
+    </section>
+    <div class="grid grid-4 tenant-metrics">
+      ${metric("公開中の宿泊施設", summary.publishedStays, `${workspace.stayListings.length}施設を管理`)}
+      ${metric("公開中の求人", summary.publishedJobs, `${summary.draftJobs}件の下書き`)}
+      ${metric("対応待ちの応募", summary.pendingApplications, "新着・選考中")}
+      ${metric("組織メンバー", workspace.tenantMembers.length, "テナントに参加中")}
+    </div>
+    <div class="grid grid-main home-layout">
+      <section class="card"><div class="card-header"><div><h3>対応が必要です</h3><p>今日確認したい運営業務</p></div></div>
+        <div class="action-feed">
+          ${newApplications.map((application) => `<button data-go="applications"><span class="action-symbol job">J</span><span><strong>${escapeHtml(application.applicantName)}さんから新しい応募</strong><small>${escapeHtml(jobName(application.jobListingId))}・${formatDateTime(application.appliedAt)}</small></span><b>確認する →</b></button>`).join("")}
+          <button data-go="reservation-dashboard"><span class="action-symbol stay">S</span><span><strong>宿泊予約の承認待ちがあります</strong><small>${workspace.stayReservations.filter((item) => item.status === "requested").length}件の申請を確認してください</small></span><b>確認する →</b></button>
+        </div>
+      </section>
+      <section class="card"><div class="card-header"><div><h3>クイックアクセス</h3><p>よく使う管理画面</p></div></div><div class="quick-grid">
+        <button data-go="reservation-dashboard"><span>▦</span><strong>予約業務</strong><small>到着・出発を確認</small></button>
+        <button data-go="jobs"><span>□</span><strong>求人管理</strong><small>募集状況を確認</small></button>
+        <button data-go="tenant-settings"><span>◉</span><strong>組織情報</strong><small>公開情報を編集</small></button>
+        <button data-go="listings"><span>◇</span><strong>宿泊施設</strong><small>施設を切り替える</small></button>
+      </div></section>
+    </div>`;
+}
+
+function renderJobs() {
+  return `<section class="page-lead"><div><h2>求人</h2><p>募集内容と公開状況を管理します。</p></div><button class="button button-primary" disabled>＋ 求人を作成</button></section>
+    <div class="filter-tabs"><button class="active">すべて <span>${workspace.jobListings.length}</span></button><button>公開中 <span>${workspace.jobListings.filter((job) => job.status === "published").length}</span></button><button>下書き <span>${workspace.jobListings.filter((job) => job.status === "draft").length}</span></button></div>
+    <section class="card table-card"><table class="table job-table"><thead><tr><th>求人</th><th>勤務地</th><th>雇用形態</th><th>応募</th><th>公開状況</th><th></th></tr></thead><tbody>${workspace.jobListings.map((job) => {
+      const count = workspace.jobApplications.filter((application) => application.jobListingId === job.id).length;
+      return `<tr><td><div class="title-cell"><span class="job-avatar">${escapeHtml(job.title.slice(0, 1))}</span><div><strong>${escapeHtml(job.title)}</strong><small>${escapeHtml(job.department)}</small></div></div></td><td>${escapeHtml(job.location)}</td><td>${employmentLabel(job.employmentType)}</td><td><strong>${count}名</strong></td><td><span class="status status-${job.status}">${job.status === "published" ? "公開中" : "下書き"}</span></td><td><button class="button button-small" data-toggle-job="${job.id}">${job.status === "published" ? "募集を停止" : "公開する"}</button></td></tr>`;
+    }).join("")}</tbody></table></section>`;
+}
+
+function renderApplications() {
+  return `<section class="page-lead"><div><h2>応募者</h2><p>求人を横断して選考状況を確認します。</p></div></section>
+    <div class="application-board">${["new", "screening", "interview", "offered"].map((status) => `<section class="application-column"><header><h3>${applicationStatusLabel(status)}</h3><span>${workspace.jobApplications.filter((item) => item.status === status).length}</span></header><div>${workspace.jobApplications.filter((item) => item.status === status).map((item) => `<article class="applicant-card"><div class="applicant-head"><span>${escapeHtml(item.applicantName.slice(0, 1))}</span><div><strong>${escapeHtml(item.applicantName)}</strong><small>${escapeHtml(jobName(item.jobListingId))}</small></div></div><p>${escapeHtml(item.note || "プロフィールと応募内容を確認してください。")}</p><label>選考ステータス<select data-application-status="${item.id}">${["new", "screening", "interview", "offered", "rejected"].map((value) => `<option value="${value}" ${value === item.status ? "selected" : ""}>${applicationStatusLabel(value)}</option>`).join("")}</select></label></article>`).join("") || `<p class="column-empty">該当者はいません</p>`}</div></section>`).join("")}</div>`;
+}
+
+function renderTenantSettings() {
+  const profile = workspace.tenant.profile;
+  return `<section class="page-lead"><div><h2>テナント情報</h2><p>各サービスに共通して表示される組織情報です。</p></div><span class="saved-hint">入力内容は自動保存されます</span></section>
+    <div class="grid settings-layout"><aside class="card tenant-profile-card"><div class="tenant-logo">${escapeHtml(workspace.tenant.name.slice(0, 1))}</div><h3>${escapeHtml(workspace.tenant.name)}</h3><p>${escapeHtml(profile.tagline || "タグライン未設定")}</p><span class="profile-completion">プロフィール完成度 78%</span><div class="progress"><span style="width:78%"></span></div></aside>
+    <section class="card settings-form"><div class="card-header"><div><h3>基本情報</h3><p>利用者に公開されるプロフィール</p></div></div><div class="field-grid">${field("テナント名", "tenant.name", workspace.tenant.name)}${field("タグライン", "tenant.profile.tagline", profile.tagline)}${textarea("紹介文", "tenant.profile.description", profile.description, "field-wide")}${field("Webサイト", "tenant.profile.website", profile.website, "url", "field-wide")}</div><div class="settings-divider"></div><div class="card-header"><div><h3>連絡先・所在地</h3><p>運営連絡に使用する情報</p></div></div><div class="field-grid">${field("メールアドレス", "tenant.profile.email", profile.email, "email")}${field("電話番号", "tenant.profile.phone", profile.phone)}${field("郵便番号", "tenant.profile.postalCode", profile.postalCode)}${field("都道府県", "tenant.profile.prefecture", profile.prefecture)}${field("市区町村", "tenant.profile.city", profile.city)}${field("番地・建物名", "tenant.profile.addressLine1", profile.addressLine1)}</div></section></div>`;
+}
+
+function renderMembers() {
+  return `<section class="page-lead"><div><h2>メンバー</h2><p>Accountに紐づくテナント所属と権限を確認します。</p></div><button class="button button-primary" disabled>＋ メンバーを招待</button></section><section class="card table-card"><table class="table"><thead><tr><th>アカウント</th><th>認証主体</th><th>役割</th><th>在籍状態</th></tr></thead><tbody>${workspace.tenantMembers.map((member) => {
+    const account = workspace.accounts.find((item) => item.id === member.accountId);
+    const isCurrent = account?.id === workspace.currentAccountId;
+    return `<tr><td><div class="title-cell"><span class="member-avatar">${member.role === "owner" ? "O" : "S"}</span><div><strong>${escapeHtml(account?.email || "Account未登録")}${isCurrent ? ` <span class="current-account-badge">ログイン中</span>` : ""}</strong><small>Account ID: ${escapeHtml(member.accountId)}</small></div></div></td><td>テナント</td><td>${memberRoleLabel(member.role)}</td><td><span class="status status-${member.status === "active" ? "published" : "inactive"}">${memberStatusLabel(member.status)}</span></td></tr>`;
+  }).join("")}</tbody></table></section>`;
 }
 
 function renderListings() {
@@ -509,6 +593,12 @@ function renderPublish() {
 
 function handleInput(event) {
   const input = event.target;
+  if (input.dataset.applicationStatus) {
+    workspace.jobApplications.find((item) => item.id === input.dataset.applicationStatus).status = input.value;
+    persist("選考ステータスを更新しました");
+    render();
+    return;
+  }
   if (input.dataset.reservationFilter) {
     reservationFilters[input.dataset.reservationFilter] = input.value;
     if (event.type === "change") render();
@@ -545,7 +635,8 @@ function handleInput(event) {
     return;
   }
   if (input.dataset.path) {
-    setPath(input.dataset.path, input.type === "number" ? Number(input.value) : input.value);
+    if (input.dataset.path.startsWith("tenant.")) setWorkspacePath(input.dataset.path, input.value);
+    else setPath(input.dataset.path, input.type === "number" ? Number(input.value) : input.value);
   } else if (input.dataset.rateAmount) {
     const [roomTypeId, ratePlanId] = input.dataset.rateAmount.split(":");
     upsertRate(roomTypeId, ratePlanId, Number(input.value), true);
@@ -562,6 +653,12 @@ function handleClick(event) {
   const target = event.target.closest("button");
   if (!target) return;
   if (target.dataset.go) { currentView = target.dataset.go; location.hash = currentView; render(); }
+  if (target.dataset.toggleJob) {
+    const job = workspace.jobListings.find((item) => item.id === target.dataset.toggleJob);
+    job.status = job.status === "published" ? "draft" : "published";
+    persist(job.status === "published" ? "求人を公開しました" : "求人の募集を停止しました");
+    render();
+  }
   if (target.dataset.calendarShift) { calendarDate = addDays(calendarDate, Number(target.dataset.calendarShift)); render(); }
   if (target.dataset.calendarSelectDate) { calendarDate = target.dataset.calendarSelectDate; render(); }
   if (target.dataset.selectListing) { activateListing(target.dataset.selectListing); currentView = "reservation-dashboard"; location.hash = currentView; render(); }
@@ -741,6 +838,13 @@ function setPath(path, value) {
   object[parts.at(-1)] = value;
 }
 
+function setWorkspacePath(path, value) {
+  const keys = path.split(".");
+  const last = keys.pop();
+  const target = keys.reduce((object, key) => object[key], workspace);
+  target[last] = value;
+}
+
 function toggleRoom(roomId) { const room = state.rooms.find((item) => item.id === roomId); room.active = !room.active; persist(); render(); }
 function toggleBed(key) { const [roomId, bedId] = key.split(":"); const bed = state.rooms.find((room) => room.id === roomId).beds.find((item) => item.id === bedId); bed.active = !bed.active; persist(); render(); }
 function toggleRate(key) { const [roomTypeId, ratePlanId] = key.split(":"); const rate = upsertRate(roomTypeId, ratePlanId, 1, false); rate.active = !rate.active; persist(); render(); }
@@ -805,6 +909,8 @@ function showNotice(message, error = false) {
 }
 
 function selectedRoomType() { return state.roomTypes.find((item) => item.id === selectedRoomTypeId); }
+function currentAccount() { return workspace.accounts.find((account) => account.id === workspace.currentAccountId); }
+function currentTenantMember() { return workspace.tenantMembers.find((member) => member.accountId === workspace.currentAccountId && member.tenantId === workspace.tenant.id); }
 function selectedReservation() { return (workspace.stayReservations || []).find((item) => item.id === selectedReservationId && item.listingId === state?.id); }
 function activateListing(listingId) {
   selectedListingId = listingId;
@@ -833,6 +939,11 @@ function statusLabel(value) { return { requested: "承認待ち", confirmed: "�
 function eventLabel(value) { return { approved: "予約を承認", rejected: "予約申請を拒否", canceled_by_tenant: "テナント都合で取消" }[value] || value; }
 function reasonLabel(value) { return { unable_to_accommodate: "受け入れ困難", request_not_acceptable: "要望に対応できない", facility_unavailable: "施設を提供できない", maintenance: "設備メンテナンス", overbooking: "オーバーブッキング", safety: "安全上の理由", other: "その他" }[value] || value; }
 function blockReasonLabel(value) { return { maintenance: "メンテナンス", cleaning: "清掃", operator_block: "運営都合", other: "その他" }[value] || value; }
+function employmentLabel(value) { return { full_time: "正社員", part_time: "アルバイト", contract: "契約社員", internship: "インターン" }[value] || value; }
+function applicationStatusLabel(value) { return { new: "新着", screening: "書類選考", interview: "面接", offered: "内定", rejected: "見送り" }[value] || value; }
+function memberRoleLabel(value) { return { owner: "オーナー", staff: "スタッフ" }[value] || value; }
+function memberStatusLabel(value) { return { active: "有効", inactive: "無効" }[value] || value || "状態不明"; }
+function jobName(id) { return workspace.jobListings.find((item) => item.id === id)?.title || "募集終了した求人"; }
 function roomTypeName(id) { return state.roomTypes.find((item) => item.id === id)?.name || "Room Type未設定"; }
 function inventoryName(id) {
   for (const room of state.rooms || []) {

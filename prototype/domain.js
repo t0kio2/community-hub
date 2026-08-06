@@ -168,8 +168,45 @@ export function normalizeWorkspace(data) {
     const workspace = structuredClone(data);
     workspace.schemaVersion = 2;
     workspace.tenant ||= { id: "tenant-prototype", name: "Prototype Tenant" };
+    workspace.tenant.profile ||= { tagline: "", description: "", website: "", email: "", phone: "", postalCode: "", prefecture: "", city: "", addressLine1: "" };
+    const legacyMembers = workspace.tenant.members || [];
+    const legacyCurrentUser = workspace.currentUser;
+    workspace.accounts ||= legacyMembers.map((member, index) => ({
+      id: member.accountId || `account-${member.id || index + 1}`,
+      email: member.email || `member-${index + 1}@example.com`,
+      accountType: "tenant",
+      status: "active",
+    }));
+    workspace.tenantMembers ||= legacyMembers.map((member, index) => ({
+      id: member.id || `tenant-member-${index + 1}`,
+      tenantId: workspace.tenant.id,
+      accountId: member.accountId || `account-${member.id || index + 1}`,
+      role: member.role || "staff",
+      status: "active",
+    }));
+    if (workspace.accounts.length === 0) {
+      workspace.accounts.push({
+        id: "account-owner-prototype",
+        email: legacyCurrentUser?.email || "owner@community-stay.example.com",
+        accountType: "tenant",
+        status: "active",
+      });
+      workspace.tenantMembers.push({
+        id: "tenant-member-owner-prototype",
+        tenantId: workspace.tenant.id,
+        accountId: "account-owner-prototype",
+        role: "owner",
+        status: "active",
+      });
+    }
+    const legacyLoginMember = legacyMembers.find((member) => member.id === legacyCurrentUser?.id || member.email === legacyCurrentUser?.email);
+    workspace.currentAccountId ||= legacyLoginMember?.accountId || (legacyLoginMember ? `account-${legacyLoginMember.id}` : null) || workspace.tenantMembers.find((member) => member.role === "owner" && member.status === "active")?.accountId || workspace.tenantMembers[0]?.accountId;
+    delete workspace.currentUser;
+    delete workspace.tenant.members;
     workspace.amenities ||= workspace.stayListings[0]?.amenities || [];
     workspace.stayReservations ||= [];
+    workspace.jobListings ||= [];
+    workspace.jobApplications ||= [];
     workspace.stayListings.forEach((listing) => {
       delete listing.amenities;
       listing.stay ||= {};
@@ -187,10 +224,30 @@ export function normalizeWorkspace(data) {
   normalizeListingRooms(listing);
   return {
     schemaVersion: 2,
-    tenant: { id: "tenant-prototype", name: "Prototype Tenant" },
+    tenant: {
+      id: "tenant-prototype",
+      name: "Prototype Tenant",
+      profile: { tagline: "", description: "", website: "", email: "", phone: "", postalCode: "", prefecture: "", city: "", addressLine1: "" },
+    },
+    accounts: [{ id: "account-owner-prototype", email: "owner@community-stay.example.com", accountType: "tenant", status: "active" }],
+    tenantMembers: [{ id: "tenant-member-owner-prototype", tenantId: "tenant-prototype", accountId: "account-owner-prototype", role: "owner", status: "active" }],
+    currentAccountId: "account-owner-prototype",
     amenities,
     stayListings: [listing],
     stayReservations: [],
+    jobListings: [],
+    jobApplications: [],
+  };
+}
+
+export function tenantDashboard(workspace) {
+  const jobs = workspace.jobListings || [];
+  const applications = workspace.jobApplications || [];
+  return {
+    publishedStays: (workspace.stayListings || []).filter((listing) => listing.status === "published").length,
+    publishedJobs: jobs.filter((job) => job.status === "published").length,
+    draftJobs: jobs.filter((job) => job.status === "draft").length,
+    pendingApplications: applications.filter((application) => ["new", "screening"].includes(application.status)).length,
   };
 }
 
