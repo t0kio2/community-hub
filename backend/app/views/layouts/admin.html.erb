@@ -9,22 +9,6 @@
     <%= stylesheet_link_tag "admin", "data-turbo-track": "reload" %>
   </head>
   <body class="admin-page">
-    <%
-      page_heading = if controller_path == "admin/home"
-        "ダッシュボード"
-      elsif controller_path == "admin/tenant_accounts"
-        {
-          "index" => "テナントアカウント",
-          "show" => "テナント詳細",
-          "new" => "テナント作成",
-          "create" => "テナント作成",
-          "edit" => "テナント編集",
-          "update" => "テナント編集"
-        }.fetch(action_name, "テナント管理")
-      else
-        "運営管理"
-      end
-    %>
 
     <div class="admin-shell">
       <aside class="admin-sidebar">
@@ -66,7 +50,7 @@
         <header class="admin-topbar">
           <div>
             <p class="admin-breadcrumb">ADMIN / COMMUNITY HUB</p>
-            <h1><%= page_heading %></h1>
+            <h1><%= content_for?(:page_title) ? yield(:page_title) : "未設定" %></h1>
           </div>
           <div class="admin-top-actions">
             <span class="system-health"><i></i>運営管理者としてログイン中</span>
