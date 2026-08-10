@@ -4,8 +4,9 @@ class Admin::TenantsController < Admin::BaseController
 	# TODO: docs/FAQ/authorize_tenant_account?.txt を元に、どうするべきか考える。
 
 	def index
-		@tenants = Tenant.order(id: :desc)
-		puts "###############{@tenants.inspect}"
+		@tenants = Tenant
+			.includes(:listings, tenant_members: :account)
+			.order(id: :desc)
 	end
 
 	def new
@@ -41,7 +42,9 @@ class Admin::TenantsController < Admin::BaseController
 	end
 
 	def set_tenant
-    @tenant = Tenant.find(params[:id])
+    @tenant = Tenant
+			.includes(:listings, tenant_members: :account)
+			.find(params[:id])
   end
 
 end

@@ -1,0 +1,186 @@
+<% content_for :title, "テナント詳細" %>
+<% content_for :page_title, "テナント詳細" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "admin/tenants", "data-turbo-track": "reload" %>
+<% end %>
+<% content_for :back_link do %>
+  <%= link_to "← テナント一覧へ戻る", admin_tenants_path, class: "admin-back-link" %>
+<% end %>
+
+<%
+  tenant_status_labels = {
+    "active" => "有効",
+    "reviewing" => "確認待ち",
+    "suspended" => "利用停止"
+  }
+  member_role_labels = { "owner" => "owner", "staff" => "staff" }
+  member_status_labels = { "active" => "有効", "inactive" => "無効" }
+  listing_type_labels = { "stay" => "宿泊", "job" => "求人" }
+  listing_status_labels = {
+    "published" => "公開中",
+    "draft" => "下書き",
+    "closed" => "公開終了",
+    "archived" => "アーカイブ"
+  }
+  members = @tenant.tenant_members.to_a
+  listings = @tenant.listings.to_a
+  recent_listings = listings.sort_by(&:updated_at).reverse.first(5)
+%>
+
+<section class="tenant-detail" aria-labelledby="admin-page-title">
+  <div class="tenant-detail__overview">
+    <span class="tenant-detail__logo" aria-hidden="true"><%= @tenant.name.first %></span>
+    <div class="tenant-detail__identity">
+      <p>Tenant #<%= @tenant.id %></p>
+      <h2><%= @tenant.name %></h2>
+      <span><%= @tenant.kana.presence || "フリガナ未設定" %></span>
+    </div>
+    <div class="tenant-detail__overview-meta">
+      <span class="status-badge status-badge--<%= @tenant.status %>">
+        <%= tenant_status_labels.fetch(@tenant.status, @tenant.status) %>
+      </span>
+      <small>登録日 <%= l(@tenant.created_at.to_date, format: :long) %></small>
+    </div>
+  </div>
+
+  <div class="tenant-detail__grid">
+    <section class="tenant-detail__card" aria-labelledby="tenant-organization-heading">
+      <div class="tenant-detail__card-heading">
+        <div>
+          <p>ORGANIZATION</p>
+          <h3 id="tenant-organization-heading">組織情報</h3>
+        </div>
+      </div>
+
+      <dl class="tenant-detail__definition-list">
+        <div>
+          <dt>組織名</dt>
+          <dd><%= @tenant.name %></dd>
+        </div>
+        <div>
+          <dt>フリガナ</dt>
+          <dd><%= @tenant.kana.presence || "未設定" %></dd>
+        </div>
+        <div>
+          <dt>所在地</dt>
+          <dd><%= @tenant.address.presence || "未設定" %></dd>
+        </div>
+        <div>
+          <dt>最終更新</dt>
+          <dd><%= l(@tenant.updated_at, format: :long) %></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="tenant-detail__card" aria-labelledby="tenant-listing-summary-heading">
+      <div class="tenant-detail__card-heading">
+        <div>
+          <p>LISTINGS</p>
+          <h3 id="tenant-listing-summary-heading">掲載サマリー</h3>
+        </div>
+      </div>
+
+      <dl class="tenant-detail__metrics">
+        <div>
+          <dt>合計</dt>
+          <dd><%= listings.size %><small>件</small></dd>
+        </div>
+        <div>
+          <dt>宿泊</dt>
+          <dd><%= listings.count { |listing| listing.listing_type == "stay" } %><small>件</small></dd>
+        </div>
+        <div>
+          <dt>求人</dt>
+          <dd><%= listings.count { |listing| listing.listing_type == "job" } %><small>件</small></dd>
+        </div>
+        <div>
+          <dt>公開中</dt>
+          <dd><%= listings.count { |listing| listing.status == "published" } %><small>件</small></dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+
+  <section class="tenant-detail__card tenant-detail__members" aria-labelledby="tenant-members-heading">
+    <div class="tenant-detail__card-heading">
+      <div>
+        <p>MEMBERS</p>
+        <h3 id="tenant-members-heading">メンバー</h3>
+      </div>
+      <span><%= members.size %>名</span>
+    </div>
+
+    <% if members.any? %>
+      <div class="tenant-detail__table-wrapper">
+        <table class="tenant-detail__table">
+          <thead>
+            <tr>
+              <th scope="col">アカウント</th>
+              <th scope="col">ロール</th>
+              <th scope="col">状態</th>
+              <th scope="col">登録日</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% members.each do |member| %>
+              <tr>
+                <td>
+                  <span class="tenant-detail__member-account">
+                    <strong><%= member.account.email %></strong>
+                    <% if member.role == "owner" %><small>代表アカウント</small><% end %>
+                  </span>
+                </td>
+                <td><%= member_role_labels.fetch(member.role, member.role) %></td>
+                <td>
+                  <span class="status-badge status-badge--<%= member.status %>">
+                    <%= member_status_labels.fetch(member.status, member.status) %>
+                  </span>
+                </td>
+                <td><%= l(member.created_at.to_date, format: :long) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="tenant-detail__empty">
+        <strong>メンバーが登録されていません</strong>
+        <p>TenantMemberが作成されると、ここに表示されます。</p>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="tenant-detail__card tenant-detail__listings" aria-labelledby="tenant-listings-heading">
+    <div class="tenant-detail__card-heading">
+      <div>
+        <p>RECENT LISTINGS</p>
+        <h3 id="tenant-listings-heading">最近の掲載</h3>
+      </div>
+      <span>更新日の新しい順・最大5件</span>
+    </div>
+
+    <% if recent_listings.any? %>
+      <div class="tenant-detail__listing-list">
+        <% recent_listings.each do |listing| %>
+          <article class="tenant-detail__listing">
+            <span class="tenant-detail__listing-icon tenant-detail__listing-icon--<%= listing.listing_type %>" aria-hidden="true">
+              <%= listing.listing_type == "stay" ? "S" : "J" %>
+            </span>
+            <div>
+              <strong><%= listing.title %></strong>
+              <small><%= listing_type_labels.fetch(listing.listing_type, listing.listing_type) %>・最終更新 <%= l(listing.updated_at.to_date, format: :long) %></small>
+            </div>
+            <span class="status-badge status-badge--<%= listing.status %>">
+              <%= listing_status_labels.fetch(listing.status, listing.status) %>
+            </span>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="tenant-detail__empty">
+        <strong>掲載がありません</strong>
+        <p>このテナントが宿泊または求人を作成すると、ここに表示されます。</p>
+      </div>
+    <% end %>
+  </section>
+</section>

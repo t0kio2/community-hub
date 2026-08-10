@@ -1,0 +1,464 @@
+/* テナント一覧 */
+.tenant-index__toolbar {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-content .button-primary {
+  color: #ffffff;
+  border-color: var(--admin-color-primary);
+  background: var(--admin-color-primary);
+}
+
+.admin-content .button-small {
+  padding: 6px 10px;
+  font-size: var(--admin-font-size-small);
+}
+
+.admin-content :is(button, input, select):disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.tenant-index__filters {
+  margin-bottom: 13px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--admin-color-border);
+  border-radius: var(--admin-radius-medium);
+  background: var(--admin-color-surface);
+}
+
+.admin-content .tenant-index__filters input {
+  min-width: 260px;
+  flex: 1;
+}
+
+.admin-content .tenant-index__filters select {
+  width: 180px;
+  flex: 0 0 180px;
+}
+
+.tenant-index__filter-note {
+  color: var(--admin-color-muted);
+  font-size: var(--admin-font-size-small);
+  white-space: nowrap;
+}
+
+.tenant-index__table-card {
+  overflow-x: auto;
+  border: 1px solid var(--admin-color-border);
+  border-radius: 13px;
+  background: var(--admin-color-surface);
+}
+
+.admin-content .tenant-index__table {
+  min-width: 900px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.admin-content .tenant-index__table td {
+  font-size: var(--admin-font-size-body);
+}
+
+.admin-content .tenant-index__table th {
+  font-size: var(--admin-font-size-small);
+}
+
+.tenant-identity {
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tenant-identity__logo {
+  width: 35px;
+  height: 35px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--admin-color-primary);
+  background: var(--admin-color-primary-soft);
+  font-weight: 800;
+}
+
+.tenant-identity__copy {
+  min-width: 0;
+}
+
+.tenant-identity__copy strong,
+.tenant-identity__copy small {
+  display: block;
+}
+
+.tenant-identity__copy small {
+  margin-top: 3px;
+  color: var(--admin-color-muted);
+  font-size: var(--admin-font-size-small);
+}
+
+.tenant-owner-email {
+  overflow-wrap: anywhere;
+}
+
+.tenant-listing-count {
+  margin-right: 2px;
+  font-size: var(--admin-font-size-subheading);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--admin-color-muted);
+  background: #edf0f4;
+  font-size: var(--admin-font-size-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status-badge--active {
+  color: #248262;
+  background: #e7f4ef;
+}
+
+.status-badge--reviewing {
+  color: #aa7019;
+  background: #fff3d8;
+}
+
+.status-badge--suspended {
+  color: var(--admin-color-danger);
+  background: var(--admin-color-danger-soft);
+}
+
+.tenant-index__actions {
+  text-align: right;
+}
+
+.tenant-index__empty {
+  padding: 35px;
+  color: var(--admin-color-muted);
+  text-align: center;
+}
+
+.tenant-index__empty strong {
+  color: var(--admin-color-ink);
+  font-size: var(--admin-font-size-body);
+}
+
+.tenant-index__empty p {
+  margin: 5px 0 0;
+  font-size: var(--admin-font-size-small);
+}
+
+/* テナント詳細 */
+.tenant-detail__overview {
+  margin-bottom: 18px;
+  padding: 22px 24px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid var(--admin-color-border);
+  border-radius: var(--admin-radius-large);
+  background: linear-gradient(120deg, #ffffff 55%, var(--admin-color-primary-soft));
+}
+
+.tenant-detail__logo {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #ffffff;
+  background: linear-gradient(140deg, #8b78f1, var(--admin-color-primary));
+  font-size: var(--admin-font-size-heading);
+  font-weight: 800;
+}
+
+.tenant-detail__identity p,
+.tenant-detail__identity h2,
+.tenant-detail__identity span {
+  margin: 0;
+}
+
+.tenant-detail__identity p {
+  margin-bottom: 4px;
+  color: var(--admin-color-primary);
+  font-size: var(--admin-font-size-caption);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tenant-detail__identity h2 {
+  font-size: var(--admin-font-size-heading);
+}
+
+.tenant-detail__identity span {
+  display: block;
+  margin-top: 4px;
+  color: var(--admin-color-muted);
+  font-size: var(--admin-font-size-body);
+}
+
+.tenant-detail__overview-meta {
+  display: grid;
+  justify-items: end;
+  gap: 9px;
+}
+
+.tenant-detail__overview-meta small {
+  color: var(--admin-color-muted);
+  font-size: var(--admin-font-size-small);
+}
+
+.tenant-detail__grid {
+  margin-bottom: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.tenant-detail__card {
+  padding: 20px;
+  border: 1px solid var(--admin-color-border);
+  border-radius: 13px;
+  background: var(--admin-color-surface);
+  box-shadow: 0 1px 0 rgb(20 30 50 / 2%);
+}
+
+.tenant-detail__card + .tenant-detail__card {
+  margin-top: 18px;
+}
+
+.tenant-detail__grid .tenant-detail__card + .tenant-detail__card {
+  margin-top: 0;
+}
+
+.tenant-detail__card-heading {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tenant-detail__card-heading p,
+.tenant-detail__card-heading h3 {
+  margin: 0;
+}
+
+.tenant-detail__card-heading p {
+  margin-bottom: 4px;
+  color: var(--admin-color-primary);
+  font-size: var(--admin-font-size-caption);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.tenant-detail__card-heading h3 {
+  font-size: var(--admin-font-size-subheading);
+}
+
+.tenant-detail__card-heading > span {
+  color: var(--admin-color-muted);
+  font-size: var(--admin-font-size-small);
+}
+
+.tenant-detail__definition-list {
+  margin: 0;
+}
+
+.tenant-detail__definition-list > div {
+  padding: 11px 0;
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 12px;
+  border-bottom: 1px solid #eceef2;
+}
+
+.tenant-detail__definition-list > div:last-child {
+  border-bottom: 0;
+}
+
+.tenant-detail__definition-list dt,
+.tenant-detail__definition-list dd {
+  margin: 0;
+  font-size: var(--admin-font-size-body);
+}
+
+.tenant-detail__definition-list dt {
+  color: var(--admin-color-muted);
+}
+
+.tenant-detail__definition-list dd {
+  font-weight: 600;
+}
+
+.tenant-detail__metrics {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tenant-detail__metrics > div {
+  padding: 14px;
+  border-radius: 10px;
+  background: #f7f8fa;
+}
+
+.tenant-detail__metrics dt {
+  color: var(--admin-color-muted);
+  font-size: var(--admin-font-size-small);
+}
+
+.tenant-detail__metrics dd {
+  margin: 7px 0 0;
+  font-size: var(--admin-font-size-page-title);
+  font-weight: 800;
+}
+
+.tenant-detail__metrics dd small {
+  margin-left: 3px;
+  color: var(--admin-color-muted);
+  font-size: var(--admin-font-size-small);
+  font-weight: 500;
+}
+
+.tenant-detail__table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-content .tenant-detail__table {
+  min-width: 650px;
+  margin: 0;
+}
+
+.admin-content .tenant-detail__table td {
+  font-size: var(--admin-font-size-body);
+}
+
+.admin-content .tenant-detail__table th {
+  font-size: var(--admin-font-size-small);
+}
+
+.tenant-detail__member-account strong,
+.tenant-detail__member-account small {
+  display: block;
+}
+
+.tenant-detail__member-account small {
+  margin-top: 3px;
+  color: var(--admin-color-primary);
+  font-size: var(--admin-font-size-caption);
+  font-weight: 700;
+}
+
+.tenant-detail__listing-list {
+  display: grid;
+}
+
+.tenant-detail__listing {
+  padding: 12px 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  border-bottom: 1px solid #eceef2;
+}
+
+.tenant-detail__listing:last-child {
+  border-bottom: 0;
+}
+
+.tenant-detail__listing-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: #3478c9;
+  background: #eaf2fc;
+  font-size: var(--admin-font-size-body);
+  font-weight: 800;
+}
+
+.tenant-detail__listing-icon--job {
+  color: var(--admin-color-primary);
+  background: var(--admin-color-primary-soft);
+}
+
+.tenant-detail__listing strong,
+.tenant-detail__listing small {
+  display: block;
+}
+
+.tenant-detail__listing strong {
+  font-size: var(--admin-font-size-body);
+}
+
+.tenant-detail__listing small {
+  margin-top: 4px;
+  color: var(--admin-color-muted);
+  font-size: var(--admin-font-size-small);
+}
+
+.tenant-detail__empty {
+  padding: 28px;
+  color: var(--admin-color-muted);
+  text-align: center;
+}
+
+.tenant-detail__empty strong {
+  color: var(--admin-color-ink);
+  font-size: var(--admin-font-size-body);
+}
+
+.tenant-detail__empty p {
+  margin: 4px 0 0;
+  font-size: var(--admin-font-size-small);
+}
+
+.status-badge--inactive,
+.status-badge--closed,
+.status-badge--archived {
+  color: var(--admin-color-muted);
+  background: #edf0f4;
+}
+
+.status-badge--published {
+  color: #248262;
+  background: #e7f4ef;
+}
+
+.status-badge--draft {
+  color: #aa7019;
+  background: #fff3d8;
+}
+
+@media (max-width: 1100px) {
+  .tenant-detail__grid {
+    grid-template-columns: 1fr;
+  }
+}

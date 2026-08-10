@@ -15,6 +15,12 @@
   --admin-radius-medium: 11px;
   --admin-radius-large: 15px;
   --admin-content-width: 1440px;
+  --admin-font-size-caption: 10px;
+  --admin-font-size-small: 11px;
+  --admin-font-size-body: 13px;
+  --admin-font-size-subheading: 17px;
+  --admin-font-size-heading: 22px;
+  --admin-font-size-page-title: 24px;
 
   min-height: 100vh;
   display: grid;
@@ -95,7 +101,7 @@
   border-radius: var(--admin-radius-medium);
   color: #ffffff;
   background: linear-gradient(140deg, #8b78f1, #5a43c6);
-  font-size: 19px;
+  font-size: var(--admin-font-size-heading);
   font-weight: 800;
 }
 
@@ -107,7 +113,7 @@
 .admin-brand small {
   margin-top: 2px;
   color: #828da1;
-  font-size: 8px;
+  font-size: var(--admin-font-size-caption);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -122,7 +128,7 @@
   border-radius: var(--admin-radius-small);
   color: #aa9df2;
   background: rgb(105 84 217 / 10%);
-  font-size: 9px;
+  font-size: var(--admin-font-size-small);
   font-weight: 700;
 }
 
@@ -147,7 +153,7 @@
 .admin-navigation p {
   margin: 14px 10px 5px;
   color: #687387;
-  font-size: 8px;
+  font-size: var(--admin-font-size-caption);
   font-weight: 700;
   letter-spacing: 0.16em;
 }
@@ -161,14 +167,14 @@
   border-radius: var(--admin-radius-small);
   color: #aeb7c7;
   text-decoration: none;
-  font-size: 12px;
+  font-size: var(--admin-font-size-body);
 }
 
 .admin-navigation a > span {
   width: 18px;
   color: #778196;
   text-align: center;
-  font-size: 14px;
+  font-size: var(--admin-font-size-body);
 }
 
 .admin-navigation a:hover,
@@ -212,7 +218,7 @@
   border-radius: 9px;
   color: #ffffff;
   background: var(--admin-color-primary);
-  font-size: 10px;
+  font-size: var(--admin-font-size-caption);
   font-weight: 800;
 }
 
@@ -229,13 +235,13 @@
 }
 
 .admin-account-copy strong {
-  font-size: 10px;
+  font-size: var(--admin-font-size-caption);
 }
 
 .admin-account-copy small {
   margin-top: 4px;
   color: #828da1;
-  font-size: 8px;
+  font-size: var(--admin-font-size-caption);
 }
 
 .admin-sidebar-footer form {
@@ -249,7 +255,7 @@
   border-radius: 9px;
   color: #98a2b5;
   background: transparent;
-  font-size: 9px;
+  font-size: var(--admin-font-size-small);
 }
 
 .logout-button:hover {
@@ -275,14 +281,28 @@
 .admin-breadcrumb {
   margin: 0 0 5px;
   color: var(--admin-color-muted);
-  font-size: 9px;
+  font-size: var(--admin-font-size-small);
   font-weight: 700;
   letter-spacing: 0.13em;
 }
 
+.admin-back-link {
+  display: inline-flex;
+  margin-bottom: 5px;
+  align-items: center;
+  color: var(--admin-color-primary);
+  text-decoration: none;
+  font-size: var(--admin-font-size-small);
+  font-weight: 700;
+}
+
+.admin-back-link:hover {
+  text-decoration: underline;
+}
+
 .admin-topbar h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: var(--admin-font-size-page-title);
   letter-spacing: -0.03em;
 }
 
@@ -297,7 +317,7 @@
   align-items: center;
   gap: 7px;
   color: var(--admin-color-muted);
-  font-size: 10px;
+  font-size: var(--admin-font-size-caption);
 }
 
 .system-health i {
@@ -319,7 +339,7 @@
   margin-bottom: 18px;
   padding: 12px 15px;
   border-radius: 9px;
-  font-size: 12px;
+  font-size: var(--admin-font-size-body);
 }
 
 .admin-content .flash.notice {
@@ -363,7 +383,7 @@
 
 .admin-content .toolbar h1 {
   margin: 0;
-  font-size: 21px;
+  font-size: var(--admin-font-size-heading);
 }
 
 .admin-content a {
@@ -378,7 +398,7 @@
   color: var(--admin-color-ink);
   background: #ffffff;
   text-decoration: none;
-  font-size: 11px;
+  font-size: var(--admin-font-size-small);
   font-weight: 700;
 }
 
@@ -403,13 +423,13 @@
   border: 0;
   border-bottom: 1px solid #eceef2;
   text-align: left;
-  font-size: 11px;
+  font-size: var(--admin-font-size-small);
 }
 
 .admin-content th {
   color: var(--admin-color-muted);
   background: #f7f8fa;
-  font-size: 9px;
+  font-size: var(--admin-font-size-small);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -436,7 +456,7 @@
 
 .admin-content label {
   color: #42495a;
-  font-size: 11px;
+  font-size: var(--admin-font-size-small);
   font-weight: 700;
 }
 

@@ -41,6 +41,14 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     get new_admin_tenant_account_path
 
     assert_response :success
+    assert_select 'link[rel="stylesheet"][href*="tenant_accounts"]', count: 1
+    assert_select ".admin-topbar .admin-back-link[href=?]", admin_tenant_accounts_path
+    assert_select ".tenant-account-create__card", count: 2
+    assert_select ".tenant-account-create__card-heading h2", text: "アカウント情報", count: 1
+    assert_select ".tenant-account-create__card-heading h2", text: "組織情報", count: 1
+    assert_select ".tenant-account-create__intro", count: 0
+    assert_select "style", count: 0
+    assert_not_includes response.body, "テナントの利用開始情報を登録"
     assert_includes response.body, "初期ロール"
     assert_includes response.body, "owner"
     assert_includes response.body, "この画面では変更できません"
