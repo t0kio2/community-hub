@@ -1,0 +1,143 @@
+› authorize_tenant_account はなに？
+
+
+• authorize_tenant_account!は、Adminがその操作を実行できるか確認するためのメソッドです。
+
+  Rails標準のメソッドではなく、現在のAdmin::TenantAccountsControllerに定義されている独自メソッドです。
+
+  def authorize_tenant_account!
+    record = @tenant || TenantAccount
+
+    query = {
+      "index" => :index?,
+      "show" => :show?,
+      "new" => :create?,
+      "create" => :create?,
+      "edit" => :update?,
+      "update" => :update?,
+      "destroy" => :destroy?
+    }.fetch(action_name)
+
+    authorize record,
+              query,
+              with: Admin::TenantAccountPolicy
+  end
+
+  ## 何をしているか
+
+  例えば一覧画面へアクセスした場合：
+
+  GET /admin/tenant_accounts
+          ↓
+  action_name = "index"
+          ↓
+  query = :index?
+          ↓
+  Admin::TenantAccountPolicy#index?
+          ↓
+  許可／拒否
+
+  Policyは現在次のようになっています。
+
+  class Admin::TenantAccountPolicy < Admin::BasePolicy
+    def index?
+      active?
+    end
+
+    def show?
+      active?
+    end
+
+    def create?
+      active?
+    end
+
+    def update?
+      active?
+    end
+
+    def destroy?
+      active? && actor.role == "super_admin"
+    end
+  end
+
+  つまり、利用中のAdminだけが一覧・詳細・作成・更新を操作でき、削除はsuper_adminだけに許可されます。
+
+  ## 認証とは別
+
+  認証と認可は別の処理です。
+
+  authenticate_admin_account!
+    → ログインしているか
+
+  authorize_tenant_account!
+    → ログイン中のAdminに操作権限があるか
+
+  Admin::BaseControllerで認証とAdminの有効性を確認し、各Controllerで対象リソースへの操作権限を確認しています。
+
+  リクエスト
+    ↓
+  Adminとしてログイン済みか
+    ↓
+  Adminがactiveか
+    ↓
+  TenantAccountを操作できるか
+    ↓
+  Controllerの処理
+
+  ## recordの意味
+
+  一覧や新規作成では、対象の個別レコードがありません。
+
+  record = TenantAccount
+
+  詳細・編集・削除では、before_action :set_tenantで取得したレコードを使います。
+
+  record = @tenant
+
+  ただし、現在の@tenantは実際にはTenantAccountなので、名前としては分かりにくいです。
+
+  def set_tenant
+    @tenant = TenantAccount.find(params[:id])
+  end
+
+  以下の方が明確です。
+
+  def set_tenant_account
+    @tenant_account = TenantAccount.find(params[:id])
+  end
+
+  ## Admin::TenantsControllerを作る場合
+
+  新しいテナント管理では、TenantAccount用の認可メソッドを流用しません。
+
+  class Admin::TenantsController < Admin::BaseController
+    before_action :authorize_tenant!
+
+    def index
+      @tenants = Tenant.order(created_at: :desc)
+    end
+
+    private
+
+    def authorize_tenant!
+      authorize Tenant,
+                :index?,
+                with: Admin::TenantPolicy
+    end
+  end
+
+  PolicyもTenant専用にします。
+
+  class Admin::TenantPolicy < Admin::BasePolicy
+    def index?
+      active?
+    end
+  end
+
+  整理すると：
+
+  - authorize_tenant_account!：認証アカウントを操作できるか
+  - authorize_tenant!：テナント組織を操作できるか
+
+  という役割です。
