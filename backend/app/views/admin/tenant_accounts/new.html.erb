@@ -1,15 +1,16 @@
 <% content_for :title, "テナント作成" %>
 <% content_for :page_title, "テナント作成" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "admin/tenant_accounts", "data-turbo-track": "reload" %>
+<% end %>
+<% content_for :back_link do %>
+  <%= link_to "← テナントアカウント一覧へ戻る", admin_tenant_accounts_path, class: "admin-back-link" %>
+<% end %>
 
-<div class="form-box">
-  <div class="nav">
-    <a href="<%= admin_tenant_accounts_path %>">← テナント一覧へ戻る</a>
-  </div>
-  <h1>テナントアカウント作成</h1>
-
+<section class="tenant-account-create" aria-labelledby="admin-page-title">
   <% if @tenant.errors.any? || @organization&.errors&.any? %>
-    <div class="errors">
-      <p>エラーが発生しました:</p>
+    <div class="tenant-account-create__errors" role="alert" aria-labelledby="tenant-account-error-heading">
+      <strong id="tenant-account-error-heading">入力内容を確認してください</strong>
       <ul>
         <% @tenant.errors.full_messages.each do |message| %>
           <li><%= message %></li>
@@ -21,56 +22,82 @@
     </div>
   <% end %>
 
-  <%= form_with model: @tenant, url: admin_tenant_accounts_path, method: :post, local: true do |form| %>
-    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+  <%= form_with model: @tenant, url: admin_tenant_accounts_path, method: :post, local: true, html: { class: "tenant-account-create__form" } do |form| %>
+    <div class="tenant-account-create__form-grid">
+      <fieldset class="tenant-account-create__card">
+        <legend class="visually-hidden">アカウント情報</legend>
+        <div class="tenant-account-create__card-heading">
+          <h2>アカウント情報</h2>
+          <p>テナントへログインするownerアカウントを設定します。</p>
+        </div>
 
-    <fieldset>
-      <legend>アカウント情報</legend>
+        <div class="field">
+          <label for="tenant_email">メールアドレス <span class="tenant-account-create__required">必須</span></label>
+          <%= form.email_field :email, id: "tenant_email", required: true, autocomplete: "username", placeholder: "owner@example.com" %>
+        </div>
 
-      <label for="tenant_email">Email</label>
-      <%= form.email_field :email, id: "tenant_email", required: true, autocomplete: "username" %>
+        <div class="field">
+          <label for="tenant_password">パスワード <span class="tenant-account-create__required">必須</span></label>
+          <div class="tenant-account-create__password-field">
+            <%= form.password_field :password, id: "tenant_password", required: true, autocomplete: "new-password" %>
+            <button type="button" class="tenant-account-create__visibility-button" data-target="tenant_password" aria-pressed="false" aria-label="パスワードを表示">表示</button>
+          </div>
+        </div>
 
-      <label for="tenant_password">Password</label>
-      <div class="field-with-toggle">
-        <%= form.password_field :password, id: "tenant_password", required: true, autocomplete: "new-password", class: "with-toggle" %>
-        <button type="button" class="toggle-visibility" data-target="tenant_password" aria-pressed="false" aria-label="パスワードを表示">表示</button>
-      </div>
+        <div class="field">
+          <label for="tenant_password_confirmation">パスワード確認 <span class="tenant-account-create__required">必須</span></label>
+          <div class="tenant-account-create__password-field">
+            <%= form.password_field :password_confirmation, id: "tenant_password_confirmation", required: true, autocomplete: "new-password" %>
+            <button type="button" class="tenant-account-create__visibility-button" data-target="tenant_password_confirmation" aria-pressed="false" aria-label="パスワード確認を表示">表示</button>
+          </div>
+        </div>
 
-      <label for="tenant_password_confirmation">Password confirmation</label>
-      <div class="field-with-toggle">
-        <%= form.password_field :password_confirmation, id: "tenant_password_confirmation", required: true, autocomplete: "new-password", class: "with-toggle" %>
-        <button type="button" class="toggle-visibility" data-target="tenant_password_confirmation" aria-pressed="false" aria-label="パスワード確認を表示">表示</button>
-      </div>
+        <div class="tenant-account-create__role" aria-label="初期ロール">
+          <span>初期ロール</span>
+          <strong>owner</strong>
+          <p>テナントの管理責任者として作成されます。この画面では変更できません。</p>
+        </div>
+      </fieldset>
 
-      <div class="fixed-role" aria-label="初期ロール">
-        <span>初期ロール</span>
-        <strong>owner</strong>
-        <p>テナントの管理責任者として作成されます。この画面では変更できません。</p>
-      </div>
-    </fieldset>
+      <fieldset class="tenant-account-create__card">
+        <legend class="visually-hidden">組織情報</legend>
+        <div class="tenant-account-create__card-heading">
+          <h2>組織情報</h2>
+          <p>管理対象となるテナントの基本情報を登録します。</p>
+        </div>
 
-    <fieldset>
-      <legend>組織情報</legend>
+        <div class="field">
+          <label for="organization_name">組織名 <span class="tenant-account-create__required">必須</span></label>
+          <%= text_field_tag "tenant[name]", params.dig(:tenant, :name), id: "organization_name", required: true, autocomplete: "organization", placeholder: "株式会社コミュニティハブ" %>
+        </div>
 
-      <label for="organization_name">組織名</label>
-      <%= text_field_tag "tenant[name]", params.dig(:tenant, :name), id: "organization_name", required: true, autocomplete: "organization" %>
+        <div class="field">
+          <label for="organization_kana">組織名カナ</label>
+          <%= text_field_tag "tenant[kana]", params.dig(:tenant, :kana), id: "organization_kana", placeholder: "カブシキガイシャコミュニティハブ" %>
+        </div>
 
-      <label for="organization_kana">組織名カナ</label>
-      <%= text_field_tag "tenant[kana]", params.dig(:tenant, :kana), id: "organization_kana" %>
+        <div class="field">
+          <label for="organization_address">所在地</label>
+          <%= text_field_tag "tenant[address]", params.dig(:tenant, :address), id: "organization_address", autocomplete: "street-address", placeholder: "東京都〇〇区〇〇 1-2-3" %>
+        </div>
 
-      <label for="organization_address">住所</label>
-      <%= text_field_tag "tenant[address]", params.dig(:tenant, :address), id: "organization_address", autocomplete: "street-address" %>
+        <div class="tenant-account-create__status-note">
+          <span aria-hidden="true"></span>
+          作成後のテナント状態は「有効」に設定されます。
+        </div>
+      </fieldset>
+    </div>
 
-      <%= hidden_field_tag "tenant[status]", params.dig(:tenant, :status).presence || "active" %>
-    </fieldset>
-
-    <button type="submit">作成する</button>
+    <div class="tenant-account-create__actions">
+      <%= link_to "キャンセル", admin_tenant_accounts_path, class: "button" %>
+      <button type="submit" class="tenant-account-create__submit">テナントを作成</button>
+    </div>
   <% end %>
-</div>
+</section>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".toggle-visibility").forEach(function (button) {
+    document.querySelectorAll(".tenant-account-create__visibility-button").forEach(function (button) {
       button.addEventListener("click", function () {
         var input = document.getElementById(button.getAttribute("data-target"));
         if (!input) return;
@@ -83,22 +110,3 @@
     });
   });
 </script>
-
-<style>
-  .form-box { max-width: 520px; padding: 24px; border: 1px solid #ddd; border-radius: 8px; }
-  fieldset { border: 0; padding: 0; margin: 24px 0 0; }
-  legend { font-weight: 700; margin-bottom: 8px; }
-  label { display: block; margin: 10px 0 6px; }
-  input[type="email"], input[type="password"], input[type="text"] { width: 100%; padding: 10px; box-sizing: border-box; }
-  form button { margin-top: 16px; padding: 10px 16px; }
-  .errors { background: #fff3f3; color: #900; padding: 10px; margin-bottom: 12px; border: 1px solid #f5c2c2; border-radius: 6px; }
-  .nav { margin-bottom: 16px; }
-  .nav a { color: #0366d6; text-decoration: none; }
-  .field-with-toggle { position: relative; }
-  .with-toggle { padding-right: 72px; }
-  .toggle-visibility { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); margin: 0; padding: 6px 10px; font-size: 12px; }
-  .fixed-role { margin-top: 20px; padding: 12px; border: 1px solid #bfdbfe; border-radius: 6px; background: #eff6ff; }
-  .fixed-role span { display: block; color: #475569; font-size: 13px; font-weight: 700; }
-  .fixed-role strong { display: block; margin-top: 4px; color: #1d4ed8; font-size: 18px; }
-  .fixed-role p { margin: 6px 0 0; color: #475569; font-size: 13px; line-height: 1.5; }
-</style>

@@ -17,6 +17,9 @@ class Admin::HomeControllerTest < ActionDispatch::IntegrationTest
     get admin_root_path
 
     assert_response :success
+    assert_select 'link[rel="stylesheet"][href*="admin"]', count: 1
+    assert_select ".admin-topbar .admin-breadcrumb", text: "ADMIN / COMMUNITY HUB"
+    assert_select ".admin-topbar .admin-back-link", count: 0
     assert_includes response.body, "運営管理画面"
     assert_includes response.body, "ログイン中:"
     assert_includes response.body, account.email
