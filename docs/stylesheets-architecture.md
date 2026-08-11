@@ -16,7 +16,7 @@ backend/app/assets/stylesheets/
 - `admin.css`: Adminのデザイントークン、シェル、サイドバー、トップバー、共通部品
 - `admin/tenants.css`: Adminにおけるテナント一覧・詳細固有のスタイル
 
-現段階では既存ファイルの移動や共通化を行わない。
+Tenant共通レイアウトの本実装用CSSは`tenant.css`として追加する。現段階ではAdmin／Tenant間の既存ファイル移動や`common`への共通化を行わない。
 
 ## Tenant画面実装時の検討方針
 

@@ -20,6 +20,14 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     get tenant_listings_path
 
     assert_response :success
+    assert_select "h1#tenant-page-title", text: "掲載管理"
+    assert_select ".tenant-menu-section.has-active", minimum: 1
+    assert_select ".tenant-menu-items a.active[href=?]", tenant_listings_path
+    assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
+    assert_select ".tenant-listing-index__card", count: 1
+    assert_select ".tenant-content style", count: 0
+    assert_includes response.body, "求人"
+    assert_includes response.body, "下書き"
     assert_includes response.body, own_listing.title
     assert_not_includes response.body, other_listing.title
   end
@@ -28,7 +36,11 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     get new_tenant_listing_path(listing_type: "job")
 
     assert_response :success
-    assert_includes response.body, "掲載作成"
+    assert_select "h1#tenant-page-title", text: "掲載作成"
+    assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
+    assert_select ".listing-form .form-section", count: 2
+    assert_select ".listing-form .type-switch a.active", text: "求人"
+    assert_select ".tenant-content style", count: 0
     assert_includes response.body, "勤務エリア"
   end
 
@@ -52,8 +64,27 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     get new_tenant_listing_path(listing_type: "stay")
 
     assert_response :success
-    assert_includes response.body, "掲載作成"
+    assert_select "h1#tenant-page-title", text: "掲載作成"
+    assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
+    assert_select ".listing-form .form-section", count: 2
+    assert_select ".listing-form .type-switch a.active", text: "宿泊"
+    assert_select ".tenant-content style", count: 0
     assert_includes response.body, "チェックイン"
+  end
+
+  test "掲載詳細をtenantデザインで表示できる" do
+    listing = create_job_listing(title: "詳細を確認する求人")
+
+    get tenant_listing_path(listing)
+
+    assert_response :success
+    assert_select "h1#tenant-page-title", text: "掲載詳細"
+    assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
+    assert_select ".tenant-topbar .tenant-back-link[href=?]", tenant_listings_path
+    assert_select ".tenant-listing-detail__overview", count: 1
+    assert_select ".tenant-content style", count: 0
+    assert_includes response.body, listing.title
+    assert_includes response.body, "求人詳細"
   end
 
   test "求人掲載を作成できる" do
