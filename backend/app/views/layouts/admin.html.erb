@@ -7,6 +7,7 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "admin", "data-turbo-track": "reload" %>
+    <%= yield :stylesheets if content_for?(:stylesheets) %>
   </head>
   <body class="admin-page">
 
@@ -26,7 +27,7 @@
           <% end %>
 
           <p>PLATFORM</p>
-          <%= link_to admin_tenant_accounts_path, class: [(controller_path == "admin/tenant_accounts" && !%w[new create].include?(action_name)) && "active"] do %>
+          <%= link_to admin_tenants_path, class: [(controller_path == "admin/tenants" && !%w[new create].include?(action_name)) && "active"] do %>
             <span>▣</span>テナント管理
           <% end %>
           <%= link_to new_admin_tenant_account_path, class: [(controller_path == "admin/tenant_accounts" && %w[new create].include?(action_name)) && "active"] do %>
@@ -49,8 +50,12 @@
       <main class="admin-main">
         <header class="admin-topbar">
           <div>
-            <p class="admin-breadcrumb">ADMIN / COMMUNITY HUB</p>
-            <h1><%= content_for?(:page_title) ? yield(:page_title) : "未設定" %></h1>
+            <% if content_for?(:back_link) %>
+              <%= yield :back_link %>
+            <% else %>
+              <p class="admin-breadcrumb">ADMIN / COMMUNITY HUB</p>
+            <% end %>
+            <h1 id="admin-page-title"><%= content_for?(:page_title) ? yield(:page_title) : "未設定" %></h1>
           </div>
           <div class="admin-top-actions">
             <span class="system-health"><i></i>運営管理者としてログイン中</span>
