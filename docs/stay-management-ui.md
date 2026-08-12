@@ -66,6 +66,8 @@ UI内の仮データを接続時に次の変数へ置き換える。
 4. Policy、Strong Parameters、成功・失敗時のレスポンスを実装する。
 5. コントローラー接続後に画面テストと操作テストを追加する。
 
+Jobs/Staysの詳細取得はそれぞれ`@tenant.listings.where(listing_type: ...)`を起点とし、別種別または別テナントのIDを404にする。Listingと`JobListing`／`StayListing`は同一トランザクションで保存する。専用フォームは`tenant_job_path`／`tenant_stay_path`へ送信し、旧Listingsルートへ依存しない。
+
 ## 検証
 
 UI段階ではERB内にインラインstyleを置かず、Ruby構文を含むテンプレートが解析可能であることと、既存Backendテストへ影響しないことを確認する。

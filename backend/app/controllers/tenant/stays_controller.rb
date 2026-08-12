@@ -1,8 +1,83 @@
 class Tenant::StaysController < Tenant::BaseController
   before_action :require_current_tenant!
+  before_action :set_listing, only: %i[show edit update]
+  before_action :authorize_existing_listing!, only: %i[show edit update]
 
   def index
     authorize @tenant, :index?, with: Tenant::ListingPolicy
     @listings = @tenant.listings.where(listing_type: "stay").order(updated_at: :desc, id: :desc)
+  end
+
+  def show
+    set_or_build_stay_detail
+  end
+
+  def new
+    @listing = @tenant.listings.new(listing_type: "stay", status: "draft")
+    authorize @listing, :create?, with: Tenant::ListingPolicy
+    set_or_build_stay_detail
+  end
+
+  def create
+    @listing = @tenant.listings.new(listing_params.merge(listing_type: "stay", status: "draft"))
+    authorize @listing, :create?, with: Tenant::ListingPolicy
+    set_audit_members
+    set_or_build_stay_detail
+
+    if save_with_stay_detail
+      redirect_to tenant_stay_path(@listing), notice: "宿泊施設を登録しました"
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  def edit
+    set_or_build_stay_detail
+  end
+
+  def update
+    @listing.assign_attributes(listing_params)
+    @listing.updated_by_tenant_member = current_tenant_member
+    set_or_build_stay_detail
+
+    if save_with_stay_detail
+      redirect_to tenant_stay_path(@listing), notice: "宿泊施設を更新しました"
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  private
+
+  def set_listing
+    @listing = @tenant.listings.where(listing_type: "stay").find(params[:id])
+  end
+
+  def authorize_existing_listing!
+    authorize @listing, action_name == "show" ? :show? : :update?, with: Tenant::ListingPolicy
+  end
+
+  def set_or_build_stay_detail
+    @stay_listing = @listing.stay_listing || @listing.build_stay_listing
+  end
+
+  def set_audit_members
+    @listing.created_by_tenant_member = current_tenant_member
+    @listing.updated_by_tenant_member = current_tenant_member
+  end
+
+  def save_with_stay_detail
+    return false unless @listing.valid? && @stay_listing.valid?
+
+    Listing.transaction do
+      @listing.save!
+      @stay_listing.listing = @listing
+      @stay_listing.save!
+    end
+    true
+  end
+
+  def listing_params
+    params.require(:listing).permit(:title, :description, :tenant_location_id)
   end
 end
