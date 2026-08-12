@@ -26,37 +26,60 @@
   <%= form_with model: [:tenant, listing], local: true, class: "listing-form" do |form| %>
     <section class="form-section" aria-label="共通項目">
       <div class="listing-form-section-heading field-wide">
-        <h2>基本情報</h2>
-        <p>掲載の種別、タイトル、公開状態を設定します。</p>
+        <h2><%= listing.listing_type == "stay" ? "施設の基本情報" : "基本情報" %></h2>
+        <p><%= listing.listing_type == "stay" ? "最初に施設の骨格だけを登録します。客室や料金は登録後に設定します。" : "掲載の種別、タイトル、公開状態を設定します。" %></p>
       </div>
 
-      <% unless listing.persisted? %>
+      <% unless listing.persisted? || listing.listing_type == "stay" %>
         <div class="type-switch field-wide">
           <a class="<%= listing.listing_type == "job" ? "active" : "" %>" href="<%= new_tenant_listing_path(listing_type: "job") %>">求人</a>
           <a class="<%= listing.listing_type == "stay" ? "active" : "" %>" href="<%= new_tenant_listing_path(listing_type: "stay") %>">宿泊</a>
         </div>
       <% end %>
 
-      <div class="field field-wide">
+      <div class="field <%= "field-wide" if listing.listing_type == "stay" %>">
         <label>種別</label>
-        <strong><%= listing_type_labels.fetch(listing.listing_type, listing.listing_type) %></strong>
+        <strong><%= listing.listing_type == "stay" ? "宿泊施設" : listing_type_labels.fetch(listing.listing_type, listing.listing_type) %></strong>
         <%= form.hidden_field :listing_type %>
       </div>
 
-      <div class="field">
-        <%= form.label :title, "タイトル" %>
-        <%= form.text_field :title %>
+      <div class="field <%= "field-wide" if listing.listing_type == "stay" %>">
+        <%= form.label :title, listing.listing_type == "stay" ? "施設名" : "タイトル" %>
+        <%= form.text_field :title, placeholder: listing.listing_type == "stay" ? "山のホテル" : nil %>
       </div>
 
-      <div class="field">
-        <%= form.label :status, "ステータス" %>
-        <%= form.select :status, Listing::STATUSES.map { |status| [listing_status_labels.fetch(status, status), status] } %>
-      </div>
+      <% if listing.listing_type == "job" %>
+        <div class="field">
+          <%= form.label :status, "ステータス" %>
+          <%= form.select :status, Listing::STATUSES.map { |status| [listing_status_labels.fetch(status, status), status] } %>
+        </div>
+      <% else %>
+        <%= form.hidden_field :status, value: "draft" unless listing.persisted? %>
+      <% end %>
 
       <div class="field field-wide">
-        <%= form.label :description, "説明" %>
-        <%= form.text_area :description, rows: 5 %>
+        <%= form.label :description, listing.listing_type == "stay" ? "施設紹介" : "説明" %>
+        <%= form.text_area :description, rows: 5, placeholder: listing.listing_type == "stay" ? "施設の特徴や周辺環境を入力してください" : nil %>
       </div>
+
+      <% if listing.listing_type == "stay" %>
+        <div class="field field-wide stay-registration-location">
+          <%= form.label :tenant_location_id, "所在地" %>
+          <% locations = @organization&.tenant_locations&.order(:name, :id) || [] %>
+          <% if locations.any? %>
+            <%= form.select :tenant_location_id,
+                            locations.map { |location| ["#{location.name}｜#{location.full_address.presence || "住所未設定"}", location.id] },
+                            { include_blank: "拠点を選択してください" } %>
+            <p>登録済みの拠点を施設所在地として使用します。<%= link_to "拠点を管理", tenant_locations_path %></p>
+          <% else %>
+            <div class="stay-registration-location__empty">
+              <strong>所在地となる拠点が登録されていません</strong>
+              <p>宿泊施設を登録する前に、住所と緯度・経度を持つ拠点を登録してください。</p>
+              <%= link_to "拠点を登録", new_tenant_location_path, class: "tenant-listing-button tenant-listing-button--primary" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
     </section>
 
     <% if listing.listing_type == "job" %>
@@ -122,59 +145,17 @@
         </section>
       <% end %>
     <% else %>
-      <%= fields_for "listing[stay_listing]", detail do |detail_form| %>
-        <section class="form-section" aria-label="宿泊詳細">
-          <div class="listing-form-section-heading field-wide">
-            <h2>宿泊詳細</h2>
-            <p>施設、料金、チェックインと予約受付期間を設定します。</p>
-          </div>
-
-          <div class="field">
-            <%= detail_form.label :stay_type, "宿泊種別" %>
-            <%= detail_form.select :stay_type, [["", ""]] + StayListing::STAY_TYPES.map { |type| [type, type] } %>
-          </div>
-          <div class="field">
-            <%= detail_form.label :address, "住所" %>
-            <%= detail_form.text_field :address %>
-          </div>
-          <div class="field">
-            <%= detail_form.label :capacity, "定員" %>
-            <%= detail_form.number_field :capacity, min: 1 %>
-          </div>
-          <div class="field">
-            <%= detail_form.label :price_per_night, "1泊料金" %>
-            <%= detail_form.number_field :price_per_night, min: 0 %>
-          </div>
-          <div class="field">
-            <%= detail_form.label :check_in_time, "チェックイン" %>
-            <%= detail_form.time_field :check_in_time %>
-          </div>
-          <div class="field">
-            <%= detail_form.label :check_out_time, "チェックアウト" %>
-            <%= detail_form.time_field :check_out_time %>
-          </div>
-          <div class="field">
-            <%= detail_form.label :available_from, "予約開始" %>
-            <%= detail_form.date_field :available_from %>
-          </div>
-          <div class="field">
-            <%= detail_form.label :available_until, "予約終了" %>
-            <%= detail_form.date_field :available_until %>
-          </div>
-          <div class="field field-wide">
-            <%= detail_form.label :amenities, "設備" %>
-            <%= detail_form.text_area :amenities, rows: 4 %>
-          </div>
-          <div class="field field-wide">
-            <%= detail_form.label :house_rules, "ルール" %>
-            <%= detail_form.text_area :house_rules, rows: 4 %>
-          </div>
-        </section>
-      <% end %>
+      <section class="stay-registration-next-steps" aria-label="登録後の設定">
+        <div><span>1</span><strong>施設を登録</strong><small>施設名・紹介・拠点</small></div>
+        <i aria-hidden="true">→</i>
+        <div><span>2</span><strong>客室と在庫</strong><small>Room Type・Room／Bed</small></div>
+        <i aria-hidden="true">→</i>
+        <div><span>3</span><strong>料金と公開</strong><small>料金プラン・販売設定</small></div>
+      </section>
     <% end %>
 
     <div class="form-actions">
-      <%= form.submit listing.persisted? ? "更新する" : "作成する", class: "listing-form-submit" %>
+      <%= form.submit listing.persisted? ? "更新する" : (listing.listing_type == "stay" ? "施設を登録して設定へ進む" : "作成する"), class: "listing-form-submit" %>
     </div>
   <% end %>
 </div>

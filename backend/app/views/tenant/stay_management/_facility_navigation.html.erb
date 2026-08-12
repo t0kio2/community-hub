@@ -1,0 +1,8 @@
+<nav class="stay-management-tabs" aria-label="宿泊施設管理">
+  <a href="#" class="<%= local_assigns[:active] == :dashboard ? "active" : nil %>">概要</a>
+  <a href="#" class="<%= local_assigns[:active] == :room_types ? "active" : nil %>">Room Type</a>
+  <a href="#" class="<%= local_assigns[:active] == :inventory ? "active" : nil %>">Room／Bed</a>
+  <a href="#" class="<%= local_assigns[:active] == :rate_plans ? "active" : nil %>">料金プラン</a>
+  <a href="#">販売管理</a>
+  <a href="#">予約</a>
+</nav>

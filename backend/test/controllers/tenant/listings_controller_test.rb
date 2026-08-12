@@ -36,7 +36,7 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     get new_tenant_listing_path(listing_type: "job")
 
     assert_response :success
-    assert_select "h1#tenant-page-title", text: "掲載作成"
+    assert_select "h1#tenant-page-title", text: "求人を作成"
     assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
     assert_select ".listing-form .form-section", count: 2
     assert_select ".listing-form .type-switch a.active", text: "求人"
@@ -61,17 +61,41 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "宿泊掲載作成画面を表示できる" do
+  test "宿泊施設の最小登録画面を表示できる" do
     get new_tenant_listing_path(listing_type: "stay")
 
     assert_response :success
-    assert_select "h1#tenant-page-title", text: "掲載作成"
+    assert_select "h1#tenant-page-title", text: "宿泊施設を登録"
     assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
-    assert_select ".listing-form .form-section", count: 2
-    assert_select ".listing-form .type-switch a.active", text: "宿泊"
+    assert_select ".listing-form .form-section", count: 1
+    assert_select ".listing-form .type-switch", count: 0
+    assert_select ".stay-registration-location__empty", count: 1
+    assert_select ".stay-registration-location__empty a[href=?]", new_tenant_location_path, text: "拠点を登録"
+    assert_select ".stay-registration-next-steps", count: 1
     assert_select ".listing-form .form-actions a", count: 0
     assert_select ".tenant-content style", count: 0
-    assert_includes response.body, "チェックイン"
+    assert_not_includes response.body, "チェックイン"
+    assert_not_includes response.body, "1泊料金"
+  end
+
+  test "宿泊施設登録画面で登録済み拠点を所在地として選べる" do
+    location = @tenant.tenant_locations.create!(
+      name: "山のホテル本館",
+      postal_code: "100-0001",
+      prefecture: "東京都",
+      city: "千代田区",
+      address_line1: "千代田1-1",
+      latitude: 35.6852,
+      longitude: 139.7528
+    )
+
+    get new_tenant_listing_path(listing_type: "stay")
+
+    assert_response :success
+    assert_select "select[name='listing[tenant_location_id]']" do
+      assert_select "option[value=?]", location.id.to_s, text: /山のホテル本館/
+    end
+    assert_select ".stay-registration-location__empty", count: 0
   end
 
   test "掲載詳細をtenantデザインで表示できる" do
