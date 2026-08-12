@@ -52,7 +52,9 @@ Rails.application.routes.draw do
     root to: 'home#index'
     resource :organization, only: [:edit, :update]
     resources :locations, only: [:index, :new, :create, :edit, :update, :destroy]
-    resources :listings, only: [:index, :show, :new, :create, :edit, :update]
+
+    resources :jobs, only: %i[index show new create edit update]
+    resources :stays, only: %i[index show new create edit update]
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

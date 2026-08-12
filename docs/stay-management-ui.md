@@ -2,7 +2,11 @@
 
 ## 目的
 
-プロトタイプで検証した宿泊施設運営の画面構成を、Railsのテナントデザインへ移植する。求人掲載と宿泊施設運営を別の業務導線として扱い、宿泊施設の最小登録後に客室・在庫・料金を段階設定する。現段階ではUIのみとし、モデル、コントローラー、ルート、保存処理は実装しない。
+プロトタイプで検証した宿泊施設運営の画面構成を、Railsのテナントデザインへ移植する。求人掲載と宿泊施設運営を別の業務導線として扱い、宿泊施設の最小登録後に客室・在庫・料金を段階設定する。
+
+求人と宿泊施設は`Tenant::JobsController`と`Tenant::StaysController`へ分割済みで、サイドメニューから`tenant_jobs_path`と`tenant_stays_path`へ直接遷移する。ナビゲーションのアクティブ判定は`controller_path`だけで行う。旧`Tenant::ListingsController`と`/tenant/listings`ルートは削除し、共通フォームだけを`tenant/shared/_listing_form`として共有する。
+
+ログイン中テナントは`Tenant::BaseController#set_current_tenant`で`@tenant`へ設定し、全テナント管理画面で共通利用する。取得処理はリダイレクトしない。テナントを必須とするJobs、Stays、Locations、Organizationsだけが`require_current_tenant!`をbefore actionとして実行し、未設定ならHomeへ戻す。Homeは必須チェックを行わず、組織未設定状態を表示できるためリダイレクトループにならない。
 
 ## 情報設計
 
@@ -25,8 +29,8 @@
 
 | ビュー | 想定URL | 役割 |
 | --- | --- | --- |
-| `tenant/stay_management/index` | `/tenant/stays` | 宿泊施設の選択 |
-| `tenant/listings/new`（stay時） | `/tenant/stays/new`へ移行予定 | 施設名・説明・拠点の最小登録 |
+| `tenant/stays/index` | `/tenant/stays` | 宿泊施設の選択 |
+| `tenant/stays/new` | `/tenant/stays/new` | 施設名・説明・拠点の最小登録 |
 | `tenant/stay_management/dashboard` | `/tenant/stays/:listing_id` | 設定状況と販売構成の確認 |
 | `tenant/stay_management/room_types` | `/tenant/stays/:listing_id/room_types` | 販売分類の管理 |
 | `tenant/stay_management/inventory` | `/tenant/stays/:listing_id/inventory` | 物理Room／Bedの管理 |
@@ -57,6 +61,8 @@ UI内の仮データを接続時に次の変数へ置き換える。
 3. `href="#"`と`action="#"`を実際のルートヘルパーへ置き換える。
 4. Policy、Strong Parameters、成功・失敗時のレスポンスを実装する。
 5. コントローラー接続後に画面テストと操作テストを追加する。
+
+Jobs/Staysの詳細取得はそれぞれ`@tenant.listings.where(listing_type: ...)`を起点とし、別種別または別テナントのIDを404にする。Listingと`JobListing`／`StayListing`は同一トランザクションで保存する。専用フォームは`tenant_job_path`／`tenant_stay_path`へ送信し、旧Listingsルートへ依存しない。
 
 ## 検証
 

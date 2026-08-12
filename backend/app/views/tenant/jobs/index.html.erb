@@ -1,11 +1,10 @@
-<% content_for :title, "掲載管理" %>
-<% content_for :page_title, "掲載管理" %>
+<% content_for :title, "求人一覧" %>
+<% content_for :page_title, "求人一覧" %>
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %>
 <% end %>
 
 <%
-  listing_type_labels = { "job" => "求人", "stay" => "宿泊" }
   listing_status_labels = {
     "published" => "公開中",
     "draft" => "下書き",
@@ -16,8 +15,7 @@
 
 <section class="tenant-listing-index" aria-labelledby="tenant-page-title">
   <div class="tenant-listing-index__toolbar">
-    <%= link_to "求人を作成", new_tenant_listing_path(listing_type: "job"), class: "tenant-listing-button tenant-listing-button--primary" %>
-    <%= link_to "宿泊施設を登録", new_tenant_listing_path(listing_type: "stay"), class: "tenant-listing-button" %>
+    <%= link_to "求人を作成", new_tenant_job_path, class: "tenant-listing-button tenant-listing-button--primary" %>
   </div>
 
   <div class="tenant-listing-index__card">
@@ -44,13 +42,13 @@
                     <strong><%= listing.title %></strong>
                   </span>
                 </td>
-                <td><span class="tenant-listing-type tenant-listing-type--<%= listing.listing_type %>"><%= listing_type_labels.fetch(listing.listing_type, listing.listing_type) %></span></td>
+                <td><span class="tenant-listing-type tenant-listing-type--job">求人</span></td>
                 <td><span class="tenant-listing-status tenant-listing-status--<%= listing.status %>"><%= listing_status_labels.fetch(listing.status, listing.status) %></span></td>
                 <td><%= l(listing.updated_at, format: :short) %></td>
                 <td>
                   <span class="tenant-listing-index__actions">
-                    <%= link_to "詳細", tenant_listing_path(listing) %>
-                    <%= link_to "編集", edit_tenant_listing_path(listing) %>
+                    <%= link_to "詳細", tenant_job_path(listing) %>
+                    <%= link_to "編集", edit_tenant_job_path(listing) %>
                   </span>
                 </td>
               </tr>
@@ -60,8 +58,8 @@
       </div>
     <% else %>
       <div class="tenant-listing-empty">
-        <strong>掲載がありません</strong>
-        <p>求人を作成、または宿泊施設を登録すると、ここに表示されます。</p>
+        <strong>求人がありません</strong>
+        <p>求人を作成すると、ここに表示されます。</p>
       </div>
     <% end %>
   </div>

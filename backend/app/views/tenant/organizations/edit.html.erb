@@ -8,11 +8,11 @@
 <% end %>
 
 <section class="tenant-organization-edit" aria-labelledby="tenant-page-title">
-  <% if @organization.errors.any? %>
+  <% if @tenant.errors.any? %>
     <div class="tenant-organization-edit__errors" role="alert" aria-labelledby="organization-error-heading">
       <strong id="organization-error-heading">入力内容を確認してください</strong>
       <ul>
-        <% @organization.errors.full_messages.each do |message| %>
+        <% @tenant.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>
@@ -25,10 +25,10 @@
         <h2>基本情報</h2>
         <p>テナントの名称を管理します。</p>
       </div>
-      <span class="tenant-organization-edit__status"><%= @organization.status.presence || "状態未設定" %></span>
+      <span class="tenant-organization-edit__status"><%= @tenant.status.presence || "状態未設定" %></span>
     </div>
 
-    <%= form_with model: @organization, url: tenant_organization_path, method: :patch, local: true, html: { class: "tenant-organization-edit__form" } do |form| %>
+    <%= form_with model: @tenant, url: tenant_organization_path, method: :patch, local: true, html: { class: "tenant-organization-edit__form" } do |form| %>
       <div class="tenant-organization-edit__field">
         <label for="tenant_name">組織名 <span>必須</span></label>
         <%= form.text_field :name, required: true, autocomplete: "organization" %>
@@ -64,7 +64,7 @@
             <div class="tenant-organization-location__content">
               <div class="tenant-organization-location__heading">
                 <strong><%= location.name %></strong>
-                <% if @organization.primary_tenant_location_id == location.id %>
+                <% if @tenant.primary_tenant_location_id == location.id %>
                   <span>代表拠点</span>
                 <% end %>
               </div>

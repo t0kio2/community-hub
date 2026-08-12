@@ -1,0 +1,19 @@
+<% content_for :title, @listing.title %>
+<% content_for :page_title, "宿泊施設詳細" %>
+<% content_for :stylesheets do %><%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %><% end %>
+<% content_for :back_link do %><%= link_to "← 宿泊施設一覧へ戻る", tenant_stays_path, class: "tenant-back-link" %><% end %>
+
+<section class="tenant-listing-detail" aria-labelledby="tenant-page-title">
+  <div class="tenant-listing-detail__overview">
+    <span class="tenant-listing-detail__icon" aria-hidden="true">S</span>
+    <div class="tenant-listing-detail__identity"><span class="tenant-listing-type">宿泊施設</span><h2><%= @listing.title %></h2></div>
+    <div class="tenant-listing-detail__overview-actions"><span class="tenant-listing-status tenant-listing-status--<%= @listing.status %>"><%= @listing.status %></span><%= link_to "編集", edit_tenant_stay_path(@listing), class: "tenant-listing-button" %></div>
+  </div>
+  <section class="tenant-listing-detail__card"><div class="tenant-listing-card-heading"><h3>施設情報</h3><p>施設の基本情報と所在地</p></div>
+    <dl class="tenant-listing-detail__definition-list">
+      <div class="tenant-listing-detail__wide"><dt>施設紹介</dt><dd><%= @listing.description.presence || "-" %></dd></div>
+      <div><dt>拠点</dt><dd><%= @listing.tenant_location&.name.presence || "未設定" %></dd></div>
+      <div><dt>住所</dt><dd><%= @listing.tenant_location&.full_address.presence || "未設定" %></dd></div>
+    </dl>
+  </section>
+</section>

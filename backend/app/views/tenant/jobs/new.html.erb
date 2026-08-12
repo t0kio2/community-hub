@@ -1,0 +1,6 @@
+<% content_for :title, "求人作成" %>
+<% content_for :page_title, "求人を作成" %>
+<% content_for :stylesheets do %><%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %><% end %>
+<% content_for :back_link do %><%= link_to "← 求人一覧へ戻る", tenant_jobs_path, class: "tenant-back-link" %><% end %>
+
+<%= render "tenant/shared/listing_form", listing: @listing, detail: @job_listing, form_url: tenant_jobs_path %>

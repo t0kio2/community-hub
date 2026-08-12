@@ -1,0 +1,36 @@
+<% content_for :title, "宿泊施設一覧" %>
+<% content_for :page_title, "宿泊施設一覧" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %>
+<% end %>
+
+<% listing_status_labels = { "published" => "公開中", "draft" => "下書き", "closed" => "公開終了", "archived" => "アーカイブ" } %>
+
+<section class="tenant-listing-index" aria-labelledby="tenant-page-title">
+  <div class="tenant-listing-index__toolbar">
+    <%= link_to "宿泊施設を登録", new_tenant_stay_path, class: "tenant-listing-button tenant-listing-button--primary" %>
+  </div>
+
+  <div class="tenant-listing-index__card">
+    <% if @listings.any? %>
+      <div class="tenant-listing-index__table-wrapper">
+        <table class="tenant-listing-index__table">
+          <thead><tr><th scope="col">施設</th><th scope="col">所在地</th><th scope="col">状態</th><th scope="col">更新日</th><th scope="col"><span class="visually-hidden">操作</span></th></tr></thead>
+          <tbody>
+            <% @listings.each do |listing| %>
+              <tr>
+                <td><span class="tenant-listing-index__identity"><span class="tenant-listing-index__icon" aria-hidden="true">S</span><strong><%= listing.title %></strong></span></td>
+                <td><%= listing.tenant_location&.name.presence || "未設定" %></td>
+                <td><span class="tenant-listing-status tenant-listing-status--<%= listing.status %>"><%= listing_status_labels.fetch(listing.status, listing.status) %></span></td>
+                <td><%= l(listing.updated_at, format: :short) %></td>
+                <td><span class="tenant-listing-index__actions"><%= link_to "詳細", tenant_stay_path(listing) %><%= link_to "編集", edit_tenant_stay_path(listing) %></span></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="tenant-listing-empty"><strong>宿泊施設がありません</strong><p>施設を登録すると、ここに表示されます。</p></div>
+    <% end %>
+  </div>
+</section>

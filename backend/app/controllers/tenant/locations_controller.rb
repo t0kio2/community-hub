@@ -1,19 +1,19 @@
 class Tenant::LocationsController < Tenant::BaseController
-  before_action :set_organization
+  before_action :require_current_tenant!
   before_action :set_location, only: %i[edit update destroy]
 
   def index
-    authorize @organization, :index?, with: Tenant::LocationPolicy
-    @locations = @organization.tenant_locations.order(:name, :id)
+    authorize @tenant, :index?, with: Tenant::LocationPolicy
+    @locations = @tenant.tenant_locations.order(:name, :id)
   end
 
   def new
-    @location = @organization.tenant_locations.new(location_type: "other")
+    @location = @tenant.tenant_locations.new(location_type: "other")
     authorize @location, :create?, with: Tenant::LocationPolicy
   end
 
   def create
-    @location = @organization.tenant_locations.new(location_params)
+    @location = @tenant.tenant_locations.new(location_params)
     authorize @location, :create?, with: Tenant::LocationPolicy
 
     if save_location
@@ -50,17 +50,10 @@ class Tenant::LocationsController < Tenant::BaseController
 
   private
 
-  def set_organization
-    @organization = current_tenant_organization
-    return if @organization
-
-    redirect_to tenant_root_path, alert: "組織情報がありません"
-  end
-
   def set_location
     return if performed?
 
-    @location = @organization.tenant_locations.find(params[:id])
+    @location = @tenant.tenant_locations.find(params[:id])
   end
 
   def location_params
@@ -90,9 +83,9 @@ class Tenant::LocationsController < Tenant::BaseController
 
   def update_primary_location!
     if primary_location_requested?
-      @organization.update!(primary_tenant_location: @location)
-    elsif @organization.primary_tenant_location == @location
-      @organization.update!(primary_tenant_location: nil)
+      @tenant.update!(primary_tenant_location: @location)
+    elsif @tenant.primary_tenant_location == @location
+      @tenant.update!(primary_tenant_location: nil)
     end
   end
 
