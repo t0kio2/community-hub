@@ -3,11 +3,9 @@
 one:
   name: MyString
   kana: MyString
-  address: MyString
   status: MyString
 
 two:
   name: MyString
   kana: MyString
-  address: MyString
   status: MyString

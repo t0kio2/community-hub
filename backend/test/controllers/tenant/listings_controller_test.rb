@@ -201,7 +201,6 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     tenant = Tenant.create!(
       name: "Sample Lodge",
       kana: "サンプルロッジ",
-      address: "Tokyo",
       status: "active"
     )
     account = TenantAccount.create!(

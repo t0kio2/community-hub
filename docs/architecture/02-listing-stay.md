@@ -335,11 +335,11 @@ Stay Listingの公開条件と、指定日程に対する予約可否は分け�
 
 - `title`と`description`が入力されている
 - 画像が1件以上存在する
-- `listing_location`が存在する
-- `prefecture / city / address_line1`が入力されている
-- `latitude / longitude`が設定されている
+- Listingと同じテナントが所有する`tenant_location`が選択されている
+- 参照する拠点に`prefecture / city / address_line1`が入力されている
+- 参照する拠点に`latitude / longitude`が設定されている
 
-`postal_code / address_line2 / google_place_id`は任意とする。住所を保持することと、一般ユーザーへ完全な住所を開示することは分けて扱い、開示範囲は位置情報仕様で定義する。
+参照する`tenant_location`の`postal_code / address_line2 / google_place_id`は任意とする。住所を保持することと、一般ユーザーへ完全な住所を開示することは分けて扱い、開示範囲は位置情報仕様で定義する。
 
 #### 宿泊施設設定
 

@@ -76,11 +76,6 @@
           <%= text_field_tag "tenant[kana]", params.dig(:tenant, :kana), id: "organization_kana", placeholder: "カブシキガイシャコミュニティハブ" %>
         </div>
 
-        <div class="field">
-          <label for="organization_address">所在地</label>
-          <%= text_field_tag "tenant[address]", params.dig(:tenant, :address), id: "organization_address", autocomplete: "street-address", placeholder: "東京都〇〇区〇〇 1-2-3" %>
-        </div>
-
         <div class="tenant-account-create__status-note">
           <span aria-hidden="true"></span>
           作成後のテナント状態は「有効」に設定されます。

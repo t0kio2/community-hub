@@ -1,24 +1,53 @@
-# README
+# Backend
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## テスト
 
-Things you may want to cover:
+BackendのRailsコマンドは、ホストのRubyではなくDocker Composeの`backend`サービスで実行します。
 
-* Ruby version
+### コンテナの起動
 
-* System dependencies
+リポジトリルートで次を実行します。
 
-* Configuration
+```sh
+docker compose up -d db backend
+```
 
-* Database creation
+### テストデータベースの準備
 
-* Database initialization
+初回実行時やマイグレーション追加後は、test環境のデータベースを準備します。
 
-* How to run the test suite
+```sh
+docker compose exec \
+  -e RAILS_ENV=test \
+  -e DATABASE_URL=postgres://app:app@db:5432/app_test \
+  backend bin/rails db:prepare
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+### 全テストの実行
 
-* Deployment instructions
+```sh
+docker compose exec \
+  -e RAILS_ENV=test \
+  -e DATABASE_URL=postgres://app:app@db:5432/app_test \
+  backend bin/rails test
+```
 
-* ...
+### テストファイルを指定して実行
+
+パスは`backend`ディレクトリを基準に指定します。
+
+```sh
+docker compose exec \
+  -e RAILS_ENV=test \
+  -e DATABASE_URL=postgres://app:app@db:5432/app_test \
+  backend bin/rails test test/models/listing_test.rb
+```
+
+特定のテストだけを実行する場合は、対象テストの行番号を付けます。
+
+```sh
+docker compose exec \
+  -e RAILS_ENV=test \
+  -e DATABASE_URL=postgres://app:app@db:5432/app_test \
+  backend bin/rails test test/models/listing_test.rb:10
+```

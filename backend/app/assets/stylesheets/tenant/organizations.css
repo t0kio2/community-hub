@@ -1,6 +1,6 @@
 /* 組織情報編集 */
 .tenant-organization-edit {
-  max-width: 760px;
+  width: 100%;
 }
 
 .tenant-organization-edit__errors {

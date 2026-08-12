@@ -81,6 +81,8 @@ AdminとTenantの共通CSS抽出はこの変更では行わない。両方の実
 
 ページ固有スタイルは`app/assets/stylesheets/tenant/organizations.css`へ分離し、View内に`style`要素を置かない。主要な更新操作はTenantの緑、キャンセルは共通の白いボタン、エラーはTenantの危険色トークンで表示する。Controller、Policy、パラメータ、更新処理は変更しない。
 
+組織情報編集の本文は独自の最大幅を持たせず、Tenantレイアウトのコンテンツ幅を使用する。これにより、掲載管理などの他画面とカードの左右位置と横幅を揃える。入力欄はカード内で全幅とし、狭い画面では共通レイアウトに従って縮小する。
+
 ## 掲載管理
 
 掲載一覧、詳細、作成、編集は共通して`app/assets/stylesheets/tenant/listings.css`を読み込む。各ViewとフォームPartialからインライン`style`を削除し、Tenantのデザイントークン、カード、テーブル、フォーム、バッジの表現へ統一する。

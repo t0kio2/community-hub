@@ -29,6 +29,6 @@ class Tenant::OrganizationsController < Tenant::BaseController
   end
 
   def organization_params
-    params.require(:tenant).permit(:name, :kana, :address)
+    params.require(:tenant).permit(:name, :kana)
   end
 end

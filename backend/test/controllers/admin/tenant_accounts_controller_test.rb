@@ -33,7 +33,6 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "active", tenant_member.status
     assert_equal "Sample Inn", tenant_member.tenant.name
     assert_equal "サンプルイン", tenant_member.tenant.kana
-    assert_equal "Tokyo", tenant_member.tenant.address
     assert_equal "active", tenant_member.tenant.status
   end
 
@@ -46,6 +45,7 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".tenant-account-create__card", count: 2
     assert_select ".tenant-account-create__card-heading h2", text: "アカウント情報", count: 1
     assert_select ".tenant-account-create__card-heading h2", text: "組織情報", count: 1
+    assert_select 'input[name="tenant[address]"]', count: 0
     assert_select ".tenant-account-create__intro", count: 0
     assert_select "style", count: 0
     assert_not_includes response.body, "テナントの利用開始情報を登録"
@@ -203,8 +203,7 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
       },
       tenant: {
         name: "Sample Inn",
-        kana: "サンプルイン",
-        address: "Tokyo"
+        kana: "サンプルイン"
       }
     }
   end
@@ -218,7 +217,6 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     tenant = Tenant.create!(
       name: tenant_name,
       kana: "テナント",
-      address: "Tokyo",
       status: "active"
     )
     TenantMember.create!(

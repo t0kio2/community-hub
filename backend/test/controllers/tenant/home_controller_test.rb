@@ -5,7 +5,6 @@ class Tenant::HomeControllerTest < ActionDispatch::IntegrationTest
     @tenant = Tenant.create!(
       name: "Sample Lodge",
       kana: "サンプルロッジ",
-      address: "Tokyo",
       status: "active"
     )
     @tenant_account = TenantAccount.create!(
