@@ -1,55 +1,5 @@
 <% content_for :title, "#{@listing.title} - 宿泊管理" %>
 <% content_for :page_title, "運営ダッシュボード" %>
-<% content_for :stylesheets do %>
-  <%= stylesheet_link_tag "tenant/stay_dashboard", "data-turbo-track": "reload" %>
-<% end %>
-
-<% content_for :tenant_sidebar_brand do %>
-  <%= link_to tenant_stay_path(@listing), class: "tenant-brand tenant-brand--facility", aria: { label: "#{@listing.title} 宿泊施設管理" } do %>
-    <span class="tenant-brand-mark tenant-brand-mark--facility" aria-hidden="true">
-      <svg viewBox="0 0 24 24" focusable="false"><path d="M3 18V7M21 18v-6.5A2.5 2.5 0 0 0 18.5 9H9v6h12M3 15h18M6 9V6h3.5A2.5 2.5 0 0 1 12 8.5V9M3 18v2M21 18v2"/></svg>
-    </span>
-    <span class="tenant-brand-copy">
-      <small>Community Hub</small>
-      <strong><%= @listing.title %></strong>
-      <span>宿泊施設管理</span>
-    </span>
-  <% end %>
-<% end %>
-
-<% content_for :tenant_sidebar_navigation do %>
-  <nav class="tenant-navigation stay-facility-navigation" aria-label="<%= @listing.title %>の宿泊施設管理">
-    <%= link_to tenant_stays_path, class: "stay-facility-navigation__back" do %>
-      <span aria-hidden="true">←</span>
-      宿泊施設一覧へ戻る
-    <% end %>
-
-    <div class="stay-facility-navigation__divider"></div>
-
-    <%= link_to tenant_stay_path(@listing), class: "stay-facility-navigation__item active", aria: { current: "page" } do %>
-      <span class="stay-facility-navigation__icon" aria-hidden="true">⌂</span>
-      <span><strong>運営ダッシュボード</strong><small>今日の状況と要対応</small></span>
-    <% end %>
-
-    <% [
-      ["予約業務", "到着・出発・承認", "▦"],
-      ["予約一覧", "予約の検索と確認", "≡"],
-      ["販売管理", "在庫・料金・販売状況", "▥"],
-      ["客室管理", "客室タイプ・客室", "▤"],
-      ["施設設定", "基本情報・公開設定", "⚙"]
-    ].each do |label, description, icon| %>
-      <span class="stay-facility-navigation__item stay-facility-navigation__item--disabled" aria-disabled="true">
-        <span class="stay-facility-navigation__icon" aria-hidden="true"><%= icon %></span>
-        <span><strong><%= label %></strong><small><%= description %></small></span>
-        <em>準備中</em>
-      </span>
-    <% end %>
-  </nav>
-<% end %>
-
-<% content_for :back_link do %>
-  <p class="tenant-breadcrumb">STAY MANAGEMENT / <%= @listing.title %></p>
-<% end %>
 
 <% status_labels = { "published" => "公開中", "draft" => "下書き", "closed" => "公開終了", "archived" => "アーカイブ" } %>
 

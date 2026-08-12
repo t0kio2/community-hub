@@ -61,7 +61,9 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1#tenant-page-title", text: "運営ダッシュボード"
+    assert_select ".tenant-breadcrumb", text: "STAY / #{listing.title}"
     assert_select ".tenant-brand--facility", text: /#{listing.title}/
+    assert_select ".tenant-brand--facility svg use[href*='icons/tenant-navigation'][href$='#stays']", count: 1
     assert_select ".stay-facility-navigation__back[href=?]", tenant_stays_path, text: /宿泊施設一覧へ戻る/
     assert_select ".stay-facility-navigation__item.active[href=?]", tenant_stay_path(listing), text: /運営ダッシュボード/
     assert_select ".stay-facility-navigation__item--disabled[aria-disabled='true']", count: 5
@@ -82,6 +84,7 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", tenant_stay_path(listing), text: "管理画面"
     assert_select ".tenant-brand", text: /Community Hub/
     assert_select ".stay-facility-navigation", count: 0
+    assert_select ".tenant-navigation svg use[href*='icons/tenant-navigation']", minimum: 4
   end
 
   test "別テナントの拠点では宿泊施設を登録しない" do

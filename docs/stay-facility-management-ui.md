@@ -8,8 +8,12 @@
 
 ## 対象ファイル
 
+- `backend/app/controllers/tenant/stays_controller.rb`
+- `backend/app/views/layouts/tenant/stay.html.erb`
 - `backend/app/views/layouts/tenant.html.erb`
 - `backend/app/views/tenant/stays/show.html.erb`
+- `backend/app/views/shared/_icon.html.erb`
+- `backend/app/assets/images/icons/tenant-navigation.svg`
 - `backend/app/views/tenant/stays/index.html.erb`
 - `backend/app/assets/stylesheets/tenant.css`
 - `backend/app/assets/stylesheets/tenant/stay_dashboard.css`
@@ -31,16 +35,17 @@
 
 ## 実装手順
 
-1. テナントレイアウトへ施設管理用のbrandとnavigationの差し込み領域を追加する
-2. 宿泊施設詳細画面から施設管理用サイドバーを指定する
-3. 詳細画面を運営ダッシュボードへ変更する
-4. 一覧画面の導線を「管理画面」へ変更する
-5. 既存デザインシステムに合わせたCSSを追加する
-6. コントローラテストで施設名、戻る導線、メニュー、ダッシュボードを確認する
+1. 宿泊施設配下で共有する`tenant/stay`レイアウトを追加する
+2. 施設名、施設別ナビゲーション、パンくず、共通CSSの指定を同レイアウトへ移す
+3. `show`は運営ダッシュボード本文だけを担当させる
+4. ナビゲーションSVGのパス定義をスプライトへ集約し、共通partialから参照する
+5. コントローラテストでレイアウト、アイコン参照、ダッシュボードを確認する
+
+`dashboard`は個別画面を表す名前として使い、予約・客室などでも共有するレイアウト名には使わない。`management`もレイアウト名には採用せず、対象リソースに合わせて`tenant/stay`とする。
 
 ## CSS構成
 
-`tenant/stay_dashboard.css`は`tenant.css`の後に、宿泊施設別ダッシュボードだけで読み込むページCSSとする。次の順序でセクションを分ける。
+`tenant/stay_dashboard.css`は`tenant.css`の後に、宿泊施設配下のレイアウトから読み込むCSSとする。現時点ではダッシュボード用スタイルも同居し、別画面の追加時に共通スタイルを分割する。次の順序でセクションを分ける。
 
 1. 宿泊管理共通レイアウト
 2. 共通コンポーネント
@@ -60,6 +65,7 @@
 - 宿泊施設詳細では施設名と施設別ナビゲーションが表示される
 - 一覧へ戻るリンクが正しいURLを持つ
 - 未実装メニューがリンクになっていない
+- ビューへSVGのパス定義を直接記述せず、共通スプライトを参照する
 - 別テナントの宿泊施設を取得できない既存制約が維持される
 
 ## 今後の対応
