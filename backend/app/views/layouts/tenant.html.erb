@@ -7,6 +7,7 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "tenant", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "confirmation_modal", "data-turbo-track": "reload" %>
     <%= yield :stylesheets if content_for?(:stylesheets) %>
   </head>
   <body class="tenant-page">
@@ -16,6 +17,7 @@
       tenant_organization = tenant_member&.tenant
       listing_section_active = controller_path == "tenant/listings"
       organization_section_active = controller_path == "tenant/organizations"
+      location_section_active = controller_path == "tenant/locations"
       requested_listing_type = params[:listing_type].presence || params.dig(:listing, :listing_type)
     %>
 
@@ -57,7 +59,7 @@
             </section>
 
             <% if tenant_member&.role == "owner" && tenant_organization.present? %>
-              <section class="tenant-menu-section <%= "has-active" if organization_section_active %>">
+              <section class="tenant-menu-section <%= "has-active" if organization_section_active || location_section_active %>">
                 <div class="tenant-menu-heading">
                   <span aria-hidden="true">◉</span>
                   <div>
@@ -67,6 +69,7 @@
                 </div>
                 <div class="tenant-menu-items">
                   <%= link_to "組織情報", edit_tenant_organization_path, class: [organization_section_active && "active"] %>
+                  <%= link_to "拠点管理", tenant_locations_path, class: [location_section_active && "active"] %>
                 </div>
               </section>
             <% end %>
@@ -134,5 +137,6 @@
         </div>
       </main>
     </div>
+    <%= render "shared/confirmation_modal" %>
   </body>
 </html>

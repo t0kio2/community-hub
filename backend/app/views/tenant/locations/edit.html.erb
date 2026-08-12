@@ -1,0 +1,12 @@
+<% content_for :title, "拠点編集" %>
+<% content_for :page_title, "拠点を編集" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "tenant/locations", "data-turbo-track": "reload" %>
+<% end %>
+<% content_for :back_link do %>
+  <%= link_to "← 拠点一覧へ戻る", tenant_locations_path, class: "tenant-back-link" %>
+<% end %>
+
+<section class="tenant-location-edit" aria-labelledby="tenant-page-title">
+  <%= render "form", location: @location %>
+</section>

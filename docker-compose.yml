@@ -14,6 +14,7 @@ services:
       - ./db/init:/docker-entrypoint-initdb.d
 
   backend:
+    # 指定ファイルに書かれた値をコンテナ内の環境変数として設定する
     env_file:
         - .env
     build:

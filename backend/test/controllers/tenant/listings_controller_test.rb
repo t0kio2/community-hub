@@ -40,6 +40,7 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
     assert_select ".listing-form .form-section", count: 2
     assert_select ".listing-form .type-switch a.active", text: "求人"
+    assert_select ".listing-form .form-actions a", count: 0
     assert_select ".tenant-content style", count: 0
     assert_includes response.body, "勤務エリア"
   end
@@ -68,6 +69,7 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
     assert_select ".listing-form .form-section", count: 2
     assert_select ".listing-form .type-switch a.active", text: "宿泊"
+    assert_select ".listing-form .form-actions a", count: 0
     assert_select ".tenant-content style", count: 0
     assert_includes response.body, "チェックイン"
   end

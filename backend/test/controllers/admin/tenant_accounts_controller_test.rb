@@ -100,6 +100,10 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'name="_method"'
     assert_includes response.body, 'value="delete"'
     assert_includes response.body, "削除"
+    assert_select 'link[rel="stylesheet"][href*="confirmation_modal"]', count: 1
+    assert_select "dialog[data-confirmation-modal]", count: 1
+    assert_select 'form[data-confirm-message][action=?]', admin_tenant_account_path(TenantAccount.find_by!(email: "index-delete-owner@example.com")), count: 1
+    assert_not_includes response.body, "return confirm("
   end
 
   test "operatorはテナントアカウントを削除できない" do
@@ -132,8 +136,8 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "ロール:"
     assert_includes response.body, "operator"
-    assert_not_includes response.body, 'value="delete"'
-    assert_not_includes response.body, "削除"
+    assert_select ".admin-content form[data-confirm-message]", count: 0
+    assert_select '.admin-content input[name="_method"][value="delete"]', count: 0
   end
 
   test "無効な管理者はテナントアカウント一覧を表示できない" do

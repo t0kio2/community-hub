@@ -4,6 +4,27 @@
 
 BackendのRailsコマンドは、ホストのRubyではなくDocker Composeの`backend`サービスで実行します。
 
+## Google Maps Embed API
+
+拠点管理画面の地図プレビューにはMaps Embed APIを使用します。APIキーはリポジトリへコミットせず、リポジトリルートの`.env`へ設定します。
+
+```sh
+GOOGLE_MAPS_EMBED_API_KEY=your_api_key
+```
+
+設定後は`backend`コンテナを再作成して環境変数を反映します。
+
+```sh
+docker compose up -d --force-recreate backend
+```
+
+APIキーはMaps Embed API専用にし、Google Cloud Consoleで次の制限を設定してください。
+
+- APIの制限：Maps Embed APIのみ
+- アプリケーションの制限：開発環境と本番環境のHTTPリファラー
+
+本番環境では、デプロイ先のSecretまたは環境変数に同じ変数名で設定します。Maps Embed APIのキーはブラウザへ送信されるため、API制限とHTTPリファラー制限が必須です。
+
 ### コンテナの起動
 
 リポジトリルートで次を実行します。

@@ -23,7 +23,13 @@
           <a class="button" href="<%= admin_tenant_account_path(tenant) %>">掲載</a>
           <a class="button" href="<%= edit_admin_tenant_account_path(tenant) %>">編集</a>
           <% if policy(tenant, with: Admin::TenantAccountPolicy).destroy? %>
-            <%= form_with url: admin_tenant_account_path(tenant), method: :delete, local: true, html: { class: "inline-form", onsubmit: "return confirm('削除してよろしいですか？');" } do %>
+            <%= form_with url: admin_tenant_account_path(tenant),
+                          method: :delete,
+                          local: true,
+                          html: {
+                            class: "inline-form",
+                            data: { confirm_message: "#{tenant.email}を削除します。この操作は取り消せません。" }
+                          } do %>
               <button type="submit">削除</button>
             <% end %>
           <% end %>
