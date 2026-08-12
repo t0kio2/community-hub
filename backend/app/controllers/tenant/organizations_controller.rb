@@ -1,6 +1,7 @@
 class Tenant::OrganizationsController < Tenant::BaseController
   before_action :set_organization
   before_action :authorize_update!
+  before_action :set_locations
 
   def edit
   end
@@ -26,6 +27,12 @@ class Tenant::OrganizationsController < Tenant::BaseController
     return if performed?
 
     authorize @organization, :update?, with: Tenant::OrganizationPolicy
+  end
+
+  def set_locations
+    return if performed?
+
+    @locations = @organization.tenant_locations.order(:name, :id)
   end
 
   def organization_params

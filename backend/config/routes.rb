@@ -51,6 +51,7 @@ Rails.application.routes.draw do
   namespace :tenant do
     root to: 'home#index'
     resource :organization, only: [:edit, :update]
+    resources :locations, only: [:index, :new, :create, :edit, :update, :destroy]
     resources :listings, only: [:index, :show, :new, :create, :edit, :update]
   end
 

@@ -1,0 +1,60 @@
+<dialog class="confirmation-modal" data-confirmation-modal aria-labelledby="confirmation-modal-title">
+  <div class="confirmation-modal__panel">
+    <div class="confirmation-modal__icon" aria-hidden="true">!</div>
+    <div class="confirmation-modal__content">
+      <h2 id="confirmation-modal-title">操作を確認してください</h2>
+      <p data-confirmation-message></p>
+    </div>
+    <div class="confirmation-modal__actions">
+      <button type="button" class="confirmation-modal__cancel" data-confirmation-cancel>キャンセル</button>
+      <button type="button" class="confirmation-modal__confirm" data-confirmation-submit>削除する</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var modal = document.querySelector("[data-confirmation-modal]");
+    if (!modal) return;
+
+    var message = modal.querySelector("[data-confirmation-message]");
+    var cancelButton = modal.querySelector("[data-confirmation-cancel]");
+    var confirmButton = modal.querySelector("[data-confirmation-submit]");
+    var pendingForm = null;
+
+    document.addEventListener("submit", function (event) {
+      var form = event.target.closest("form[data-confirm-message]");
+      if (!form || form.dataset.confirmed === "true") return;
+
+      event.preventDefault();
+      pendingForm = form;
+      message.textContent = form.dataset.confirmMessage;
+      modal.showModal();
+      cancelButton.focus();
+    });
+
+    cancelButton.addEventListener("click", closeModal);
+
+    confirmButton.addEventListener("click", function () {
+      if (!pendingForm) return;
+
+      var form = pendingForm;
+      form.dataset.confirmed = "true";
+      closeModal();
+      form.requestSubmit();
+    });
+
+    modal.addEventListener("cancel", function () {
+      pendingForm = null;
+    });
+
+    modal.addEventListener("click", function (event) {
+      if (event.target === modal) closeModal();
+    });
+
+    function closeModal() {
+      pendingForm = null;
+      modal.close();
+    }
+  });
+</script>

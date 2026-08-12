@@ -24,10 +24,11 @@ class Listing < ApplicationRecord
   validates :listing_type, presence: true, inclusion: { in: LISTING_TYPES }
   validates :title, presence: true
   validates :status, presence: true, inclusion: { in: STATUSES }
-  validates :location_belongs_to_tenant
+  validate :tenant_location_belongs_to_tenant
 
   private
-  def location_belongs_to_tenant
+
+  def tenant_location_belongs_to_tenant
     return if tenant_location.nil?
     return if tenant_location.tenant_id == tenant_id
 
@@ -36,5 +37,4 @@ class Listing < ApplicationRecord
       "は同じテナントの拠点を指定してください"
     )
   end
-
 end

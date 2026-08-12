@@ -40,8 +40,50 @@
       </div>
 
       <div class="tenant-organization-edit__actions">
-        <%= link_to "キャンセル", tenant_root_path, class: "button" %>
         <%= form.submit "更新する", class: "tenant-organization-edit__submit" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="tenant-organization-edit__card tenant-organization-locations">
+    <div class="tenant-organization-edit__card-heading">
+      <div>
+        <h2>拠点情報</h2>
+        <p>組織が利用する住所と地図上の位置を管理します。</p>
+      </div>
+      <% if @locations.any? %>
+        <%= link_to "拠点を追加", new_tenant_location_path, class: "tenant-organization-locations__add" %>
+      <% end %>
+    </div>
+
+    <% if @locations.any? %>
+      <div class="tenant-organization-locations__list">
+        <% @locations.each do |location| %>
+          <article class="tenant-organization-location">
+            <div class="tenant-organization-location__icon" aria-hidden="true">⌖</div>
+            <div class="tenant-organization-location__content">
+              <div class="tenant-organization-location__heading">
+                <strong><%= location.name %></strong>
+                <% if @organization.primary_tenant_location_id == location.id %>
+                  <span>代表拠点</span>
+                <% end %>
+              </div>
+              <p><%= location.full_address.presence || "住所未設定" %></p>
+              <small>緯度 <%= location.latitude.to_s("F") %> / 経度 <%= location.longitude.to_s("F") %></small>
+            </div>
+            <%= link_to "編集", edit_tenant_location_path(location), class: "tenant-organization-location__edit" %>
+          </article>
+        <% end %>
+      </div>
+      <div class="tenant-organization-locations__footer">
+        <%= link_to "すべての拠点を管理", tenant_locations_path %>
+      </div>
+    <% else %>
+      <div class="tenant-organization-locations__empty">
+        <span aria-hidden="true">⌖</span>
+        <strong>拠点が登録されていません</strong>
+        <p>住所と緯度・経度を登録すると、代表拠点やListingの所在地として利用できます。</p>
+        <%= link_to "拠点を登録", new_tenant_location_path, class: "tenant-organization-locations__register" %>
       </div>
     <% end %>
   </div>

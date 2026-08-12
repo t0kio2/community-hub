@@ -174,7 +174,6 @@
     <% end %>
 
     <div class="form-actions">
-      <%= link_to "キャンセル", listing.persisted? ? tenant_listing_path(listing) : tenant_listings_path, class: "button" %>
       <%= form.submit listing.persisted? ? "更新する" : "作成する", class: "listing-form-submit" %>
     </div>
   <% end %>

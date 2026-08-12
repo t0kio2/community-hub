@@ -1,6 +1,8 @@
 /* 組織情報編集 */
 .tenant-organization-edit {
   width: 100%;
+  display: grid;
+  gap: 18px;
 }
 
 .tenant-organization-edit__errors {
@@ -116,4 +118,109 @@
   color: #ffffff;
   border-color: #12563e;
   background: #12563e;
+}
+
+.tenant-organization-locations__add,
+.tenant-organization-locations__register,
+.tenant-organization-location__edit {
+  min-height: 36px;
+  padding: 8px 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: 8px;
+  background: #ffffff;
+  text-decoration: none;
+  font-size: var(--tenant-font-size-small);
+  font-weight: 700;
+}
+
+.tenant-organization-locations__register {
+  color: #ffffff !important;
+  border-color: var(--tenant-color-primary);
+  background: var(--tenant-color-primary);
+}
+
+.tenant-organization-locations__list {
+  display: grid;
+  gap: 10px;
+}
+
+.tenant-organization-location {
+  padding: 15px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: 11px;
+  background: #f9faf8;
+}
+
+.tenant-organization-location__icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--tenant-color-primary);
+  background: var(--tenant-color-primary-soft);
+  font-size: var(--tenant-font-size-subheading);
+}
+
+.tenant-organization-location__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tenant-organization-location__heading span {
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: var(--tenant-color-primary);
+  background: var(--tenant-color-primary-soft);
+  font-size: var(--tenant-font-size-caption);
+  font-weight: 700;
+}
+
+.tenant-organization-location__content p,
+.tenant-organization-location__content small {
+  display: block;
+  margin: 4px 0 0;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+}
+
+.tenant-organization-locations__footer {
+  margin-top: 14px;
+  padding-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--tenant-color-border);
+  font-size: var(--tenant-font-size-small);
+  font-weight: 700;
+}
+
+.tenant-organization-locations__empty {
+  padding: 28px 20px;
+  display: grid;
+  justify-items: center;
+  color: var(--tenant-color-muted);
+  text-align: center;
+}
+
+.tenant-organization-locations__empty > span {
+  margin-bottom: 8px;
+  font-size: 30px;
+}
+
+.tenant-organization-locations__empty strong {
+  color: var(--tenant-color-ink);
+  font-size: var(--tenant-font-size-subheading);
+}
+
+.tenant-organization-locations__empty p {
+  margin: 7px 0 16px;
+  font-size: var(--tenant-font-size-body);
 }

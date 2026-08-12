@@ -1,0 +1,234 @@
+<%
+  location_type_options = [
+    ["本社", "headquarters"],
+    ["オフィス", "office"],
+    ["施設", "facility"],
+    ["その他", "other"]
+  ]
+%>
+
+<% if location.errors.any? %>
+  <div class="tenant-location-form__errors" role="alert">
+    <strong>入力内容を確認してください</strong>
+    <ul>
+      <% location.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%= form_with model: location,
+              url: location.persisted? ? tenant_location_path(location) : tenant_locations_path,
+              method: location.persisted? ? :patch : :post,
+              local: true,
+              class: "tenant-location-form" do |form| %>
+  <section class="tenant-location-form__card" aria-labelledby="location-basic-heading">
+    <div class="tenant-location-form__heading">
+      <div>
+        <h2 id="location-basic-heading">基本情報</h2>
+        <p>管理画面で拠点を識別する名称と種別を設定します。</p>
+      </div>
+    </div>
+
+    <div class="tenant-location-form__grid">
+      <div class="tenant-location-field">
+        <%= form.label :name do %>拠点名 <span>必須</span><% end %>
+        <%= form.text_field :name, required: true, maxlength: 100, placeholder: "本社、○○ホテルなど" %>
+      </div>
+
+      <div class="tenant-location-field">
+        <%= form.label :location_type do %>拠点種別 <span>必須</span><% end %>
+        <%= form.select :location_type, location_type_options, {}, required: true %>
+      </div>
+
+      <label class="tenant-location-primary-check tenant-location-field--wide">
+        <%= check_box_tag :primary_location, "1", @organization.primary_tenant_location == location %>
+        <span>
+          <strong>代表拠点に設定する</strong>
+          <small>組織の代表住所として使用します。</small>
+        </span>
+      </label>
+    </div>
+  </section>
+
+  <section class="tenant-location-form__card" aria-labelledby="location-address-heading">
+    <div class="tenant-location-form__heading">
+      <div>
+        <h2 id="location-address-heading">住所</h2>
+        <p>住所を項目ごとに入力してください。</p>
+      </div>
+    </div>
+
+    <div class="tenant-location-form__grid">
+      <div class="tenant-location-field">
+        <%= form.label :postal_code, "郵便番号" %>
+        <%= form.text_field :postal_code, maxlength: 16, autocomplete: "postal-code", placeholder: "100-0001" %>
+      </div>
+
+      <div class="tenant-location-field">
+        <%= form.label :prefecture, "都道府県" %>
+        <%= form.text_field :prefecture, maxlength: 50, autocomplete: "address-level1", placeholder: "東京都" %>
+      </div>
+
+      <div class="tenant-location-field">
+        <%= form.label :city, "市区町村" %>
+        <%= form.text_field :city, maxlength: 100, autocomplete: "address-level2", placeholder: "千代田区" %>
+      </div>
+
+      <div class="tenant-location-field">
+        <%= form.label :address_line1, "町名・番地" %>
+        <%= form.text_field :address_line1, maxlength: 255, autocomplete: "address-line1", placeholder: "千代田1-1" %>
+      </div>
+
+      <div class="tenant-location-field tenant-location-field--wide">
+        <%= form.label :address_line2, "建物名・部屋番号" %>
+        <%= form.text_field :address_line2, maxlength: 255, autocomplete: "address-line2", placeholder: "コミュニティビル 3F" %>
+      </div>
+    </div>
+  </section>
+
+  <section class="tenant-location-form__card" aria-labelledby="location-map-heading">
+    <div class="tenant-location-form__heading">
+      <div>
+        <h2 id="location-map-heading">地図情報</h2>
+        <p>別途調べた緯度・経度を入力して、地図上の位置を確認してください。</p>
+      </div>
+    </div>
+
+    <div class="tenant-location-form__grid">
+      <div class="tenant-location-field">
+        <%= form.label :latitude do %>緯度 <span>必須</span><% end %>
+        <%= form.number_field :latitude, required: true, min: -90, max: 90, step: "any", placeholder: "35.681236" %>
+      </div>
+
+      <div class="tenant-location-field">
+        <%= form.label :longitude do %>経度 <span>必須</span><% end %>
+        <%= form.number_field :longitude, required: true, min: -180, max: 180, step: "any", placeholder: "139.767125" %>
+      </div>
+
+      <div class="tenant-location-field tenant-location-field--wide">
+        <%= form.label :google_place_id, "Google Place ID" %>
+        <%= form.text_field :google_place_id, placeholder: "取得済みの場合のみ入力" %>
+      </div>
+
+      <div class="tenant-location-map tenant-location-field--wide"
+           data-google-maps-preview
+           data-api-key="<%= google_maps_embed_api_key %>">
+        <div class="tenant-location-map__toolbar">
+          <div>
+            <strong>地図プレビュー</strong>
+            <small>入力した座標を中心にGoogle Mapsを表示します。</small>
+          </div>
+          <button type="button" class="tenant-location-button" data-map-preview-button>地図を更新</button>
+        </div>
+
+        <% if google_maps_embed_api_key.blank? %>
+          <div class="tenant-location-map__message" data-map-message>
+            <span><code>GOOGLE_MAPS_EMBED_API_KEY</code>を設定すると地図を表示できます。</span>
+          </div>
+        <% elsif google_maps_embed_url(latitude: location.latitude, longitude: location.longitude) %>
+          <iframe
+            title="入力した拠点のGoogle Mapsプレビュー"
+            src="<%= google_maps_embed_url(latitude: location.latitude, longitude: location.longitude) %>"
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="strict-origin-when-cross-origin"
+            data-map-frame></iframe>
+          <div class="tenant-location-map__footer">
+            <%= link_to "Google Mapsで開く",
+                        google_maps_search_url(latitude: location.latitude, longitude: location.longitude),
+                        target: "_blank",
+                        rel: "noopener",
+                        data: { map_external_link: true } %>
+          </div>
+        <% else %>
+          <div class="tenant-location-map__message" data-map-message>
+            緯度・経度を入力して「地図を更新」を押してください。
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <div class="tenant-location-form__actions">
+    <%= form.submit location.persisted? ? "更新する" : "登録する", class: "tenant-location-button tenant-location-button--primary" %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var preview = document.querySelector("[data-google-maps-preview]");
+    if (!preview) return;
+
+    var button = preview.querySelector("[data-map-preview-button]");
+    var latitudeInput = document.getElementById("tenant_location_latitude");
+    var longitudeInput = document.getElementById("tenant_location_longitude");
+    var apiKey = preview.dataset.apiKey;
+
+    button.addEventListener("click", function () {
+      var latitude = latitudeInput.value.trim();
+      var longitude = longitudeInput.value.trim();
+
+      if (!apiKey) return;
+
+      if (!latitude || !longitude) {
+        updateMessage("緯度・経度を入力してください。");
+        return;
+      }
+
+      var source = "https://www.google.com/maps/embed/v1/view?key=" + encodeURIComponent(apiKey) +
+        "&center=" + encodeURIComponent(latitude + "," + longitude) +
+        "&zoom=16&maptype=roadmap";
+      var frame = preview.querySelector("[data-map-frame]");
+
+      if (!frame) {
+        frame = document.createElement("iframe");
+        frame.title = "入力した拠点のGoogle Mapsプレビュー";
+        frame.loading = "lazy";
+        frame.allowFullscreen = true;
+        frame.referrerPolicy = "strict-origin-when-cross-origin";
+        frame.dataset.mapFrame = "true";
+        preview.appendChild(frame);
+      }
+
+      frame.src = source;
+      preview.querySelector("[data-map-message]")?.remove();
+      updateExternalLink(latitude, longitude);
+    });
+
+    function updateMessage(text) {
+      var message = preview.querySelector("[data-map-message]");
+      if (!message) {
+        message = document.createElement("div");
+        message.className = "tenant-location-map__message";
+        message.dataset.mapMessage = "true";
+        preview.appendChild(message);
+      }
+      message.textContent = text;
+    }
+
+    function updateExternalLink(latitude, longitude) {
+      var footer = preview.querySelector(".tenant-location-map__footer");
+      var link = preview.querySelector("[data-map-external-link]");
+
+      if (!footer) {
+        footer = document.createElement("div");
+        footer.className = "tenant-location-map__footer";
+        preview.appendChild(footer);
+      }
+
+      if (!link) {
+        link = document.createElement("a");
+        link.textContent = "Google Mapsで開く";
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.dataset.mapExternalLink = "true";
+        footer.appendChild(link);
+      }
+
+      link.href = "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(latitude + "," + longitude);
+    }
+  });
+</script>
