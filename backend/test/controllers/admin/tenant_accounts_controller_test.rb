@@ -33,7 +33,6 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "active", tenant_member.status
     assert_equal "Sample Inn", tenant_member.tenant.name
     assert_equal "サンプルイン", tenant_member.tenant.kana
-    assert_equal "Tokyo", tenant_member.tenant.address
     assert_equal "active", tenant_member.tenant.status
   end
 
@@ -46,6 +45,7 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".tenant-account-create__card", count: 2
     assert_select ".tenant-account-create__card-heading h2", text: "アカウント情報", count: 1
     assert_select ".tenant-account-create__card-heading h2", text: "組織情報", count: 1
+    assert_select 'input[name="tenant[address]"]', count: 0
     assert_select ".tenant-account-create__intro", count: 0
     assert_select "style", count: 0
     assert_not_includes response.body, "テナントの利用開始情報を登録"
@@ -100,6 +100,10 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'name="_method"'
     assert_includes response.body, 'value="delete"'
     assert_includes response.body, "削除"
+    assert_select 'link[rel="stylesheet"][href*="confirmation_modal"]', count: 1
+    assert_select "dialog[data-confirmation-modal]", count: 1
+    assert_select 'form[data-confirm-message][action=?]', admin_tenant_account_path(TenantAccount.find_by!(email: "index-delete-owner@example.com")), count: 1
+    assert_not_includes response.body, "return confirm("
   end
 
   test "operatorはテナントアカウントを削除できない" do
@@ -132,8 +136,8 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "ロール:"
     assert_includes response.body, "operator"
-    assert_not_includes response.body, 'value="delete"'
-    assert_not_includes response.body, "削除"
+    assert_select ".admin-content form[data-confirm-message]", count: 0
+    assert_select '.admin-content input[name="_method"][value="delete"]', count: 0
   end
 
   test "無効な管理者はテナントアカウント一覧を表示できない" do
@@ -203,8 +207,7 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
       },
       tenant: {
         name: "Sample Inn",
-        kana: "サンプルイン",
-        address: "Tokyo"
+        kana: "サンプルイン"
       }
     }
   end
@@ -218,7 +221,6 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     tenant = Tenant.create!(
       name: tenant_name,
       kana: "テナント",
-      address: "Tokyo",
       status: "active"
     )
     TenantMember.create!(

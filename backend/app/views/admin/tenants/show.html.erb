@@ -62,10 +62,6 @@
           <dd><%= @tenant.kana.presence || "未設定" %></dd>
         </div>
         <div>
-          <dt>所在地</dt>
-          <dd><%= @tenant.address.presence || "未設定" %></dd>
-        </div>
-        <div>
           <dt>最終更新</dt>
           <dd><%= l(@tenant.updated_at, format: :long) %></dd>
         </div>

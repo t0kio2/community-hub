@@ -1,0 +1,49 @@
+<% content_for :title, "宿泊施設" %>
+<% content_for :page_title, "宿泊施設" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "tenant/stay_management", "data-turbo-track": "reload" %>
+<% end %>
+
+<%
+  facilities = [
+    { title: "山のホテル", area: "長野県 白馬村", status: "公開中", room_types: 3, rooms: 12, rate_plans: 2, readiness: 6, image: "MAIN LODGE" },
+    { title: "森のゲストハウス", area: "山梨県 北杜市", status: "下書き", room_types: 2, rooms: 7, rate_plans: 1, readiness: 4, image: "FOREST HOUSE" }
+  ]
+%>
+
+<section class="stay-management" aria-labelledby="tenant-page-title">
+  <%= render "prototype_notice" %>
+
+  <header class="stay-management-page-lead">
+    <div>
+      <p class="stay-management-eyebrow">STAY FACILITIES</p>
+      <h2>管理する施設を選択</h2>
+      <p>施設ごとに客室、在庫、料金、予約を管理します。</p>
+    </div>
+    <a href="#" class="stay-management-button stay-management-button--primary">＋ 宿泊施設を作成</a>
+  </header>
+
+  <div class="stay-facility-grid">
+    <% facilities.each do |facility| %>
+      <article class="stay-management-card stay-facility-card">
+        <div class="stay-facility-card__image"><span><%= facility[:image] %></span></div>
+        <div class="stay-facility-card__body">
+          <div class="stay-management-card-heading">
+            <div><h3><%= facility[:title] %></h3><p><%= facility[:area] %></p></div>
+            <span class="stay-status <%= facility[:status] == "公開中" ? "stay-status--published" : "stay-status--draft" %>"><%= facility[:status] %></span>
+          </div>
+          <dl class="stay-facility-card__metrics">
+            <div><dt>Room Type</dt><dd><%= facility[:room_types] %></dd></div>
+            <div><dt>物理Room</dt><dd><%= facility[:rooms] %></dd></div>
+            <div><dt>料金プラン</dt><dd><%= facility[:rate_plans] %></dd></div>
+          </dl>
+          <div class="stay-readiness">
+            <span>公開準備 <strong><%= facility[:readiness] %>/7</strong></span>
+            <div><i style="width: <%= facility[:readiness] * 100 / 7 %>%"></i></div>
+          </div>
+          <a href="#" class="stay-management-button stay-management-button--primary stay-management-button--wide">この施設を管理</a>
+        </div>
+      </article>
+    <% end %>
+  </div>
+</section>

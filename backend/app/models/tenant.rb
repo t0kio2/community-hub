@@ -1,7 +1,26 @@
 class Tenant < ApplicationRecord
+  belongs_to :primary_tenant_location,
+              class_name: "TenantLocation",
+              inverse_of: :primary_tenants,
+              optional: true
+
+  has_many :tenant_locations, inverse_of: :tenant, dependent: :destroy
   has_many :tenant_members, dependent: :destroy
   has_many :listings, dependent: :destroy
 
   validates :name, presence: true
   validates :status, presence: true
+  validate :primary_tenant_location_belongs_to_tenant
+
+  private
+
+  def primary_tenant_location_belongs_to_tenant
+    return if primary_tenant_location.nil?
+    return if primary_tenant_location.tenant_id == id
+
+    errors.add(
+      :primary_tenant_location,
+      "は同じテナントの拠点を指定してください"
+    )
+  end
 end

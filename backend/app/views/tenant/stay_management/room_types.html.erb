@@ -1,0 +1,34 @@
+<% content_for :title, "Room Type管理" %>
+<% content_for :page_title, "Room Type管理" %>
+<% content_for :stylesheets do %><%= stylesheet_link_tag "tenant/stay_management", "data-turbo-track": "reload" %><% end %>
+<% content_for :back_link do %><a href="#" class="tenant-back-link">← 山のホテルの概要へ戻る</a><% end %>
+
+<% room_types = [{ name: "個室ツイン", detail: "個室・在庫 5", status: "公開中" }, { name: "男女共用ドミトリー", detail: "相部屋・在庫 6 Bed", status: "公開中" }, { name: "離れ一棟", detail: "一棟貸し・在庫 1", status: "下書き" }] %>
+
+<section class="stay-management" aria-labelledby="tenant-page-title">
+  <%= render "prototype_notice" %><%= render "facility_navigation", active: :room_types %>
+  <header class="stay-management-page-lead"><div><p class="stay-management-eyebrow">SELLING CATEGORIES</p><h2>利用者が選ぶ客室分類</h2><p>定員、販売形態、説明、設備をRoom Type単位で設定します。</p></div><button type="button" class="stay-management-button stay-management-button--primary">＋ Room Typeを追加</button></header>
+
+  <div class="stay-management-master-detail">
+    <aside class="stay-management-card stay-entity-panel">
+      <div class="stay-management-card-heading"><div><h3>Room Types</h3><p>3件の販売分類</p></div></div>
+      <div class="stay-entity-list"><% room_types.each_with_index do |room_type, index| %><button type="button" class="stay-entity-row <%= "selected" if index.zero? %>"><span><strong><%= room_type[:name] %></strong><small><%= room_type[:detail] %></small></span><span class="stay-status <%= room_type[:status] == "公開中" ? "stay-status--published" : "stay-status--draft" %>"><%= room_type[:status] %></span></button><% end %></div>
+    </aside>
+
+    <div class="stay-management-stack">
+      <form action="#" class="stay-management-card stay-editor-card">
+        <div class="stay-management-card-heading"><div><h3>個室ツイン</h3><p>販売単位：個室</p></div><span class="stay-status stay-status--published">公開中</span></div>
+        <div class="stay-management-fields">
+          <label><span>名称</span><input value="個室ツイン"></label>
+          <label><span>状態</span><select><option>公開中</option><option>下書き</option><option>停止中</option></select></label>
+          <label><span>販売形態</span><select><option>個室</option><option>相部屋</option><option>一棟貸し</option></select></label>
+          <label><span>1販売単位の定員</span><input type="number" value="2"></label>
+          <label class="wide"><span>説明</span><textarea rows="4">山を望む明るいツインルームです。</textarea></label>
+        </div>
+        <fieldset class="stay-amenity-selector"><legend>客室設備</legend><label><input type="checkbox" checked> Wi-Fi</label><label><input type="checkbox" checked> 専用バス</label><label><input type="checkbox"> デスク</label><label><input type="checkbox" checked> エアコン</label></fieldset>
+        <div class="stay-management-actions"><button type="button" class="stay-management-button stay-management-button--primary">更新する</button></div>
+      </form>
+      <section class="stay-management-card stay-inventory-summary"><div><span>分類済みRoom</span><strong>5</strong></div><div><span>販売在庫</span><strong>5室</strong></div><a href="#" class="stay-management-button">Room／Bedを管理</a></section>
+    </div>
+  </div>
+</section>

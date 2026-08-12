@@ -13,6 +13,8 @@
 ```mermaid
 erDiagram
     tenants ||--o{ listings : "掲載を持つ"
+    tenants ||--o{ tenant_locations : "拠点を持つ"
+    tenants o|--o| tenant_locations : "代表拠点を指定する"
     tenant_members o|--o{ listings : "作成する"
     tenant_members o|--o{ listings : "更新する"
     listings ||--o| job_listings : "求人詳細を持つ"
@@ -32,7 +34,7 @@ erDiagram
     stay_room_types ||--o{ stay_room_type_rates : "プラン別料金を持つ"
     stay_rate_plans ||--o{ stay_room_type_rates : "部屋タイプへ適用する"
     stay_room_type_rates ||--o{ stay_room_type_rate_daily_prices : "日別料金を持つ"
-    listings ||--o| listing_locations : "位置情報を持つ"
+    tenant_locations o|--o{ listings : "掲載で使用される"
     listings ||--o{ listing_images : "画像を持つ"
     users ||--o{ favorites : "お気に入り登録する"
     listings ||--o{ favorites : "お気に入り登録される"
@@ -44,6 +46,7 @@ erDiagram
 erDiagram
     tenants {
         bigint id PK
+        bigint primary_tenant_location_id FK
     }
 
     tenant_members {
@@ -53,6 +56,7 @@ erDiagram
     listings {
         bigint id PK
         bigint tenant_id FK
+        bigint tenant_location_id FK
         bigint created_by_tenant_member_id FK
         bigint updated_by_tenant_member_id FK
         string listing_type
@@ -69,6 +73,7 @@ erDiagram
     }
 
     tenants ||--o{ listings : "掲載を持つ"
+    tenant_locations o|--o{ listings : "掲載で使用される"
     tenant_members o|--o{ listings : "作成する"
     tenant_members o|--o{ listings : "更新する"
 ```
@@ -77,6 +82,7 @@ erDiagram
 | --- | --- | :---: | --- | --- |
 | `id` | bigint | × | 自動採番 | 主キー |
 | `tenant_id` | bigint | × | なし | `tenants.id`への外部キー、作成後変更不可 |
+| `tenant_location_id` | bigint | ○ | NULL | `tenant_locations.id`への外部キー、同じテナントの拠点に限定 |
 | `created_by_tenant_member_id` | bigint | ○ | 操作中のメンバー | `tenant_members.id`への外部キー、メンバー削除時はNULL |
 | `updated_by_tenant_member_id` | bigint | ○ | 操作中のメンバー | `tenant_members.id`への外部キー、メンバー削除時はNULL |
 | `listing_type` | string | × | なし | `job / stay`、作成後変更不可 |
@@ -95,17 +101,25 @@ erDiagram
 
 状態遷移と日時カラムの更新条件は [`../architecture/02-listing.md`](../architecture/02-listing.md) を参照する。
 
-## listing_locations
+## tenant_locations
 
 ```mermaid
 erDiagram
-    listings {
+    tenants {
         bigint id PK
+        bigint primary_tenant_location_id FK
     }
 
-    listing_locations {
+    listings {
         bigint id PK
-        bigint listing_id FK, UK
+        bigint tenant_location_id FK
+    }
+
+    tenant_locations {
+        bigint id PK
+        bigint tenant_id FK
+        string name
+        string location_type
         string postal_code
         string prefecture
         string city
@@ -118,13 +132,17 @@ erDiagram
         datetime updated_at
     }
 
-    listings ||--o| listing_locations : "位置情報を持つ"
+    tenants ||--o{ tenant_locations : "拠点を持つ"
+    tenants o|--o| tenant_locations : "代表拠点を指定する"
+    tenant_locations o|--o{ listings : "掲載で使用される"
 ```
 
 | カラム | 型 | NULL | 初期値 | 制約・定義 |
 | --- | --- | :---: | --- | --- |
 | `id` | bigint | × | 自動採番 | 主キー |
-| `listing_id` | bigint | × | なし | `listings.id`への外部キー、一意 |
+| `tenant_id` | bigint | × | なし | `tenants.id`への外部キー、作成後変更不可 |
+| `name` | string | × | なし | 拠点の管理用名称、最大100文字、テナント内で一意 |
+| `location_type` | string | × | `other` | `headquarters / office / facility / other` |
 | `postal_code` | string | ○ | NULL | 郵便番号 |
 | `prefecture` | string | ○ | NULL | 都道府県 |
 | `city` | string | ○ | NULL | 市区町村 |
@@ -136,7 +154,7 @@ erDiagram
 | `created_at` | datetime | × | 自動設定 | 作成日時 |
 | `updated_at` | datetime | × | 自動設定 | 更新日時 |
 
-Listing削除時は対応する位置情報を連動削除する。住所・位置情報の業務仕様は [`../architecture/03-location.md`](../architecture/03-location.md) を参照する。
+`tenant_locations`はテナント所有の再利用可能な拠点であり、複数のListingから参照できる。`tenant_id`はNULLを許可しない。`tenants.primary_tenant_location_id`には同じテナントの代表拠点を任意に設定し、`tenants`自身には住所カラムを持たせない。住所・位置情報の業務仕様は[`../architecture/03-location.md`](../architecture/03-location.md)を参照する。
 
 ## listing_images
 
@@ -210,6 +228,9 @@ erDiagram
 | `listings` | `status, published_at` | composite index |
 | `listings` | `created_by_tenant_member_id` | index |
 | `listings` | `updated_by_tenant_member_id` | index |
-| `listing_locations` | `listing_id` | unique index |
+| `listings` | `tenant_location_id` | index |
+| `tenants` | `primary_tenant_location_id` | index |
+| `tenant_locations` | `tenant_id` | index |
+| `tenant_locations` | `tenant_id, name` | unique index |
 | `listing_images` | `listing_id, position` | unique index |
 | `favorites` | `user_id, listing_id` | unique index |

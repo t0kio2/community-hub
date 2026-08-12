@@ -1,0 +1,19 @@
+<% content_for :title, "料金プラン" %><% content_for :page_title, "料金プラン" %>
+<% content_for :stylesheets do %><%= stylesheet_link_tag "tenant/stay_management", "data-turbo-track": "reload" %><% end %>
+<% content_for :back_link do %><a href="#" class="tenant-back-link">← 山のホテルの概要へ戻る</a><% end %>
+
+<% plans = [{ name: "素泊まりプラン", detail: "食事なし・標準キャンセル", status: "公開中" }, { name: "朝食付きプラン", detail: "朝食・標準キャンセル", status: "公開中" }, { name: "早割返金不可", detail: "食事なし・返金不可", status: "下書き" }] %>
+
+<section class="stay-management" aria-labelledby="tenant-page-title">
+  <%= render "prototype_notice" %><%= render "facility_navigation", active: :rate_plans %>
+  <header class="stay-management-page-lead"><div><p class="stay-management-eyebrow">RATE PLANS</p><h2>販売条件と基本料金</h2><p>プランの条件とRoom Type別の1泊料金を設定します。</p></div><button type="button" class="stay-management-button stay-management-button--primary">＋ 料金プランを追加</button></header>
+
+  <div class="stay-management-master-detail">
+    <aside class="stay-management-card stay-entity-panel"><div class="stay-management-card-heading"><div><h3>Rate Plans</h3><p>3件の販売条件</p></div></div><div class="stay-entity-list"><% plans.each_with_index do |plan, index| %><button type="button" class="stay-entity-row <%= "selected" if index.zero? %>"><span><strong><%= plan[:name] %></strong><small><%= plan[:detail] %></small></span><span class="stay-status <%= plan[:status] == "公開中" ? "stay-status--published" : "stay-status--draft" %>"><%= plan[:status] %></span></button><% end %></div></aside>
+
+    <div class="stay-management-stack">
+      <form action="#" class="stay-management-card stay-editor-card"><div class="stay-management-card-heading"><div><h3>素泊まりプラン</h3><p>プラン設定</p></div><span class="stay-status stay-status--published">公開中</span></div><div class="stay-management-fields"><label><span>名称</span><input value="素泊まりプラン"></label><label><span>状態</span><select><option>公開中</option><option>下書き</option><option>停止中</option></select></label><label><span>食事</span><select><option>食事なし</option><option>朝食</option><option>朝夕食</option></select></label><label><span>キャンセル</span><select><option>標準</option><option>返金不可</option></select></label><label class="wide"><span>説明</span><textarea rows="3">お食事なしのシンプルな宿泊プランです。</textarea></label></div><div class="stay-management-actions"><button type="button" class="stay-management-button stay-management-button--primary">更新する</button></div></form>
+      <section class="stay-management-card stay-management-card--table"><div class="stay-management-card-heading"><div><h3>Room Type別の基本料金</h3><p>JPY / 1販売単位 / 1泊</p></div></div><table class="stay-management-table"><thead><tr><th>Room Type</th><th>販売単位</th><th>基本料金</th><th>販売</th></tr></thead><tbody><tr><td><strong>個室ツイン</strong></td><td>1室</td><td><div class="stay-price-input"><span>¥</span><input type="number" value="12000"></div></td><td><label class="stay-switch"><input type="checkbox" checked><span></span></label></td></tr><tr><td><strong>男女共用ドミトリー</strong></td><td>1 Bed</td><td><div class="stay-price-input"><span>¥</span><input type="number" value="4000"></div></td><td><label class="stay-switch"><input type="checkbox" checked><span></span></label></td></tr><tr><td><strong>離れ一棟</strong></td><td>1棟</td><td><div class="stay-price-input"><span>¥</span><input type="number" value="28000"></div></td><td><label class="stay-switch"><input type="checkbox"><span></span></label></td></tr></tbody></table><div class="stay-management-actions"><button type="button" class="stay-management-button stay-management-button--primary">料金を更新</button></div></section>
+    </div>
+  </div>
+</section>

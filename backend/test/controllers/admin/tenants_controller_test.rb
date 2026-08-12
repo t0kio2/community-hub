@@ -25,7 +25,6 @@ class Admin::TenantsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-topbar .admin-back-link[href=?]", admin_tenants_path, text: "← テナント一覧へ戻る"
     assert_select ".admin-content .admin-back-link", count: 0
     assert_select ".tenant-detail__identity h2", text: tenant.name
-    assert_includes response.body, tenant.address
     assert_includes response.body, member.account.email
     assert_includes response.body, listing.title
     assert_includes response.body, "求人"
@@ -36,7 +35,6 @@ class Admin::TenantsControllerTest < ActionDispatch::IntegrationTest
     tenant = Tenant.create!(
       name: "空状態確認テナント",
       kana: "カラジョウタイカクニンテナント",
-      address: "東京都",
       status: "active"
     )
 

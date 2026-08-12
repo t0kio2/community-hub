@@ -15,8 +15,7 @@ class TenantAccounts::CreateServiceTest < ActiveSupport::TestCase
             },
             tenant_attributes: {
               name: "作成テナント",
-              kana: "サクセイテナント",
-              address: "東京都"
+              kana: "サクセイテナント"
             }
           ).call
         end
@@ -42,8 +41,7 @@ class TenantAccounts::CreateServiceTest < ActiveSupport::TestCase
       },
       tenant_attributes: {
         name: "",
-        kana: "ロールバック",
-        address: "東京都"
+        kana: "ロールバック"
       }
     )
 

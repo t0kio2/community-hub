@@ -1,0 +1,79 @@
+<% content_for :title, "拠点管理" %>
+<% content_for :page_title, "拠点管理" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "tenant/locations", "data-turbo-track": "reload" %>
+<% end %>
+
+<%
+  location_type_labels = {
+    "headquarters" => "本社",
+    "office" => "オフィス",
+    "facility" => "施設",
+    "other" => "その他"
+  }
+%>
+
+<section class="tenant-location-index" aria-labelledby="tenant-page-title">
+  <div class="tenant-location-index__toolbar">
+    <div>
+      <strong><%= @locations.size %>件の拠点</strong>
+      <p>求人や宿泊掲載で再利用する住所と位置情報を管理します。</p>
+    </div>
+    <%= link_to "＋ 拠点を追加", new_tenant_location_path, class: "tenant-location-button tenant-location-button--primary" %>
+  </div>
+
+  <div class="tenant-location-index__card">
+    <% if @locations.any? %>
+      <div class="tenant-location-index__table-wrapper">
+        <table class="tenant-location-index__table">
+          <thead>
+            <tr>
+              <th scope="col">拠点</th>
+              <th scope="col">種別</th>
+              <th scope="col">住所</th>
+              <th scope="col">掲載</th>
+              <th scope="col"><span class="visually-hidden">操作</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @locations.each do |location| %>
+              <tr>
+                <td>
+                  <div class="tenant-location-index__identity">
+                    <span class="tenant-location-index__icon" aria-hidden="true">⌖</span>
+                    <span>
+                      <strong><%= location.name %></strong>
+                      <% if @tenant.primary_tenant_location_id == location.id %>
+                        <small class="tenant-location-primary-badge">代表拠点</small>
+                      <% end %>
+                    </span>
+                  </div>
+                </td>
+                <td><%= location_type_labels.fetch(location.location_type, location.location_type) %></td>
+                <td><%= location.full_address.presence || "住所未設定" %></td>
+                <td><%= location.listings.size %>件</td>
+                <td>
+                  <div class="tenant-location-index__actions">
+                    <%= link_to "編集", edit_tenant_location_path(location), class: "tenant-location-edit-button" %>
+                    <%= button_to "削除",
+                                  tenant_location_path(location),
+                                  method: :delete,
+                                  class: "tenant-location-delete-button",
+                                  form: { data: { confirm_message: "#{location.name}を削除します。この操作は取り消せません。" } } %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="tenant-location-empty">
+        <span aria-hidden="true">⌖</span>
+        <strong>拠点が登録されていません</strong>
+        <p>最初の拠点を登録すると、代表拠点やListingの所在地として利用できます。</p>
+        <%= link_to "拠点を登録", new_tenant_location_path, class: "tenant-location-button tenant-location-button--primary" %>
+      </div>
+    <% end %>
+  </div>
+</section>

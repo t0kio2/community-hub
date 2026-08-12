@@ -1,0 +1,538 @@
+/* 掲載共通 */
+.tenant-content .tenant-listing-button {
+  min-height: 38px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: 9px;
+  color: var(--tenant-color-ink);
+  background: var(--tenant-color-surface);
+  text-decoration: none;
+  font-size: var(--tenant-font-size-body);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tenant-content .tenant-listing-button--primary {
+  color: #ffffff;
+  border-color: var(--tenant-color-primary);
+  background: var(--tenant-color-primary);
+}
+
+.tenant-listing-button:hover {
+  transform: translateY(-1px);
+  border-color: #83a694;
+  box-shadow: 0 5px 14px rgb(20 40 30 / 8%);
+}
+
+.tenant-content .tenant-listing-button--primary:hover {
+  color: #ffffff;
+  border-color: #12563e;
+  background: #12563e;
+}
+
+.tenant-listing-type,
+.tenant-listing-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: var(--tenant-font-size-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tenant-listing-type {
+  padding: 5px 8px;
+  color: #34705a;
+  background: var(--tenant-color-primary-soft);
+}
+
+.tenant-listing-type--job {
+  color: #775b1e;
+  background: var(--tenant-color-warning-soft);
+}
+
+.tenant-listing-status {
+  gap: 6px;
+  padding: 5px 9px;
+  color: var(--tenant-color-muted);
+  background: #edf0ed;
+}
+
+.tenant-listing-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tenant-listing-status--published {
+  color: var(--tenant-color-primary);
+  background: var(--tenant-color-primary-soft);
+}
+
+.tenant-listing-status--draft {
+  color: var(--tenant-color-warning);
+  background: var(--tenant-color-warning-soft);
+}
+
+.tenant-listing-status--closed,
+.tenant-listing-status--archived {
+  color: var(--tenant-color-muted);
+  background: #edf0ed;
+}
+
+.tenant-listing-card-heading {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--tenant-color-border);
+}
+
+.tenant-listing-card-heading h3,
+.tenant-listing-card-heading p {
+  margin: 0;
+}
+
+.tenant-listing-card-heading h3 {
+  font-size: var(--tenant-font-size-subheading);
+}
+
+.tenant-listing-card-heading p {
+  margin-top: 5px;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+}
+
+.tenant-listing-empty {
+  padding: 38px 20px;
+  color: var(--tenant-color-muted);
+  text-align: center;
+}
+
+.tenant-listing-empty strong {
+  color: var(--tenant-color-ink);
+  font-size: var(--tenant-font-size-body);
+}
+
+.tenant-listing-empty p {
+  margin: 5px 0 0;
+  font-size: var(--tenant-font-size-small);
+}
+
+/* 掲載一覧 */
+.tenant-listing-index__toolbar {
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tenant-listing-index__card {
+  overflow: hidden;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: 13px;
+  background: var(--tenant-color-surface);
+}
+
+.tenant-listing-index__table-wrapper {
+  overflow-x: auto;
+}
+
+.tenant-content .tenant-listing-index__table {
+  min-width: 820px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.tenant-listing-index__table th,
+.tenant-listing-index__table td {
+  padding: 13px 14px;
+  border: 0;
+  border-bottom: 1px solid #edf0ed;
+  text-align: left;
+  vertical-align: middle;
+  font-size: var(--tenant-font-size-body);
+}
+
+.tenant-listing-index__table th {
+  color: var(--tenant-color-muted);
+  background: #f7f8f5;
+  font-size: var(--tenant-font-size-small);
+  letter-spacing: 0.05em;
+}
+
+.tenant-listing-index__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tenant-listing-index__identity {
+  min-width: 230px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.tenant-listing-index__icon,
+.tenant-listing-detail__icon {
+  display: grid;
+  place-items: center;
+  color: #34705a;
+  background: var(--tenant-color-primary-soft);
+  font-weight: 800;
+}
+
+.tenant-listing-index__icon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 9px;
+  font-size: var(--tenant-font-size-small);
+}
+
+.tenant-listing-index__icon--job,
+.tenant-listing-detail__icon--job {
+  color: #775b1e;
+  background: var(--tenant-color-warning-soft);
+}
+
+.tenant-listing-index__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.tenant-listing-index__actions a {
+  font-size: var(--tenant-font-size-small);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* 掲載詳細 */
+.tenant-listing-detail {
+  display: grid;
+  gap: 18px;
+}
+
+.tenant-listing-detail__overview {
+  padding: 22px 24px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: var(--tenant-radius-large);
+  background: linear-gradient(120deg, #ffffff 55%, var(--tenant-color-primary-soft));
+}
+
+.tenant-listing-detail__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  font-size: var(--tenant-font-size-subheading);
+}
+
+.tenant-listing-detail__identity h2 {
+  margin: 7px 0 0;
+  font-size: var(--tenant-font-size-heading);
+  overflow-wrap: anywhere;
+}
+
+.tenant-listing-detail__overview-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tenant-listing-detail__card {
+  padding: 22px;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: 13px;
+  background: var(--tenant-color-surface);
+  box-shadow: 0 1px 0 rgb(20 40 30 / 2%);
+}
+
+.tenant-listing-detail__definition-list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: var(--tenant-radius-medium);
+  background: var(--tenant-color-border);
+}
+
+.tenant-listing-detail__definition-list > div {
+  min-width: 0;
+  padding: 14px;
+  background: var(--tenant-color-surface);
+}
+
+.tenant-listing-detail__definition-list .tenant-listing-detail__wide {
+  grid-column: 1 / -1;
+}
+
+.tenant-listing-detail__definition-list dt,
+.tenant-listing-detail__definition-list dd {
+  margin: 0;
+}
+
+.tenant-listing-detail__definition-list dt {
+  margin-bottom: 6px;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+  font-weight: 700;
+}
+
+.tenant-listing-detail__definition-list dd {
+  font-size: var(--tenant-font-size-body);
+  font-weight: 600;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* 掲載フォーム */
+.listing-form-page,
+.listing-form {
+  display: grid;
+  gap: 18px;
+}
+
+.form-errors {
+  padding: 15px 17px;
+  border: 1px solid #e7bcb8;
+  border-radius: var(--tenant-radius-medium);
+  color: var(--tenant-color-danger);
+  background: var(--tenant-color-danger-soft);
+  font-size: var(--tenant-font-size-body);
+}
+
+.form-errors strong {
+  display: block;
+}
+
+.form-errors ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.listing-form .form-section {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: 13px;
+  background: var(--tenant-color-surface);
+  box-shadow: 0 1px 0 rgb(20 40 30 / 2%);
+}
+
+.listing-form-section-heading {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--tenant-color-border);
+}
+
+.listing-form-section-heading h2,
+.listing-form-section-heading p {
+  margin: 0;
+}
+
+.listing-form-section-heading h2 {
+  font-size: var(--tenant-font-size-subheading);
+}
+
+.listing-form-section-heading p {
+  margin-top: 5px;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+}
+
+.listing-form .field {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.listing-form .field-wide {
+  grid-column: 1 / -1;
+}
+
+.listing-form .field label {
+  color: #425047;
+  font-size: var(--tenant-font-size-body);
+  font-weight: 700;
+}
+
+.listing-form .field strong {
+  color: var(--tenant-color-ink);
+  font-size: var(--tenant-font-size-body);
+}
+
+.listing-form .field :is(input, select, textarea) {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid #d8ded8;
+  border-radius: 9px;
+  font-size: var(--tenant-font-size-body);
+}
+
+.listing-form .field textarea {
+  resize: vertical;
+}
+
+.stay-registration-location > p {
+  margin: 0;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+}
+
+.stay-registration-location__empty {
+  padding: 18px;
+  display: grid;
+  justify-items: start;
+  gap: 7px;
+  border: 1px dashed #bdc9c0;
+  border-radius: 10px;
+  background: #f7f9f6;
+}
+
+.stay-registration-location__empty p {
+  margin: 0 0 5px;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+}
+
+.stay-registration-next-steps {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: 13px;
+  background: #f7f9f6;
+}
+
+.stay-registration-next-steps div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 9px;
+}
+
+.stay-registration-next-steps span {
+  width: 28px;
+  height: 28px;
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--tenant-color-primary);
+  background: var(--tenant-color-primary-soft);
+  font-size: var(--tenant-font-size-small);
+  font-weight: 800;
+}
+
+.stay-registration-next-steps strong,
+.stay-registration-next-steps small {
+  overflow-wrap: anywhere;
+}
+
+.stay-registration-next-steps small {
+  color: var(--tenant-color-muted);
+}
+
+.stay-registration-next-steps i {
+  color: #9aa79f;
+  font-style: normal;
+}
+
+.listing-form .type-switch {
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  border-radius: 10px;
+  background: #eef1ed;
+}
+
+.listing-form .type-switch a {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--tenant-color-muted);
+  text-decoration: none;
+  font-size: var(--tenant-font-size-body);
+  font-weight: 700;
+}
+
+.listing-form .type-switch a.active {
+  color: var(--tenant-color-primary);
+  border-color: var(--tenant-color-border);
+  background: var(--tenant-color-surface);
+  box-shadow: 0 2px 7px rgb(20 40 30 / 8%);
+}
+
+.listing-form .form-actions {
+  padding-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--tenant-color-border);
+}
+
+.tenant-content .listing-form-submit {
+  color: #ffffff;
+  border-color: var(--tenant-color-primary);
+  background: var(--tenant-color-primary);
+}
+
+.tenant-content .listing-form-submit:hover {
+  color: #ffffff;
+  border-color: #12563e;
+  background: #12563e;
+}
+
+@media (max-width: 1100px) {
+  .tenant-listing-detail__definition-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .tenant-listing-detail__overview {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .tenant-listing-detail__overview-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .tenant-listing-detail__definition-list,
+  .listing-form .form-section {
+    grid-template-columns: 1fr;
+  }
+
+  .stay-registration-next-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .stay-registration-next-steps i {
+    padding-left: 8px;
+    transform: rotate(90deg);
+  }
+}

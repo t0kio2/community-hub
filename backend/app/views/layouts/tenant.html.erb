@@ -1,73 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><%= content_for?(:title) ? yield(:title) : 'テナント管理画面' %></title>
+    <title><%= content_for?(:title) ? yield(:title) : "テナント管理画面" %> | Community Hub</title>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <style>
-      body { font-family: system-ui, -apple-system, sans-serif; margin: 0; }
-      .site-header { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid #e5e7eb; }
-      .site-header .inner { max-width: 960px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
-      .brand { font-size: 22px; font-weight: 700; letter-spacing: .2px; line-height: 1.2; }
-      .brand a { display: flex; align-items: center; gap: 8px; }
-      .context-badge { padding: 4px 9px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 13px; font-weight: 700; }
-      .primary-nav { display: flex; align-items: center; gap: 14px; font-size: 14px; }
-      .primary-nav a { color: #374151; text-decoration: none; font-weight: 700; }
-      .primary-nav a:hover { color: #111827; text-decoration: underline; }
-      .auth { display: flex; align-items: center; gap: 12px; font-size: 14px; }
-      .auth .user { color: #374151; }
-      .auth button { padding: 6px 10px; border-radius: 6px; border: 1px solid #d1d5db; background: #f9fafb; cursor: pointer; }
-      .container { max-width: 960px; margin: 24px auto; padding: 0 16px 24px; }
-      .flash { margin-bottom: 12px; }
-      .flash.notice { background:#e7f6ec;border:1px solid #b7e1c0;color:#0a4; padding:10px; border-radius:6px; }
-      .flash.alert  { background:#fff3f3;border:1px solid #f5c2c2;color:#900; padding:10px; border-radius:6px; }
-    </style>
+    <%= stylesheet_link_tag "tenant", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "confirmation_modal", "data-turbo-track": "reload" %>
+    <%= yield :stylesheets if content_for?(:stylesheets) %>
   </head>
-  <body>
-    <header class="site-header">
-      <div class="inner">
-        <nav class="primary-nav" aria-label="テナント管理">
-          <div class="brand">
-            <a href="<%= tenant_root_path %>" style="text-decoration:none;color:inherit;">
-              <span>Community Hub</span>
-              <span class="context-badge">テナント管理画面</span>
-            </a>
+  <body class="tenant-page">
+    <%
+      signed_in = defined?(tenant_account_signed_in?) && tenant_account_signed_in?
+      tenant_member = signed_in ? current_tenant_account&.tenant_member : nil
+      tenant_organization = @tenant
+      jobs_section_active = controller_path == "tenant/jobs"
+      stays_section_active = %w[tenant/stays tenant/stay_management].include?(controller_path)
+      organization_section_active = controller_path == "tenant/organizations"
+      location_section_active = controller_path == "tenant/locations"
+    %>
+
+    <div class="tenant-shell">
+      <aside class="tenant-sidebar">
+        <%= link_to tenant_root_path, class: "tenant-brand", aria: { label: "Community Hub テナント管理画面" } do %>
+          <span class="tenant-brand-mark">C</span>
+          <span>
+            <strong>Community Hub</strong>
+            <small>Tenant workspace</small>
+          </span>
+        <% end %>
+
+        <% if signed_in %>
+          <nav class="tenant-navigation" aria-label="テナント管理">
+            <%= link_to tenant_root_path, class: ["tenant-home-link", current_page?(tenant_root_path) && "active"] do %>
+              <span class="tenant-nav-icon tenant-nav-icon--home" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="m3 11 9-7 9 7M5.5 9.5V20h13V9.5M9.5 20v-6h5v6"/></svg>
+              </span>ホーム
+            <% end %>
+
+            <section class="tenant-menu-section <%= "has-active" if jobs_section_active %>">
+              <div class="tenant-menu-heading">
+                <span class="tenant-menu-icon tenant-menu-icon--jobs" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false"><path d="M9 7V5.8c0-.99.81-1.8 1.8-1.8h2.4c.99 0 1.8.81 1.8 1.8V7M4.5 7h15c.83 0 1.5.67 1.5 1.5v9c0 .83-.67 1.5-1.5 1.5h-15c-.83 0-1.5-.67-1.5-1.5v-9C3 7.67 3.67 7 4.5 7Z"/><path d="M3 11.5c2.75 1.2 5.75 1.8 9 1.8s6.25-.6 9-1.8M10 13.3v2h4v-2"/></svg>
+                </span>
+                <div>
+                  <strong>求人管理</strong>
+                  <small>求人掲載の管理</small>
+                </div>
+              </div>
+              <div class="tenant-menu-items">
+                <%= link_to tenant_jobs_path, class: [(jobs_section_active && action_name == "index") && "active"] do %>
+                  求人一覧
+                <% end %>
+                <%= link_to new_tenant_job_path, class: [(jobs_section_active && %w[new create].include?(action_name)) && "active"] do %>
+                  求人を作成
+                <% end %>
+              </div>
+            </section>
+
+            <section class="tenant-menu-section <%= "has-active" if stays_section_active %>">
+              <div class="tenant-menu-heading">
+                <span class="tenant-menu-icon tenant-menu-icon--stays" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false"><path d="M3 18V7M21 18v-6.5A2.5 2.5 0 0 0 18.5 9H9v6h12M3 15h18M6 9V6h3.5A2.5 2.5 0 0 1 12 8.5V9M3 18v2M21 18v2"/></svg>
+                </span>
+                <div>
+                  <strong>宿泊管理</strong>
+                  <small>施設・客室・料金の管理</small>
+                </div>
+              </div>
+              <div class="tenant-menu-items">
+                <%= link_to tenant_stays_path, class: [(stays_section_active && action_name == "index") && "active"] do %>
+                  宿泊一覧
+                <% end %>
+                <%= link_to new_tenant_stay_path, class: [(stays_section_active && %w[new create].include?(action_name)) && "active"] do %>
+                  宿泊施設を登録
+                <% end %>
+              </div>
+            </section>
+
+            <% if tenant_member&.role == "owner" && tenant_organization.present? %>
+              <section class="tenant-menu-section <%= "has-active" if organization_section_active || location_section_active %>">
+                <div class="tenant-menu-heading">
+                  <span class="tenant-menu-icon tenant-menu-icon--organization" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M5 21V5.5L12 3v18M12 7h7v14M2.5 21h19M8 8h1M8 12h1M8 16h1M15 10h1M15 14h1M15 18h1"/></svg>
+                  </span>
+                  <div>
+                    <strong>組織設定</strong>
+                    <small>基本情報の管理</small>
+                  </div>
+                </div>
+                <div class="tenant-menu-items">
+                  <%= link_to "組織情報", edit_tenant_organization_path, class: [organization_section_active && "active"] %>
+                  <%= link_to "拠点管理", tenant_locations_path, class: [location_section_active && "active"] %>
+                </div>
+              </section>
+            <% end %>
+          </nav>
+        <% else %>
+          <div class="tenant-session-context">
+            <span></span>
+            テナント管理画面
           </div>
-          <% if defined?(tenant_account_signed_in?) && tenant_account_signed_in? %>
-            <a href="<%= tenant_listings_path %>">掲載</a>
-          <% end %>
-        </nav>
-        <div class="auth">
-          <% if defined?(tenant_account_signed_in?) && tenant_account_signed_in? %>
-            <span class="user">
-              ログイン中:
-              <strong><%= current_tenant_account&.email %></strong>
-              /
-              ロール:
-              <strong><%= current_tenant_member&.role %></strong>
-            </span>
-            <form action="<%= destroy_tenant_account_session_path %>" method="post">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>" />
-              <button type="submit">ログアウト</button>
-            </form>
+        <% end %>
+
+        <div class="tenant-sidebar-footer">
+          <% if signed_in %>
+            <div class="tenant-account">
+              <span class="tenant-account-avatar"><%= tenant_member&.role == "owner" ? "O" : "S" %></span>
+              <span class="tenant-account-copy">
+                <strong><%= tenant_organization&.name.presence || "テナント未設定" %></strong>
+                <small><span class="visually-hidden">ロール:</span><%= tenant_member&.role.presence || "ロール未設定" %>・<%= tenant_member&.status.presence || "状態未設定" %></small>
+                <small class="tenant-account-email"><%= current_tenant_account.email %></small>
+              </span>
+            </div>
+            <%= button_to "ログアウト", destroy_tenant_account_session_path, method: :post, class: "tenant-logout-button" %>
           <% else %>
-            <a href="<%= new_tenant_account_session_path %>">ログイン</a>
+            <%= link_to "ログイン", new_tenant_account_session_path, class: "tenant-login-link" %>
           <% end %>
         </div>
-      </div>
-    </header>
+      </aside>
 
-    <main class="container">
-      <% if flash[:notice] %>
-        <div class="flash notice"><%= flash[:notice] %></div>
-      <% end %>
-      <% if flash[:alert] %>
-        <div class="flash alert"><%= flash[:alert] %></div>
-      <% end %>
+      <main class="tenant-main">
+        <header class="tenant-topbar">
+          <div>
+            <% if content_for?(:back_link) %>
+              <%= yield :back_link %>
+            <% else %>
+              <p class="tenant-breadcrumb">
+                TENANT<% if tenant_organization&.name.present? %> / <%= tenant_organization.name %><% end %>
+              </p>
+            <% end %>
+            <h1 id="tenant-page-title">
+              <% if content_for?(:page_title) %>
+                <%= yield :page_title %>
+              <% elsif content_for?(:title) %>
+                <%= yield :title %>
+              <% else %>
+                テナントホーム
+              <% end %>
+            </h1>
+          </div>
+          <% if signed_in %>
+            <div class="tenant-top-actions">
+              <span class="tenant-session-state"><i></i>テナントとしてログイン中</span>
+            </div>
+          <% end %>
+        </header>
 
-      <%= yield %>
-    </main>
+        <div class="tenant-content">
+          <% if flash[:notice] %>
+            <div class="tenant-flash notice" role="status"><%= flash[:notice] %></div>
+          <% end %>
+          <% if flash[:alert] %>
+            <div class="tenant-flash alert" role="alert"><%= flash[:alert] %></div>
+          <% end %>
+
+          <%= yield %>
+        </div>
+      </main>
+    </div>
+    <%= render "shared/confirmation_modal" %>
   </body>
-  </html>
+</html>
