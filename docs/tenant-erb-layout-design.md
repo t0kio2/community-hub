@@ -45,10 +45,12 @@ tenant-shell
 プロトタイプの区分表現を保ちながら、現在実在するルートだけを表示する。
 
 - ホーム: `tenant_root_path`
-- 掲載管理
-  - 掲載一覧: `tenant_listings_path`
-  - 求人を作成: `new_tenant_listing_path(listing_type: "job")`
-  - 宿泊を作成: `new_tenant_listing_path(listing_type: "stay")`
+- 求人管理
+  - 求人一覧: `tenant_jobs_path`
+  - 求人を作成: `new_tenant_job_path`
+- 宿泊管理
+  - 宿泊施設一覧: `tenant_stays_path`
+  - 宿泊施設を登録: `new_tenant_stay_path`
 - 組織設定
   - 組織情報: `edit_tenant_organization_path`。ownerにだけ表示する
 
@@ -85,7 +87,7 @@ AdminとTenantの共通CSS抽出はこの変更では行わない。両方の実
 
 ## 掲載管理
 
-掲載一覧、詳細、作成、編集は共通して`app/assets/stylesheets/tenant/listings.css`を読み込む。各ViewとフォームPartialからインライン`style`を削除し、Tenantのデザイントークン、カード、テーブル、フォーム、バッジの表現へ統一する。
+求人・宿泊施設の一覧、詳細、作成、編集は共通して`app/assets/stylesheets/tenant/listings.css`を読み込む。フォームPartialは`app/views/tenant/shared/_listing_form.html.erb`で共有し、各専用コントローラのURLを明示的に渡す。
 
 - 一覧: 本文上部には求人作成・宿泊作成の操作だけを置き、カード内のテーブルに種別、状態、更新日、詳細・編集導線を表示する
 - 詳細: トップバーに一覧へ戻る導線を置き、掲載名・種別・状態の概要、共通情報、求人または宿泊の詳細をカードとして表示する

@@ -2,15 +2,11 @@
 
 ## 目的
 
-プロトタイプで検証した宿泊施設運営の画面構成を、Railsのテナントデザインへ移植する。求人掲載と宿泊施設運営を別の業務導線として扱い、宿泊施設の最小登録後に客室・在庫・料金を段階設定する。現段階ではUIのみとし、モデル、コントローラー、ルート、保存処理は実装しない。
+プロトタイプで検証した宿泊施設運営の画面構成を、Railsのテナントデザインへ移植する。求人掲載と宿泊施設運営を別の業務導線として扱い、宿泊施設の最小登録後に客室・在庫・料金を段階設定する。
 
-宿泊施設一覧ルートが未接続の間、サイドメニューの「宿泊施設」はリンクにせず「準備中」と表示する。`href="#"`の仮リンクは使用しない。`/tenant/stays`実装時に一覧ルートへの通常リンクへ置き換える。
+求人と宿泊施設は`Tenant::JobsController`と`Tenant::StaysController`へ分割済みで、サイドメニューから`tenant_jobs_path`と`tenant_stays_path`へ直接遷移する。ナビゲーションのアクティブ判定は`controller_path`だけで行う。旧`Tenant::ListingsController`と`/tenant/listings`ルートは削除し、共通フォームだけを`tenant/shared/_listing_form`として共有する。
 
-移行期間中に`tenant/listings/:id`で宿泊Listingを表示・編集する場合も、`@listing.listing_type`を基準に宿泊運営の画面として扱う。求人管理をアクティブにせず、見出しは「宿泊施設詳細／編集」、一覧ルート接続前の戻り先はテナントホームとする。
-
-`Tenant::JobsController`と`Tenant::StaysController`への分割後は、サイドメニューから`tenant_jobs_path`と`tenant_stays_path`へ直接遷移する。ナビゲーションのアクティブ判定は`controller_path`だけで行い、`listing_type`パラメータや`@listing`から画面領域を推測しない。既存の`Tenant::ListingsController`は移行中の互換ルートとし、サイドメニューの判定対象に含めない。
-
-ログイン中テナントは`Tenant::BaseController#set_current_tenant`で`@tenant`へ設定し、全テナント管理画面で共通利用する。取得処理はリダイレクトしない。テナントを必須とするJobs、Stays、Listings、Locations、Organizationsだけが`require_current_tenant!`をbefore actionとして実行し、未設定ならHomeへ戻す。Homeは必須チェックを行わず、組織未設定状態を表示できるためリダイレクトループにならない。`current_tenant_organization`や各コントローラ固有の`set_tenant`／`set_organization`は持たない。
+ログイン中テナントは`Tenant::BaseController#set_current_tenant`で`@tenant`へ設定し、全テナント管理画面で共通利用する。取得処理はリダイレクトしない。テナントを必須とするJobs、Stays、Locations、Organizationsだけが`require_current_tenant!`をbefore actionとして実行し、未設定ならHomeへ戻す。Homeは必須チェックを行わず、組織未設定状態を表示できるためリダイレクトループにならない。
 
 ## 情報設計
 
@@ -33,8 +29,8 @@
 
 | ビュー | 想定URL | 役割 |
 | --- | --- | --- |
-| `tenant/stay_management/index` | `/tenant/stays` | 宿泊施設の選択 |
-| `tenant/listings/new`（stay時） | `/tenant/stays/new`へ移行予定 | 施設名・説明・拠点の最小登録 |
+| `tenant/stays/index` | `/tenant/stays` | 宿泊施設の選択 |
+| `tenant/stays/new` | `/tenant/stays/new` | 施設名・説明・拠点の最小登録 |
 | `tenant/stay_management/dashboard` | `/tenant/stays/:listing_id` | 設定状況と販売構成の確認 |
 | `tenant/stay_management/room_types` | `/tenant/stays/:listing_id/room_types` | 販売分類の管理 |
 | `tenant/stay_management/inventory` | `/tenant/stays/:listing_id/inventory` | 物理Room／Bedの管理 |

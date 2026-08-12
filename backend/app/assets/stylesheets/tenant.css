@@ -157,16 +157,27 @@
 }
 
 .tenant-home-link {
-  min-height: 44px;
+  min-height: 48px;
   padding: 11px 13px !important;
   font-weight: 700;
 }
 
 .tenant-nav-icon {
-  width: 18px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
   color: #91aa9e;
-  text-align: center;
-  font-size: var(--tenant-font-size-subheading);
+}
+
+.tenant-nav-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tenant-home-link.active .tenant-nav-icon {
@@ -209,15 +220,30 @@
   border-bottom: 1px solid rgb(255 255 255 / 8%);
 }
 
-.tenant-menu-heading > span {
-  width: 25px;
-  height: 25px;
+.tenant-menu-heading > .tenant-menu-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
   display: grid;
   place-items: center;
   border-radius: 7px;
   color: #b8d1c5;
   background: rgb(255 255 255 / 8%);
-  font-size: var(--tenant-font-size-body);
+}
+
+.tenant-menu-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tenant-menu-section.has-active .tenant-menu-icon {
+  color: var(--tenant-color-accent);
+  background: rgb(200 240 104 / 10%);
 }
 
 .tenant-menu-heading strong,

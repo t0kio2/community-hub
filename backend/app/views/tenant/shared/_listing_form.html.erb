@@ -23,20 +23,12 @@
     </section>
   <% end %>
 
-  <% default_form_url = listing.persisted? ? tenant_listing_path(listing) : tenant_listings_path %>
-  <%= form_with model: listing, url: local_assigns.fetch(:form_url, default_form_url), local: true, class: "listing-form" do |form| %>
+  <%= form_with model: listing, url: form_url, local: true, class: "listing-form" do |form| %>
     <section class="form-section" aria-label="共通項目">
       <div class="listing-form-section-heading field-wide">
         <h2><%= listing.listing_type == "stay" ? "施設の基本情報" : "基本情報" %></h2>
         <p><%= listing.listing_type == "stay" ? "最初に施設の骨格だけを登録します。客室や料金は登録後に設定します。" : "掲載の種別、タイトル、公開状態を設定します。" %></p>
       </div>
-
-      <% unless listing.persisted? || listing.listing_type == "stay" || local_assigns[:separated_resource] %>
-        <div class="type-switch field-wide">
-          <a class="<%= listing.listing_type == "job" ? "active" : "" %>" href="<%= new_tenant_listing_path(listing_type: "job") %>">求人</a>
-          <a class="<%= listing.listing_type == "stay" ? "active" : "" %>" href="<%= new_tenant_listing_path(listing_type: "stay") %>">宿泊</a>
-        </div>
-      <% end %>
 
       <div class="field <%= "field-wide" if listing.listing_type == "stay" %>">
         <label>種別</label>

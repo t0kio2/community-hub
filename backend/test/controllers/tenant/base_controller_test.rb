@@ -37,7 +37,6 @@ class Tenant::BaseControllerTest < ActiveSupport::TestCase
     controllers = [
       Tenant::JobsController,
       Tenant::StaysController,
-      Tenant::ListingsController,
       Tenant::LocationsController,
       Tenant::OrganizationsController
     ]
