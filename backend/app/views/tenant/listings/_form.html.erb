@@ -65,7 +65,7 @@
       <% if listing.listing_type == "stay" %>
         <div class="field field-wide stay-registration-location">
           <%= form.label :tenant_location_id, "所在地" %>
-          <% locations = @organization&.tenant_locations&.order(:name, :id) || [] %>
+          <% locations = @tenant&.tenant_locations&.order(:name, :id) || [] %>
           <% if locations.any? %>
             <%= form.select :tenant_location_id,
                             locations.map { |location| ["#{location.name}｜#{location.full_address.presence || "住所未設定"}", location.id] },

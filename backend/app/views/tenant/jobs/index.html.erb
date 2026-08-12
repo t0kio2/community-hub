@@ -1,0 +1,67 @@
+<% content_for :title, "掲載管理" %>
+<% content_for :page_title, "掲載管理" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %>
+<% end %>
+
+<%
+  listing_type_labels = { "job" => "求人", "stay" => "宿泊" }
+  listing_status_labels = {
+    "published" => "公開中",
+    "draft" => "下書き",
+    "closed" => "公開終了",
+    "archived" => "アーカイブ"
+  }
+%>
+
+<section class="tenant-listing-index" aria-labelledby="tenant-page-title">
+  <div class="tenant-listing-index__toolbar">
+    <%= link_to "求人を作成", new_tenant_listing_path(listing_type: "job"), class: "tenant-listing-button tenant-listing-button--primary" %>
+  </div>
+
+  <div class="tenant-listing-index__card">
+    <% if @listings.any? %>
+      <div class="tenant-listing-index__table-wrapper">
+        <table class="tenant-listing-index__table">
+          <thead>
+            <tr>
+              <th scope="col">掲載</th>
+              <th scope="col">種別</th>
+              <th scope="col">状態</th>
+              <th scope="col">更新日</th>
+              <th scope="col"><span class="visually-hidden">操作</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @listings.each do |listing| %>
+              <tr>
+                <td>
+                  <span class="tenant-listing-index__identity">
+                    <span class="tenant-listing-index__icon tenant-listing-index__icon--<%= listing.listing_type %>" aria-hidden="true">
+                      <%= listing.listing_type == "stay" ? "S" : "J" %>
+                    </span>
+                    <strong><%= listing.title %></strong>
+                  </span>
+                </td>
+                <td><span class="tenant-listing-type tenant-listing-type--<%= listing.listing_type %>"><%= listing_type_labels.fetch(listing.listing_type, listing.listing_type) %></span></td>
+                <td><span class="tenant-listing-status tenant-listing-status--<%= listing.status %>"><%= listing_status_labels.fetch(listing.status, listing.status) %></span></td>
+                <td><%= l(listing.updated_at, format: :short) %></td>
+                <td>
+                  <span class="tenant-listing-index__actions">
+                    <%= link_to "詳細", tenant_listing_path(listing) %>
+                    <%= link_to "編集", edit_tenant_listing_path(listing) %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="tenant-listing-empty">
+        <strong>掲載がありません</strong>
+        <p>求人を作成、または宿泊施設を登録すると、ここに表示されます。</p>
+      </div>
+    <% end %>
+  </div>
+</section>

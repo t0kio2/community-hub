@@ -43,7 +43,7 @@
       </div>
 
       <label class="tenant-location-primary-check tenant-location-field--wide">
-        <%= check_box_tag :primary_location, "1", @organization.primary_tenant_location == location %>
+        <%= check_box_tag :primary_location, "1", @tenant.primary_tenant_location == location %>
         <span>
           <strong>代表拠点に設定する</strong>
           <small>組織の代表住所として使用します。</small>

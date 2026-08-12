@@ -1,5 +1,5 @@
-<% content_for :title, "掲載編集" %>
-<% content_for :page_title, "掲載編集" %>
+<% content_for :title, @listing.listing_type == "stay" ? "宿泊施設編集" : "求人編集" %>
+<% content_for :page_title, @listing.listing_type == "stay" ? "宿泊施設を編集" : "求人を編集" %>
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %>
 <% end %>

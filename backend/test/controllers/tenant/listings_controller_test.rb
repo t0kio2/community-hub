@@ -17,12 +17,11 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
       status: "draft"
     )
 
-    get tenant_listings_path
+    get tenant_listings_path(listing_type: "job")
 
     assert_response :success
     assert_select "h1#tenant-page-title", text: "掲載管理"
-    assert_select ".tenant-menu-section.has-active", minimum: 1
-    assert_select ".tenant-menu-items a.active[href=?]", tenant_listings_path
+    assert_select ".tenant-menu-section.has-active", count: 0
     assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
     assert_select ".tenant-listing-index__card", count: 1
     assert_select ".tenant-content style", count: 0
@@ -31,7 +30,6 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, own_listing.title
     assert_not_includes response.body, other_listing.title
   end
-
   test "求人掲載作成画面を表示できる" do
     get new_tenant_listing_path(listing_type: "job")
 
@@ -72,6 +70,7 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".stay-registration-location__empty", count: 1
     assert_select ".stay-registration-location__empty a[href=?]", new_tenant_location_path, text: "拠点を登録"
     assert_select ".stay-registration-next-steps", count: 1
+    assert_select ".tenant-menu-items a[href='#']", count: 0
     assert_select ".listing-form .form-actions a", count: 0
     assert_select ".tenant-content style", count: 0
     assert_not_includes response.body, "チェックイン"
@@ -104,13 +103,34 @@ class Tenant::ListingsControllerTest < ActionDispatch::IntegrationTest
     get tenant_listing_path(listing)
 
     assert_response :success
-    assert_select "h1#tenant-page-title", text: "掲載詳細"
+    assert_select "h1#tenant-page-title", text: "求人詳細"
     assert_select 'link[rel="stylesheet"][href*="tenant/listings"]', count: 1
     assert_select ".tenant-topbar .tenant-back-link[href=?]", tenant_listings_path
     assert_select ".tenant-listing-detail__overview", count: 1
     assert_select ".tenant-content style", count: 0
     assert_includes response.body, listing.title
     assert_includes response.body, "求人詳細"
+  end
+
+  test "旧掲載ルートでも宿泊施設詳細を表示できる" do
+    listing = Listing.create!(
+      tenant: @tenant,
+      created_by_tenant_member: @member,
+      updated_by_tenant_member: @member,
+      listing_type: "stay",
+      title: "山のホテル",
+      status: "draft"
+    )
+    StayListing.create!(listing: listing)
+
+    get tenant_listing_path(listing)
+
+    assert_response :success
+    assert_select "h1#tenant-page-title", text: "宿泊施設詳細"
+    assert_select ".tenant-menu-section.has-active", count: 0
+    assert_select ".tenant-topbar .tenant-back-link[href=?]", tenant_root_path, text: "← ホームへ戻る"
+    assert_select ".tenant-listing-type--stay", text: "宿泊施設"
+    assert_select "#listing-common-heading", text: "施設情報"
   end
 
   test "求人掲載を作成できる" do

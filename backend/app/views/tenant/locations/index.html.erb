@@ -43,7 +43,7 @@
                     <span class="tenant-location-index__icon" aria-hidden="true">⌖</span>
                     <span>
                       <strong><%= location.name %></strong>
-                      <% if @organization.primary_tenant_location_id == location.id %>
+                      <% if @tenant.primary_tenant_location_id == location.id %>
                         <small class="tenant-location-primary-badge">代表拠点</small>
                       <% end %>
                     </span>

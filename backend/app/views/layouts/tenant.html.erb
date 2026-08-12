@@ -14,10 +14,9 @@
     <%
       signed_in = defined?(tenant_account_signed_in?) && tenant_account_signed_in?
       tenant_member = signed_in ? current_tenant_account&.tenant_member : nil
-      tenant_organization = tenant_member&.tenant
-      requested_listing_type = params[:listing_type].presence || params.dig(:listing, :listing_type)
-      listing_section_active = controller_path == "tenant/listings"
-      stay_management_section_active = controller_path == "tenant/stay_management" || (listing_section_active && requested_listing_type == "stay")
+      tenant_organization = @tenant
+      jobs_section_active = controller_path == "tenant/jobs"
+      stays_section_active = %w[tenant/stays tenant/stay_management].include?(controller_path)
       organization_section_active = controller_path == "tenant/organizations"
       location_section_active = controller_path == "tenant/locations"
     %>
@@ -38,7 +37,7 @@
               <span class="tenant-nav-icon">⌂</span>ホーム
             <% end %>
 
-            <section class="tenant-menu-section <%= "has-active" if listing_section_active %>">
+            <section class="tenant-menu-section <%= "has-active" if jobs_section_active %>">
               <div class="tenant-menu-heading">
                 <span aria-hidden="true">◇</span>
                 <div>
@@ -47,26 +46,28 @@
                 </div>
               </div>
               <div class="tenant-menu-items">
-                <%= link_to tenant_listings_path, class: [(listing_section_active && !%w[new create].include?(action_name)) && "active"] do %>
-                  求人・掲載一覧
+                <%= link_to tenant_jobs_path, class: [(jobs_section_active && action_name == "index") && "active"] do %>
+                  求人一覧
                 <% end %>
-                <%= link_to new_tenant_listing_path(listing_type: "job"), class: [(listing_section_active && %w[new create].include?(action_name) && requested_listing_type == "job") && "active"] do %>
+                <%= link_to new_tenant_job_path, class: [(jobs_section_active && %w[new create].include?(action_name)) && "active"] do %>
                   求人を作成
                 <% end %>
               </div>
             </section>
 
-            <section class="tenant-menu-section <%= "has-active" if stay_management_section_active %>">
+            <section class="tenant-menu-section <%= "has-active" if stays_section_active %>">
               <div class="tenant-menu-heading">
                 <span aria-hidden="true">▦</span>
                 <div>
-                  <strong>宿泊運営</strong>
+                  <strong>宿泊管理</strong>
                   <small>施設・客室・料金の管理</small>
                 </div>
               </div>
               <div class="tenant-menu-items">
-                <a href="#" class="<%= "active" if controller_path == "tenant/stay_management" %>">宿泊施設</a>
-                <%= link_to new_tenant_listing_path(listing_type: "stay"), class: [(listing_section_active && %w[new create].include?(action_name) && requested_listing_type == "stay") && "active"] do %>
+                <%= link_to tenant_stays_path, class: [(stays_section_active && action_name == "index") && "active"] do %>
+                  宿泊一覧
+                <% end %>
+                <%= link_to new_tenant_stay_path, class: [(stays_section_active && %w[new create].include?(action_name)) && "active"] do %>
                   宿泊施設を登録
                 <% end %>
               </div>

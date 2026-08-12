@@ -1,11 +1,12 @@
 class Tenant::ListingsController < Tenant::BaseController
-  before_action :set_organization
+  before_action :require_current_tenant!
   before_action :set_listing, only: [ :show, :edit, :update ]
   before_action :authorize_existing_listing!, only: [ :show, :edit, :update ]
 
   def index
-    authorize @organization, :index?, with: Tenant::ListingPolicy
-    @listings = @organization.listings.order(updated_at: :desc, id: :desc)
+    type = params[:listing_type]
+    authorize @tenant, :index?, with: Tenant::ListingPolicy
+    @listings = @tenant.listings.where(listing_type: type).order(updated_at: :desc, id: :desc)
   end
 
   def show
@@ -13,13 +14,13 @@ class Tenant::ListingsController < Tenant::BaseController
   end
 
   def new
-    @listing = @organization.listings.new(listing_type: listing_type_param, status: "draft")
+    @listing = @tenant.listings.new(listing_type: listing_type_param, status: "draft")
     authorize @listing, :create?, with: Tenant::ListingPolicy
     build_detail
   end
 
   def create
-    @listing = @organization.listings.new(common_listing_params)
+    @listing = @tenant.listings.new(common_listing_params)
     authorize @listing, :create?, with: Tenant::ListingPolicy
     @listing.created_by_tenant_member = current_tenant_member
     @listing.updated_by_tenant_member = current_tenant_member
@@ -54,17 +55,10 @@ class Tenant::ListingsController < Tenant::BaseController
 
   private
 
-  def set_organization
-    @organization = current_tenant_organization
-    return if @organization
-
-    redirect_to tenant_root_path, alert: "組織情報がありません"
-  end
-
   def set_listing
     return if performed?
 
-    @listing = @organization.listings.find(params[:id])
+    @listing = @tenant.listings.find(params[:id])
   end
 
   def authorize_existing_listing!
