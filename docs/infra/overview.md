@@ -2,7 +2,7 @@
 
 ## 文書の位置づけ
 
-この文書は、Community Hubをポートフォリオとして公開するためのインフラ構成案である。2026年8月時点では未実装であり、Terraform実装時に採用サービス、サイズ、料金を再確認する。
+この文書は、Community Hubをポートフォリオとして公開するためのインフラ構成案である。2026年8月時点では未実装であり、Terraform実装時に採用サービス、サイズ、料金を再確認する。構築順序は[README.md](README.md)を正本とする。
 
 ## 目的
 
@@ -37,9 +37,10 @@ EC2（Public Subnet）
 ├── HTTPSリバースプロキシ
 ├── Next.js
 ├── Rails Web
-└── Solid Queue Worker
+├── Solid Queue Worker
+└── PostgreSQL
+   │  └── EBS（DBデータ永続化）
    │
-   ├── RDS for PostgreSQL（Private Subnet / Single-AZ）
    ├── S3（Active Storage）
    ├── ECR（Dockerイメージ）
    └── CloudWatch（ログ・監視）
@@ -57,19 +58,19 @@ EC2（Public Subnet）
 ### ネットワーク
 
 - EC2はPublic Subnetへ配置する
-- RDSはPrivate Subnetへ配置し、Public Accessを無効にする
-- RDSのSecurity GroupはEC2のSecurity GroupからのPostgreSQL接続だけを許可する
 - EC2へのInboundはHTTP／HTTPSに限定する
+- PostgreSQLはDocker内部ネットワークだけで接続し、5432番ポートを公開しない
 - 初期デモ環境ではNAT Gatewayを使用しない
 - ALBは常時料金が発生するため、初期デモ環境には置かない
 
 ### PostgreSQL
 
-- RDS for PostgreSQLのSingle-AZを使用する
-- Railsの`primary`、`cache`、`queue`、`cable`は、初期段階では同じRDSインスタンス内の論理DBとして管理する
-- 自動バックアップとPoint-in-Time Recoveryを有効にする
+- デモ環境ではEC2上のPostgreSQLコンテナを使用する
+- PostgreSQLデータは専用EBSへ永続化し、コンテナ内へ保存しない
+- Railsの`primary`、`cache`、`queue`、`cable`は、同じPostgreSQL内の論理DBとして管理する
+- EBS SnapshotとS3へ保存する`pg_dump`を併用する
 - デモデータはRailsのseedから再作成できるようにする
-- 実データを保持する必要が生じた場合だけ、削除前のスナップショット保存を検討する
+- 本格運用ではRDS PostgreSQLへの移行を第一候補とする
 
 ### ファイルとコンテナイメージ
 
@@ -98,13 +99,13 @@ infra/
 │   └── demo/
 │       ├── network
 │       ├── compute
-│       ├── database
+│       ├── compute
 │       ├── storage
 │       └── monitoring
 └── modules/
     ├── network/
     ├── compute/
-    ├── database/
+    ├── compute/
     └── storage/
 ```
 
@@ -124,7 +125,6 @@ Terraform State用S3 Bucketはデモ環境の`terraform destroy`対象に含め�
 - Security Group
 - EC2、EBS
 - Public IPv4またはElastic IP
-- RDS
 - デモ環境固有のS3 Bucket
 - CloudWatch Log Group、Alarm
 - IAM Role、Policy
@@ -137,7 +137,7 @@ Terraform State用S3 Bucketはデモ環境の`terraform destroy`対象に含め�
 ```text
 terraform apply
       ↓
-ネットワーク、EC2、RDSなどを作成
+ネットワーク、EC2、EBSなどを作成
       ↓
 Dockerイメージをデプロイ
       ↓
@@ -199,15 +199,15 @@ GitHub Actionsの手動実行から次の処理を行える構成を目標とす
 ## 監視と運用
 
 - Rails、Next.js、WorkerのログをCloudWatch Logsへ送る
-- EC2、RDSのCPU、メモリ、ストレージを監視する
+- EC2、PostgreSQLコンテナ、EBSのCPU、メモリ、ストレージを監視する
 - HTTPヘルスチェックを用意する
 - デプロイ失敗時のロールバック方法を文書化する
-- RDSのバックアップから定期的にリストア確認を行う
+- `pg_dump`とEBS Snapshotから定期的にリストア確認を行う
 - AWS Budgetsで月額予算の通知を設定する
 
 ## 費用方針
 
-EC2を停止しても、EBS、Elastic IP、RDS、ALB、NAT Gatewayなどは残存状況に応じて課金される。そのため、長期間公開しない場合はEC2の停止だけでなく、デモ環境を`terraform destroy`する。
+EC2を停止しても、EBS、Elastic IP、ALB、NAT Gatewayなどは残存状況に応じて課金される。そのため、長期間公開しない場合はEC2の停止だけでなく、デモ環境を`terraform destroy`する。
 
 Terraformで削除しても、常設するRoute 53、State用S3、ECR、スナップショット、ログ、ドメインには少額の費用が残る。実装前と公開前にAWS Pricing Calculatorで見積もり、AWS Budgetsを設定する。
 
@@ -231,7 +231,7 @@ READMEや構成図では、デモ環境を本番相当と表現せず、費用�
 
 - Docker ComposeとKamalのどちらを採用するか
 - Public IPv4を毎回再取得するか、Elastic IPを常設するか
-- RDSを毎回再作成するか、Snapshotから復元するか
+- PostgreSQL用EBSを環境と同時に削除するか、Snapshotを残すか
 - ECRとS3のどこまでを常設するか
 - Next.jsとRailsのドメイン構成
 - SSM Parameter StoreとSecrets Managerのどちらを採用するか
@@ -246,6 +246,6 @@ READMEや構成図では、デモ環境を本番相当と表現せず、費用�
 - `terraform destroy`後に意図しない課金対象が残っていないこと
 - Admin、Tenant、ユーザー画面とAPIがHTTPSで利用できること
 - Rails migrationとseedを自動実行できること
-- RDSへインターネットから直接接続できないこと
+- PostgreSQLの5432番ポートへインターネットから接続できないこと
 - EC2へSSHポートを開けずにSession Managerで接続できること
 - バックアップからデータを復元できること
