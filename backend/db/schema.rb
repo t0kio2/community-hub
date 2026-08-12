@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_12_012613) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_12_013300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -26,36 +26,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_012613) do
     t.index ["account_type"], name: "index_accounts_on_account_type"
     t.index ["email"], name: "index_accounts_on_email", unique: true
     t.index ["reset_password_token"], name: "index_accounts_on_reset_password_token", unique: true
-  end
-
-  create_table "active_storage_attachments", force: :cascade do |t|
-    t.bigint "blob_id", null: false
-    t.datetime "created_at", null: false
-    t.string "name", null: false
-    t.bigint "record_id", null: false
-    t.string "record_type", null: false
-    t.datetime "updated_at", null: false
-    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
-    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
-  end
-
-  create_table "active_storage_blobs", force: :cascade do |t|
-    t.bigint "byte_size", null: false
-    t.string "checksum"
-    t.string "content_type"
-    t.datetime "created_at", null: false
-    t.string "filename", null: false
-    t.string "key", null: false
-    t.text "metadata"
-    t.string "service_name", null: false
-    t.datetime "updated_at", null: false
-    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
-  end
-
-  create_table "active_storage_variant_records", force: :cascade do |t|
-    t.bigint "blob_id", null: false
-    t.string "variation_digest", null: false
-    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "admins", force: :cascade do |t|
@@ -78,59 +48,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_012613) do
     t.index ["user_id"], name: "index_favorites_on_user_id"
   end
 
-  create_table "job_categories", force: :cascade do |t|
-    t.boolean "active", default: true, null: false
-    t.string "code", null: false
-    t.datetime "created_at", null: false
-    t.bigint "created_by_admin_id"
-    t.text "description"
-    t.string "name", limit: 100, null: false
-    t.integer "position", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "updated_by_admin_id"
-    t.index ["active", "position"], name: "index_job_categories_on_active_and_position"
-    t.index ["code"], name: "index_job_categories_on_code", unique: true
-    t.index ["created_by_admin_id"], name: "index_job_categories_on_created_by_admin_id"
-    t.index ["updated_by_admin_id"], name: "index_job_categories_on_updated_by_admin_id"
-  end
-
   create_table "job_listings", force: :cascade do |t|
-    t.datetime "application_deadline"
     t.integer "application_limit"
     t.text "benefits"
-    t.integer "break_minutes", default: 0, null: false
     t.datetime "created_at", null: false
-    t.string "currency", default: "JPY", null: false
-    t.text "dress_code"
     t.string "employment_type"
-    t.text "items_to_bring"
     t.string "job_category"
-    t.bigint "job_category_id"
     t.bigint "listing_id", null: false
-    t.integer "positions_available"
-    t.text "preferred_qualifications"
-    t.string "recruitment_type"
-    t.text "required_qualifications"
     t.text "required_skills"
     t.integer "salary_max"
-    t.integer "salary_max_amount"
     t.integer "salary_min"
-    t.integer "salary_min_amount"
-    t.text "salary_notes"
     t.string "salary_type"
-    t.string "salary_unit"
-    t.text "selection_process"
-    t.integer "transportation_fee", default: 0, null: false
     t.datetime "updated_at", null: false
     t.text "welcome_skills"
     t.string "work_address"
     t.string "work_area"
     t.string "work_days"
-    t.datetime "work_ends_at"
-    t.string "work_mode", default: "onsite", null: false
-    t.datetime "work_starts_at"
     t.string "working_hours"
-    t.index ["job_category_id"], name: "index_job_listings_on_job_category_id"
     t.index ["listing_id"], name: "index_job_listings_on_listing_id", unique: true
   end
 
@@ -145,7 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_012613) do
   create_table "listing_images", force: :cascade do |t|
     t.string "alt_text"
     t.datetime "created_at", null: false
-    t.string "image_url"
+    t.string "image_url", null: false
     t.bigint "listing_id", null: false
     t.integer "position", null: false
     t.datetime "updated_at", null: false
@@ -153,29 +87,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_012613) do
     t.index ["listing_id"], name: "index_listing_images_on_listing_id"
   end
 
-  create_table "listing_locations", force: :cascade do |t|
-    t.string "address_line1"
-    t.string "address_line2"
-    t.string "city", limit: 100
-    t.datetime "created_at", null: false
-    t.string "google_place_id"
-    t.decimal "latitude", precision: 10, scale: 7, null: false
-    t.bigint "listing_id", null: false
-    t.decimal "longitude", precision: 10, scale: 7, null: false
-    t.string "postal_code", limit: 16
-    t.string "prefecture", limit: 50
-    t.datetime "updated_at", null: false
-    t.index ["listing_id"], name: "index_listing_locations_on_listing_id", unique: true
-  end
-
   create_table "listings", force: :cascade do |t|
-    t.datetime "archived_at"
     t.datetime "closed_at"
-    t.string "closed_reason"
     t.datetime "created_at", null: false
     t.bigint "created_by_tenant_member_id"
     t.text "description"
-    t.datetime "last_published_at"
     t.string "listing_type", null: false
     t.datetime "published_at"
     t.string "status", default: "draft", null: false
@@ -444,17 +360,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_012613) do
     t.index ["account_id"], name: "index_users_on_account_id", unique: true
   end
 
-  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "accounts"
   add_foreign_key "favorites", "listings"
   add_foreign_key "favorites", "users"
-  add_foreign_key "job_categories", "admins", column: "created_by_admin_id", on_delete: :nullify
-  add_foreign_key "job_categories", "admins", column: "updated_by_admin_id", on_delete: :nullify
-  add_foreign_key "job_listings", "job_categories"
   add_foreign_key "job_listings", "listings"
   add_foreign_key "listing_images", "listings"
-  add_foreign_key "listing_locations", "listings"
   add_foreign_key "listings", "tenant_locations"
   add_foreign_key "listings", "tenant_members", column: "created_by_tenant_member_id", on_delete: :nullify
   add_foreign_key "listings", "tenant_members", column: "updated_by_tenant_member_id", on_delete: :nullify

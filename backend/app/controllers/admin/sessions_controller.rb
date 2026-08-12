@@ -1,5 +1,6 @@
 class Admin::SessionsController < Devise::SessionsController
   respond_to :html
+  layout "authentication"
 
   # HTMLログインフォームを表示
   def new

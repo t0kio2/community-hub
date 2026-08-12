@@ -55,16 +55,21 @@ class Tenant::HomeControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "組織情報を編集"
   end
 
-  test "未ログインのログイン画面にもtenantレイアウトを表示する" do
+  test "未ログインのログイン画面をtenant用認証デザインで表示する" do
     sign_out @tenant_account
 
     get new_tenant_account_session_path
 
     assert_response :success
-    assert_select ".tenant-shell", count: 1
-    assert_select ".tenant-session-context", text: /テナント管理画面/
-    assert_select ".tenant-account", count: 0
-    assert_select ".tenant-login-link", text: "ログイン"
+    assert_select "body.authentication-page--tenant", count: 1
+    assert_select 'link[rel="stylesheet"][href*="authentication"]', count: 1
+    assert_select ".authentication-role-label", text: /テナント管理画面/
+    assert_select ".authentication-card h2", text: "テナントログイン"
+    assert_select "form.authentication-form[action=?]", tenant_account_session_path
+    assert_select "input#tenant_email[required][autocomplete='username']", count: 1
+    assert_select "input#tenant_password[required][autocomplete='current-password']", count: 1
+    assert_select ".authentication-submit[value='ログイン']", count: 1
+    assert_select "style", count: 0
   end
 
   test "無効なtenant memberはtenantホーム画面を表示できない" do

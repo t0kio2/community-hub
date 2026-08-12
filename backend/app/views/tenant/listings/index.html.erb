@@ -17,7 +17,7 @@
 <section class="tenant-listing-index" aria-labelledby="tenant-page-title">
   <div class="tenant-listing-index__toolbar">
     <%= link_to "求人を作成", new_tenant_listing_path(listing_type: "job"), class: "tenant-listing-button tenant-listing-button--primary" %>
-    <%= link_to "宿泊を作成", new_tenant_listing_path(listing_type: "stay"), class: "tenant-listing-button" %>
+    <%= link_to "宿泊施設を登録", new_tenant_listing_path(listing_type: "stay"), class: "tenant-listing-button" %>
   </div>
 
   <div class="tenant-listing-index__card">
@@ -61,7 +61,7 @@
     <% else %>
       <div class="tenant-listing-empty">
         <strong>掲載がありません</strong>
-        <p>求人または宿泊を作成すると、ここに表示されます。</p>
+        <p>求人を作成、または宿泊施設を登録すると、ここに表示されます。</p>
       </div>
     <% end %>
   </div>

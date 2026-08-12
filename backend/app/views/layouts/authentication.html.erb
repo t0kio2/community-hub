@@ -1,0 +1,50 @@
+<%
+  admin_authentication = controller_path.start_with?("admin/")
+  authentication_role = admin_authentication ? "admin" : "tenant"
+  authentication_title = admin_authentication ? "運営管理者ログイン" : "テナントログイン"
+%>
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= authentication_title %> | Community Hub</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "authentication", "data-turbo-track": "reload" %>
+  </head>
+  <body class="authentication-page authentication-page--<%= authentication_role %>">
+    <main class="authentication-shell">
+      <section class="authentication-introduction" aria-labelledby="authentication-brand-title">
+        <a href="/" class="authentication-brand" aria-label="Community Hub">
+          <span class="authentication-brand__mark">C</span>
+          <span>
+            <strong id="authentication-brand-title">Community Hub</strong>
+            <small><%= admin_authentication ? "Operations console" : "Tenant workspace" %></small>
+          </span>
+        </a>
+
+        <div class="authentication-introduction__copy">
+          <span class="authentication-role-label"><i></i><%= admin_authentication ? "運営管理画面" : "テナント管理画面" %></span>
+          <h1><%= admin_authentication ? "サービス運営を、ひとつの場所から。" : "地域での仕事と滞在を、育てていく。" %></h1>
+          <p><%= admin_authentication ? "テナントとプラットフォーム全体の状態を、安全に管理します。" : "求人・宿泊施設・組織情報を、あなたのワークスペースで管理できます。" %></p>
+        </div>
+
+        <p class="authentication-introduction__footer">Community Hub management workspace</p>
+      </section>
+
+      <section class="authentication-panel" aria-label="<%= authentication_title %>">
+        <div class="authentication-card">
+          <% if flash[:notice].present? %>
+            <div class="authentication-flash authentication-flash--notice" role="status"><%= flash[:notice] %></div>
+          <% end %>
+          <% if flash[:alert].present? %>
+            <div class="authentication-flash authentication-flash--alert" role="alert"><%= flash[:alert] %></div>
+          <% end %>
+
+          <%= yield %>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
