@@ -8,6 +8,14 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     get edit_tenant_organization_path
 
     assert_response :success
+    assert_select 'link[rel="stylesheet"][href*="organizations"]', count: 1
+    assert_select "h1#tenant-page-title", text: "組織情報を編集"
+    assert_select ".tenant-content > .tenant-organization-edit", count: 1
+    assert_select ".tenant-topbar .tenant-back-link[href=?]", tenant_root_path, text: "← ホームへ戻る"
+    assert_select ".tenant-organization-edit__card", count: 1
+    assert_select ".tenant-organization-edit__submit", count: 1
+    assert_select 'input[name="tenant[address]"]', count: 0
+    assert_select ".tenant-content style", count: 0
     assert_includes response.body, "組織情報を編集"
     assert_includes response.body, tenant.name
   end
@@ -19,8 +27,7 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     patch tenant_organization_path, params: {
       tenant: {
         name: "Updated Lodge",
-        kana: "アップデートロッジ",
-        address: "Osaka"
+        kana: "アップデートロッジ"
       }
     }
 
@@ -28,7 +35,6 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     tenant.reload
     assert_equal "Updated Lodge", tenant.name
     assert_equal "アップデートロッジ", tenant.kana
-    assert_equal "Osaka", tenant.address
     assert_equal "active", tenant.status
   end
 
@@ -39,8 +45,7 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     patch tenant_organization_path, params: {
       tenant: {
         name: "",
-        kana: "アップデートロッジ",
-        address: "Osaka"
+        kana: "アップデートロッジ"
       }
     }
 
@@ -48,7 +53,6 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     tenant.reload
     assert_equal "Sample Lodge", tenant.name
     assert_equal "サンプルロッジ", tenant.kana
-    assert_equal "Tokyo", tenant.address
   end
 
   test "staffは組織情報編集画面を表示できない" do
@@ -68,8 +72,7 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     patch tenant_organization_path, params: {
       tenant: {
         name: "Staff Updated Lodge",
-        kana: "スタッフロッジ",
-        address: "Kyoto"
+        kana: "スタッフロッジ"
       }
     }
 
@@ -77,7 +80,6 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     tenant.reload
     assert_equal "Sample Lodge", tenant.name
     assert_equal "サンプルロッジ", tenant.kana
-    assert_equal "Tokyo", tenant.address
   end
 
   private
@@ -86,7 +88,6 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     tenant = Tenant.create!(
       name: "Sample Lodge",
       kana: "サンプルロッジ",
-      address: "Tokyo",
       status: "active"
     )
     account = TenantAccount.create!(

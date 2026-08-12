@@ -1,73 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><%= content_for?(:title) ? yield(:title) : 'テナント管理画面' %></title>
+    <title><%= content_for?(:title) ? yield(:title) : "テナント管理画面" %> | Community Hub</title>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <style>
-      body { font-family: system-ui, -apple-system, sans-serif; margin: 0; }
-      .site-header { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid #e5e7eb; }
-      .site-header .inner { max-width: 960px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
-      .brand { font-size: 22px; font-weight: 700; letter-spacing: .2px; line-height: 1.2; }
-      .brand a { display: flex; align-items: center; gap: 8px; }
-      .context-badge { padding: 4px 9px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 13px; font-weight: 700; }
-      .primary-nav { display: flex; align-items: center; gap: 14px; font-size: 14px; }
-      .primary-nav a { color: #374151; text-decoration: none; font-weight: 700; }
-      .primary-nav a:hover { color: #111827; text-decoration: underline; }
-      .auth { display: flex; align-items: center; gap: 12px; font-size: 14px; }
-      .auth .user { color: #374151; }
-      .auth button { padding: 6px 10px; border-radius: 6px; border: 1px solid #d1d5db; background: #f9fafb; cursor: pointer; }
-      .container { max-width: 960px; margin: 24px auto; padding: 0 16px 24px; }
-      .flash { margin-bottom: 12px; }
-      .flash.notice { background:#e7f6ec;border:1px solid #b7e1c0;color:#0a4; padding:10px; border-radius:6px; }
-      .flash.alert  { background:#fff3f3;border:1px solid #f5c2c2;color:#900; padding:10px; border-radius:6px; }
-    </style>
+    <%= stylesheet_link_tag "tenant", "data-turbo-track": "reload" %>
+    <%= yield :stylesheets if content_for?(:stylesheets) %>
   </head>
-  <body>
-    <header class="site-header">
-      <div class="inner">
-        <nav class="primary-nav" aria-label="テナント管理">
-          <div class="brand">
-            <a href="<%= tenant_root_path %>" style="text-decoration:none;color:inherit;">
-              <span>Community Hub</span>
-              <span class="context-badge">テナント管理画面</span>
-            </a>
+  <body class="tenant-page">
+    <%
+      signed_in = defined?(tenant_account_signed_in?) && tenant_account_signed_in?
+      tenant_member = signed_in ? current_tenant_account&.tenant_member : nil
+      tenant_organization = tenant_member&.tenant
+      listing_section_active = controller_path == "tenant/listings"
+      organization_section_active = controller_path == "tenant/organizations"
+      requested_listing_type = params[:listing_type].presence || params.dig(:listing, :listing_type)
+    %>
+
+    <div class="tenant-shell">
+      <aside class="tenant-sidebar">
+        <%= link_to tenant_root_path, class: "tenant-brand", aria: { label: "Community Hub テナント管理画面" } do %>
+          <span class="tenant-brand-mark">C</span>
+          <span>
+            <strong>Community Hub</strong>
+            <small>Tenant workspace</small>
+          </span>
+        <% end %>
+
+        <% if signed_in %>
+          <nav class="tenant-navigation" aria-label="テナント管理">
+            <%= link_to tenant_root_path, class: ["tenant-home-link", current_page?(tenant_root_path) && "active"] do %>
+              <span class="tenant-nav-icon">⌂</span>ホーム
+            <% end %>
+
+            <section class="tenant-menu-section <%= "has-active" if listing_section_active %>">
+              <div class="tenant-menu-heading">
+                <span aria-hidden="true">◇</span>
+                <div>
+                  <strong>掲載管理</strong>
+                  <small>宿泊と求人の管理</small>
+                </div>
+              </div>
+              <div class="tenant-menu-items">
+                <%= link_to tenant_listings_path, class: [(listing_section_active && !%w[new create].include?(action_name)) && "active"] do %>
+                  掲載一覧
+                <% end %>
+                <%= link_to new_tenant_listing_path(listing_type: "job"), class: [(listing_section_active && %w[new create].include?(action_name) && requested_listing_type == "job") && "active"] do %>
+                  求人を作成
+                <% end %>
+                <%= link_to new_tenant_listing_path(listing_type: "stay"), class: [(listing_section_active && %w[new create].include?(action_name) && requested_listing_type == "stay") && "active"] do %>
+                  宿泊を作成
+                <% end %>
+              </div>
+            </section>
+
+            <% if tenant_member&.role == "owner" && tenant_organization.present? %>
+              <section class="tenant-menu-section <%= "has-active" if organization_section_active %>">
+                <div class="tenant-menu-heading">
+                  <span aria-hidden="true">◉</span>
+                  <div>
+                    <strong>組織設定</strong>
+                    <small>基本情報の管理</small>
+                  </div>
+                </div>
+                <div class="tenant-menu-items">
+                  <%= link_to "組織情報", edit_tenant_organization_path, class: [organization_section_active && "active"] %>
+                </div>
+              </section>
+            <% end %>
+          </nav>
+        <% else %>
+          <div class="tenant-session-context">
+            <span></span>
+            テナント管理画面
           </div>
-          <% if defined?(tenant_account_signed_in?) && tenant_account_signed_in? %>
-            <a href="<%= tenant_listings_path %>">掲載</a>
-          <% end %>
-        </nav>
-        <div class="auth">
-          <% if defined?(tenant_account_signed_in?) && tenant_account_signed_in? %>
-            <span class="user">
-              ログイン中:
-              <strong><%= current_tenant_account&.email %></strong>
-              /
-              ロール:
-              <strong><%= current_tenant_member&.role %></strong>
-            </span>
-            <form action="<%= destroy_tenant_account_session_path %>" method="post">
-              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>" />
-              <button type="submit">ログアウト</button>
-            </form>
+        <% end %>
+
+        <div class="tenant-sidebar-footer">
+          <% if signed_in %>
+            <div class="tenant-account">
+              <span class="tenant-account-avatar"><%= tenant_member&.role == "owner" ? "O" : "S" %></span>
+              <span class="tenant-account-copy">
+                <strong><%= tenant_organization&.name.presence || "テナント未設定" %></strong>
+                <small><span class="visually-hidden">ロール:</span><%= tenant_member&.role.presence || "ロール未設定" %>・<%= tenant_member&.status.presence || "状態未設定" %></small>
+                <small class="tenant-account-email"><%= current_tenant_account.email %></small>
+              </span>
+            </div>
+            <%= button_to "ログアウト", destroy_tenant_account_session_path, method: :post, class: "tenant-logout-button" %>
           <% else %>
-            <a href="<%= new_tenant_account_session_path %>">ログイン</a>
+            <%= link_to "ログイン", new_tenant_account_session_path, class: "tenant-login-link" %>
           <% end %>
         </div>
-      </div>
-    </header>
+      </aside>
 
-    <main class="container">
-      <% if flash[:notice] %>
-        <div class="flash notice"><%= flash[:notice] %></div>
-      <% end %>
-      <% if flash[:alert] %>
-        <div class="flash alert"><%= flash[:alert] %></div>
-      <% end %>
+      <main class="tenant-main">
+        <header class="tenant-topbar">
+          <div>
+            <% if content_for?(:back_link) %>
+              <%= yield :back_link %>
+            <% else %>
+              <p class="tenant-breadcrumb">
+                TENANT<% if tenant_organization&.name.present? %> / <%= tenant_organization.name %><% end %>
+              </p>
+            <% end %>
+            <h1 id="tenant-page-title">
+              <% if content_for?(:page_title) %>
+                <%= yield :page_title %>
+              <% elsif content_for?(:title) %>
+                <%= yield :title %>
+              <% else %>
+                テナントホーム
+              <% end %>
+            </h1>
+          </div>
+          <% if signed_in %>
+            <div class="tenant-top-actions">
+              <span class="tenant-session-state"><i></i>テナントとしてログイン中</span>
+            </div>
+          <% end %>
+        </header>
 
-      <%= yield %>
-    </main>
+        <div class="tenant-content">
+          <% if flash[:notice] %>
+            <div class="tenant-flash notice" role="status"><%= flash[:notice] %></div>
+          <% end %>
+          <% if flash[:alert] %>
+            <div class="tenant-flash alert" role="alert"><%= flash[:alert] %></div>
+          <% end %>
+
+          <%= yield %>
+        </div>
+      </main>
+    </div>
   </body>
-  </html>
+</html>

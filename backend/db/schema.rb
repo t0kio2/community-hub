@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_12_012613) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -26,6 +26,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
     t.index ["account_type"], name: "index_accounts_on_account_type"
     t.index ["email"], name: "index_accounts_on_email", unique: true
     t.index ["reset_password_token"], name: "index_accounts_on_reset_password_token", unique: true
+  end
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "admins", force: :cascade do |t|
@@ -48,23 +78,59 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
     t.index ["user_id"], name: "index_favorites_on_user_id"
   end
 
+  create_table "job_categories", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_admin_id"
+    t.text "description"
+    t.string "name", limit: 100, null: false
+    t.integer "position", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_admin_id"
+    t.index ["active", "position"], name: "index_job_categories_on_active_and_position"
+    t.index ["code"], name: "index_job_categories_on_code", unique: true
+    t.index ["created_by_admin_id"], name: "index_job_categories_on_created_by_admin_id"
+    t.index ["updated_by_admin_id"], name: "index_job_categories_on_updated_by_admin_id"
+  end
+
   create_table "job_listings", force: :cascade do |t|
+    t.datetime "application_deadline"
     t.integer "application_limit"
     t.text "benefits"
+    t.integer "break_minutes", default: 0, null: false
     t.datetime "created_at", null: false
+    t.string "currency", default: "JPY", null: false
+    t.text "dress_code"
     t.string "employment_type"
+    t.text "items_to_bring"
     t.string "job_category"
+    t.bigint "job_category_id"
     t.bigint "listing_id", null: false
+    t.integer "positions_available"
+    t.text "preferred_qualifications"
+    t.string "recruitment_type"
+    t.text "required_qualifications"
     t.text "required_skills"
     t.integer "salary_max"
+    t.integer "salary_max_amount"
     t.integer "salary_min"
+    t.integer "salary_min_amount"
+    t.text "salary_notes"
     t.string "salary_type"
+    t.string "salary_unit"
+    t.text "selection_process"
+    t.integer "transportation_fee", default: 0, null: false
     t.datetime "updated_at", null: false
     t.text "welcome_skills"
     t.string "work_address"
     t.string "work_area"
     t.string "work_days"
+    t.datetime "work_ends_at"
+    t.string "work_mode", default: "onsite", null: false
+    t.datetime "work_starts_at"
     t.string "working_hours"
+    t.index ["job_category_id"], name: "index_job_listings_on_job_category_id"
     t.index ["listing_id"], name: "index_job_listings_on_listing_id", unique: true
   end
 
@@ -79,7 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
   create_table "listing_images", force: :cascade do |t|
     t.string "alt_text"
     t.datetime "created_at", null: false
-    t.string "image_url", null: false
+    t.string "image_url"
     t.bigint "listing_id", null: false
     t.integer "position", null: false
     t.datetime "updated_at", null: false
@@ -87,15 +153,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
     t.index ["listing_id"], name: "index_listing_images_on_listing_id"
   end
 
+  create_table "listing_locations", force: :cascade do |t|
+    t.string "address_line1"
+    t.string "address_line2"
+    t.string "city", limit: 100
+    t.datetime "created_at", null: false
+    t.string "google_place_id"
+    t.decimal "latitude", precision: 10, scale: 7, null: false
+    t.bigint "listing_id", null: false
+    t.decimal "longitude", precision: 10, scale: 7, null: false
+    t.string "postal_code", limit: 16
+    t.string "prefecture", limit: 50
+    t.datetime "updated_at", null: false
+    t.index ["listing_id"], name: "index_listing_locations_on_listing_id", unique: true
+  end
+
   create_table "listings", force: :cascade do |t|
+    t.datetime "archived_at"
     t.datetime "closed_at"
+    t.string "closed_reason"
     t.datetime "created_at", null: false
     t.bigint "created_by_tenant_member_id"
     t.text "description"
+    t.datetime "last_published_at"
     t.string "listing_type", null: false
     t.datetime "published_at"
     t.string "status", default: "draft", null: false
     t.bigint "tenant_id", null: false
+    t.bigint "tenant_location_id"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.bigint "updated_by_tenant_member_id"
@@ -103,6 +188,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
     t.index ["listing_type", "status"], name: "index_listings_on_listing_type_and_status"
     t.index ["status", "published_at"], name: "index_listings_on_status_and_published_at"
     t.index ["tenant_id"], name: "index_listings_on_tenant_id"
+    t.index ["tenant_location_id"], name: "index_listings_on_tenant_location_id"
     t.index ["updated_by_tenant_member_id"], name: "index_listings_on_updated_by_tenant_member_id"
   end
 
@@ -115,11 +201,64 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
     t.index ["updated_at"], name: "index_sessions_on_updated_at"
   end
 
+  create_table "stay_amenities", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "category", default: "other", null: false
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.string "name", limit: 100, null: false
+    t.integer "position", null: false
+    t.string "scope", null: false
+    t.bigint "tenant_id"
+    t.datetime "updated_at", null: false
+    t.index ["active", "scope", "category"], name: "index_stay_amenities_on_active_and_scope_and_category"
+    t.index ["code"], name: "idx_common_stay_amenities_code", unique: true, where: "(tenant_id IS NULL)"
+    t.index ["tenant_id", "code"], name: "idx_tenant_stay_amenities_code", unique: true, where: "(tenant_id IS NOT NULL)"
+    t.index ["tenant_id"], name: "index_stay_amenities_on_tenant_id"
+  end
+
+  create_table "stay_bed_blocks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "ends_on", null: false
+    t.text "notes"
+    t.string "reason", null: false
+    t.date "starts_on", null: false
+    t.bigint "stay_bed_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_bed_id", "starts_on", "ends_on"], name: "index_stay_bed_blocks_on_stay_bed_id_and_starts_on_and_ends_on"
+    t.index ["stay_bed_id"], name: "index_stay_bed_blocks_on_stay_bed_id"
+  end
+
+  create_table "stay_beds", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.bigint "stay_room_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_room_id", "name"], name: "index_stay_beds_on_stay_room_id_and_name", unique: true
+    t.index ["stay_room_id"], name: "index_stay_beds_on_stay_room_id"
+  end
+
+  create_table "stay_listing_amenities", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "stay_amenity_id", null: false
+    t.bigint "stay_listing_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_amenity_id"], name: "index_stay_listing_amenities_on_stay_amenity_id"
+    t.index ["stay_listing_id", "stay_amenity_id"], name: "idx_stay_listing_amenities_unique", unique: true
+    t.index ["stay_listing_id"], name: "index_stay_listing_amenities_on_stay_listing_id"
+  end
+
   create_table "stay_listings", force: :cascade do |t|
     t.string "address"
     t.text "amenities"
+    t.integer "approval_deadline_hours", default: 24, null: false
     t.date "available_from"
     t.date "available_until"
+    t.integer "booking_close_hours_before", default: 0, null: false
+    t.string "booking_confirmation_mode", default: "approval_required", null: false
+    t.integer "booking_open_days_before", default: 365, null: false
     t.integer "capacity"
     t.time "check_in_time"
     t.time "check_out_time"
@@ -127,9 +266,124 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
     t.text "house_rules"
     t.bigint "listing_id", null: false
     t.integer "price_per_night"
+    t.date "stay_available_ends_on"
+    t.date "stay_available_starts_on"
     t.string "stay_type"
+    t.string "time_zone", default: "Asia/Tokyo", null: false
     t.datetime "updated_at", null: false
     t.index ["listing_id"], name: "index_stay_listings_on_listing_id", unique: true
+  end
+
+  create_table "stay_rate_plans", force: :cascade do |t|
+    t.string "cancellation_policy_type", default: "standard", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "meal_type", default: "room_only", null: false
+    t.string "name", limit: 100, null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "stay_listing_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_listing_id", "name"], name: "index_stay_rate_plans_on_stay_listing_id_and_name", unique: true
+    t.index ["stay_listing_id", "status"], name: "index_stay_rate_plans_on_stay_listing_id_and_status"
+    t.index ["stay_listing_id"], name: "index_stay_rate_plans_on_stay_listing_id"
+  end
+
+  create_table "stay_room_blocks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "ends_on", null: false
+    t.text "notes"
+    t.string "reason", null: false
+    t.date "starts_on", null: false
+    t.bigint "stay_room_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_room_id", "starts_on", "ends_on"], name: "idx_on_stay_room_id_starts_on_ends_on_56279077be"
+    t.index ["stay_room_id"], name: "index_stay_room_blocks_on_stay_room_id"
+  end
+
+  create_table "stay_room_type_amenities", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "stay_amenity_id", null: false
+    t.bigint "stay_room_type_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_amenity_id"], name: "index_stay_room_type_amenities_on_stay_amenity_id"
+    t.index ["stay_room_type_id", "stay_amenity_id"], name: "idx_stay_room_type_amenities_unique", unique: true
+    t.index ["stay_room_type_id"], name: "index_stay_room_type_amenities_on_stay_room_type_id"
+  end
+
+  create_table "stay_room_type_daily_sales_controls", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "sales_limit", null: false
+    t.date "stay_date", null: false
+    t.bigint "stay_room_type_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_room_type_id", "stay_date"], name: "idx_stay_room_type_daily_sales_unique", unique: true
+    t.index ["stay_room_type_id"], name: "index_stay_room_type_daily_sales_controls_on_stay_room_type_id"
+  end
+
+  create_table "stay_room_type_rate_daily_prices", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "price_amount", null: false
+    t.date "stay_date", null: false
+    t.bigint "stay_room_type_rate_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_room_type_rate_id", "stay_date"], name: "idx_stay_daily_prices_unique", unique: true
+    t.index ["stay_room_type_rate_id"], name: "idx_on_stay_room_type_rate_id_b7f2c2a804"
+  end
+
+  create_table "stay_room_type_rates", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "JPY", null: false
+    t.integer "price_per_night_amount", null: false
+    t.bigint "stay_rate_plan_id", null: false
+    t.bigint "stay_room_type_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_rate_plan_id"], name: "index_stay_room_type_rates_on_stay_rate_plan_id"
+    t.index ["stay_room_type_id", "stay_rate_plan_id"], name: "idx_stay_room_type_rates_unique", unique: true
+    t.index ["stay_room_type_id"], name: "index_stay_room_type_rates_on_stay_room_type_id"
+  end
+
+  create_table "stay_room_types", force: :cascade do |t|
+    t.integer "capacity"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", limit: 100, null: false
+    t.string "room_kind", null: false
+    t.string "status", default: "draft", null: false
+    t.bigint "stay_listing_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_listing_id", "name"], name: "index_stay_room_types_on_stay_listing_id_and_name", unique: true
+    t.index ["stay_listing_id", "status"], name: "index_stay_room_types_on_stay_listing_id_and_status"
+    t.index ["stay_listing_id"], name: "index_stay_room_types_on_stay_listing_id"
+  end
+
+  create_table "stay_rooms", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.bigint "stay_room_type_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["stay_room_type_id", "name"], name: "index_stay_rooms_on_stay_room_type_id_and_name", unique: true
+    t.index ["stay_room_type_id"], name: "index_stay_rooms_on_stay_room_type_id"
+  end
+
+  create_table "tenant_locations", force: :cascade do |t|
+    t.string "address_line1"
+    t.string "address_line2"
+    t.string "city"
+    t.datetime "created_at", null: false
+    t.string "google_place_id"
+    t.decimal "latitude", null: false
+    t.string "location_type", default: "other", null: false
+    t.decimal "longitude", null: false
+    t.string "name", null: false
+    t.string "postal_code"
+    t.string "prefecture"
+    t.bigint "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id", "name"], name: "index_tenant_locations_on_tenant_id_and_name", unique: true
+    t.index ["tenant_id"], name: "index_tenant_locations_on_tenant_id"
   end
 
   create_table "tenant_members", force: :cascade do |t|
@@ -145,12 +399,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
   end
 
   create_table "tenants", force: :cascade do |t|
-    t.string "address"
     t.datetime "created_at", null: false
     t.string "kana"
     t.string "name"
+    t.bigint "primary_tenant_location_id"
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index ["primary_tenant_location_id"], name: "index_tenants_on_primary_tenant_location_id"
   end
 
   create_table "user_profiles", force: :cascade do |t|
@@ -189,17 +444,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_000000) do
     t.index ["account_id"], name: "index_users_on_account_id", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "accounts"
   add_foreign_key "favorites", "listings"
   add_foreign_key "favorites", "users"
+  add_foreign_key "job_categories", "admins", column: "created_by_admin_id", on_delete: :nullify
+  add_foreign_key "job_categories", "admins", column: "updated_by_admin_id", on_delete: :nullify
+  add_foreign_key "job_listings", "job_categories"
   add_foreign_key "job_listings", "listings"
   add_foreign_key "listing_images", "listings"
+  add_foreign_key "listing_locations", "listings"
+  add_foreign_key "listings", "tenant_locations"
   add_foreign_key "listings", "tenant_members", column: "created_by_tenant_member_id", on_delete: :nullify
   add_foreign_key "listings", "tenant_members", column: "updated_by_tenant_member_id", on_delete: :nullify
   add_foreign_key "listings", "tenants"
+  add_foreign_key "stay_amenities", "tenants"
+  add_foreign_key "stay_bed_blocks", "stay_beds"
+  add_foreign_key "stay_beds", "stay_rooms"
+  add_foreign_key "stay_listing_amenities", "stay_amenities"
+  add_foreign_key "stay_listing_amenities", "stay_listings"
   add_foreign_key "stay_listings", "listings"
+  add_foreign_key "stay_rate_plans", "stay_listings"
+  add_foreign_key "stay_room_blocks", "stay_rooms"
+  add_foreign_key "stay_room_type_amenities", "stay_amenities"
+  add_foreign_key "stay_room_type_amenities", "stay_room_types"
+  add_foreign_key "stay_room_type_daily_sales_controls", "stay_room_types"
+  add_foreign_key "stay_room_type_rate_daily_prices", "stay_room_type_rates"
+  add_foreign_key "stay_room_type_rates", "stay_rate_plans"
+  add_foreign_key "stay_room_type_rates", "stay_room_types"
+  add_foreign_key "stay_room_types", "stay_listings"
+  add_foreign_key "stay_rooms", "stay_room_types"
+  add_foreign_key "tenant_locations", "tenants", on_delete: :cascade
   add_foreign_key "tenant_members", "accounts"
   add_foreign_key "tenant_members", "tenants"
+  add_foreign_key "tenants", "tenant_locations", column: "primary_tenant_location_id"
   add_foreign_key "user_profiles", "users"
   add_foreign_key "user_refresh_tokens", "accounts"
   add_foreign_key "users", "accounts"

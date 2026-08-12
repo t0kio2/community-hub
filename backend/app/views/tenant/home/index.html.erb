@@ -1,4 +1,5 @@
 <% content_for :title, 'Tenant Home' %>
+<% content_for :page_title, "ホーム" %>
 
 <div class="tenant-home">
   <section class="tenant-overview" aria-labelledby="tenant-home-title">
@@ -31,10 +32,6 @@
       <div class="tenant-summary-item">
         <span>Role</span>
         <strong><%= current_tenant_member.role.presence || '-' %></strong>
-      </div>
-      <div class="tenant-summary-item">
-        <span>Address</span>
-        <strong><%= current_tenant_organization.address.presence || '-' %></strong>
       </div>
     </section>
 
@@ -106,24 +103,26 @@
     justify-content: flex-end;
   }
 
-  .tenant-edit-link {
+  .tenant-content .tenant-edit-link {
     display: inline-flex;
     align-items: center;
     min-height: 36px;
     padding: 0 14px;
-    border: 1px solid #2563eb;
+    border: 1px solid var(--tenant-color-primary);
     border-radius: 8px;
-    background: #2563eb;
+    background: var(--tenant-color-primary);
     color: #fff;
-    font-size: 14px;
+    font-size: var(--tenant-font-size-body);
     font-weight: 700;
     text-decoration: none;
     white-space: nowrap;
   }
 
-  .tenant-edit-link:hover {
+  .tenant-content .tenant-edit-link:hover {
+    color: #fff;
     text-decoration: none;
-    background: #1d4ed8;
+    border-color: #12563e;
+    background: #12563e;
   }
 
   .tenant-summary {

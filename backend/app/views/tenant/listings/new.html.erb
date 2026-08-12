@@ -1,3 +1,10 @@
 <% content_for :title, "掲載作成" %>
+<% content_for :page_title, "掲載作成" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %>
+<% end %>
+<% content_for :back_link do %>
+  <%= link_to "← 掲載一覧へ戻る", tenant_listings_path, class: "tenant-back-link" %>
+<% end %>
 
-<%= render "form", listing: @listing, detail: @detail, form_title: "掲載作成" %>
+<%= render "form", listing: @listing, detail: @detail %>

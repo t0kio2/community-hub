@@ -84,12 +84,17 @@ erDiagram
 
     tenants {
         bigint id PK
+        bigint primary_tenant_location_id FK
         string name
         string kana
-        string address
         string status
         datetime created_at
         datetime updated_at
+    }
+
+    tenant_locations {
+        bigint id PK
+        bigint tenant_id FK
     }
 
     tenant_members {
@@ -104,7 +109,10 @@ erDiagram
 
     accounts ||--o{ tenant_members : "テナントに所属"
     tenants ||--o{ tenant_members : "メンバーを持つ"
+    tenants o|--o| tenant_locations : "代表拠点を指定する"
 ```
+
+`tenants`は住所文字列を直接保持しない。住所・位置情報は`tenant_locations`で管理し、`primary_tenant_location_id`には同じテナントが所有する代表拠点を任意に設定する。拠点の詳細は[`01-listing.md`](./01-listing.md)を参照する。
 
 ## 運営管理者
 
