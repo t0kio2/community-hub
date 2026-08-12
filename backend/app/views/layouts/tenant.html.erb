@@ -23,26 +23,33 @@
 
     <div class="tenant-shell">
       <aside class="tenant-sidebar">
-        <%= link_to tenant_root_path, class: "tenant-brand", aria: { label: "Community Hub テナント管理画面" } do %>
-          <span class="tenant-brand-mark">C</span>
-          <span>
-            <strong>Community Hub</strong>
-            <small>Tenant workspace</small>
-          </span>
+        <% if content_for?(:tenant_sidebar_brand) %>
+          <%= yield :tenant_sidebar_brand %>
+        <% else %>
+          <%= link_to tenant_root_path, class: "tenant-brand", aria: { label: "Community Hub テナント管理画面" } do %>
+            <span class="tenant-brand-mark">C</span>
+            <span>
+              <strong>Community Hub</strong>
+              <small>Tenant workspace</small>
+            </span>
+          <% end %>
         <% end %>
 
         <% if signed_in %>
-          <nav class="tenant-navigation" aria-label="テナント管理">
+          <% if content_for?(:tenant_sidebar_navigation) %>
+            <%= yield :tenant_sidebar_navigation %>
+          <% else %>
+            <nav class="tenant-navigation" aria-label="テナント管理">
             <%= link_to tenant_root_path, class: ["tenant-home-link", current_page?(tenant_root_path) && "active"] do %>
               <span class="tenant-nav-icon tenant-nav-icon--home" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false"><path d="m3 11 9-7 9 7M5.5 9.5V20h13V9.5M9.5 20v-6h5v6"/></svg>
+                <%= render "shared/icon", name: "home" %>
               </span>ホーム
             <% end %>
 
             <section class="tenant-menu-section <%= "has-active" if jobs_section_active %>">
               <div class="tenant-menu-heading">
                 <span class="tenant-menu-icon tenant-menu-icon--jobs" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" focusable="false"><path d="M9 7V5.8c0-.99.81-1.8 1.8-1.8h2.4c.99 0 1.8.81 1.8 1.8V7M4.5 7h15c.83 0 1.5.67 1.5 1.5v9c0 .83-.67 1.5-1.5 1.5h-15c-.83 0-1.5-.67-1.5-1.5v-9C3 7.67 3.67 7 4.5 7Z"/><path d="M3 11.5c2.75 1.2 5.75 1.8 9 1.8s6.25-.6 9-1.8M10 13.3v2h4v-2"/></svg>
+                  <%= render "shared/icon", name: "jobs" %>
                 </span>
                 <div>
                   <strong>求人管理</strong>
@@ -62,7 +69,7 @@
             <section class="tenant-menu-section <%= "has-active" if stays_section_active %>">
               <div class="tenant-menu-heading">
                 <span class="tenant-menu-icon tenant-menu-icon--stays" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" focusable="false"><path d="M3 18V7M21 18v-6.5A2.5 2.5 0 0 0 18.5 9H9v6h12M3 15h18M6 9V6h3.5A2.5 2.5 0 0 1 12 8.5V9M3 18v2M21 18v2"/></svg>
+                  <%= render "shared/icon", name: "stays" %>
                 </span>
                 <div>
                   <strong>宿泊管理</strong>
@@ -83,7 +90,7 @@
               <section class="tenant-menu-section <%= "has-active" if organization_section_active || location_section_active %>">
                 <div class="tenant-menu-heading">
                   <span class="tenant-menu-icon tenant-menu-icon--organization" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false"><path d="M5 21V5.5L12 3v18M12 7h7v14M2.5 21h19M8 8h1M8 12h1M8 16h1M15 10h1M15 14h1M15 18h1"/></svg>
+                    <%= render "shared/icon", name: "organization" %>
                   </span>
                   <div>
                     <strong>組織設定</strong>
@@ -96,7 +103,8 @@
                 </div>
               </section>
             <% end %>
-          </nav>
+            </nav>
+          <% end %>
         <% else %>
           <div class="tenant-session-context">
             <span></span>

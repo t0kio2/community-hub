@@ -1,4 +1,6 @@
 class Tenant::StaysController < Tenant::BaseController
+  layout :tenant_stay_layout
+
   before_action :require_current_tenant!
   before_action :set_listing, only: %i[show edit update]
   before_action :authorize_existing_listing!, only: %i[show edit update]
@@ -48,6 +50,10 @@ class Tenant::StaysController < Tenant::BaseController
   end
 
   private
+
+  def tenant_stay_layout
+    action_name == "show" ? "tenant/stay" : "tenant"
+  end
 
   def set_listing
     @listing = @tenant.listings.where(listing_type: "stay").find(params[:id])

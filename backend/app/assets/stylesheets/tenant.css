@@ -114,6 +114,53 @@
   display: block;
 }
 
+.tenant-brand--facility {
+  align-items: flex-start;
+}
+
+.tenant-brand-mark--facility {
+  transform: none;
+}
+
+.tenant-brand-mark--facility svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tenant-brand-copy {
+  min-width: 0;
+  display: block;
+}
+
+.tenant-brand-copy small {
+  margin: 0 0 3px;
+  color: #9fb2a9;
+  font-size: var(--tenant-font-size-caption);
+}
+
+.tenant-brand-copy strong {
+  max-width: 160px;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tenant-brand-copy > span {
+  margin-top: 3px;
+  display: block;
+  color: var(--tenant-color-accent);
+  font-size: var(--tenant-font-size-caption);
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
 .tenant-brand strong {
   font-size: var(--tenant-font-size-body);
 }
@@ -321,6 +368,99 @@
   border-radius: 50%;
   background: var(--tenant-color-accent);
   box-shadow: 0 0 0 3px rgb(200 240 104 / 10%);
+}
+
+.stay-facility-navigation {
+  gap: 5px;
+}
+
+.stay-facility-navigation .stay-facility-navigation__back {
+  min-height: 42px;
+  color: #d8e4dd;
+  background: rgb(255 255 255 / 6%);
+  font-weight: 700;
+}
+
+.stay-facility-navigation__back > span {
+  color: var(--tenant-color-accent);
+  font-size: 18px;
+}
+
+.stay-facility-navigation__divider {
+  height: 1px;
+  margin: 8px 4px;
+  background: rgb(255 255 255 / 10%);
+}
+
+.stay-facility-navigation .stay-facility-navigation__item,
+.stay-facility-navigation__item {
+  min-height: 54px;
+  padding: 8px 9px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  border-radius: var(--tenant-radius-small);
+  color: #b6c6be;
+  text-decoration: none;
+}
+
+.stay-facility-navigation .stay-facility-navigation__item.active {
+  color: #ffffff;
+  background: rgb(255 255 255 / 10%);
+  box-shadow: inset 3px 0 var(--tenant-color-accent);
+}
+
+.stay-facility-navigation__item > span:nth-child(2) {
+  min-width: 0;
+}
+
+.stay-facility-navigation__item strong,
+.stay-facility-navigation__item small {
+  display: block;
+}
+
+.stay-facility-navigation__item strong {
+  color: inherit;
+  font-size: var(--tenant-font-size-body);
+}
+
+.stay-facility-navigation__item small {
+  margin-top: 2px;
+  color: #789487;
+  font-size: var(--tenant-font-size-caption);
+}
+
+.stay-facility-navigation__icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: #bdd0c6;
+  background: rgb(255 255 255 / 7%);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.stay-facility-navigation__item.active .stay-facility-navigation__icon {
+  color: var(--tenant-color-accent);
+  background: rgb(200 240 104 / 10%);
+}
+
+.stay-facility-navigation__item--disabled {
+  opacity: .68;
+  cursor: default;
+}
+
+.stay-facility-navigation__item--disabled em {
+  padding: 2px 5px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  color: #8ba096;
+  font-size: 9px;
+  font-style: normal;
+  white-space: nowrap;
 }
 
 .tenant-session-context {

@@ -1,0 +1,249 @@
+/* 宿泊施設ダッシュボードのローカルトークンと基本レイアウト */
+.stay-dashboard {
+  --stay-color-surface-muted: #f8faf8;
+  --stay-color-surface-subtle: #edf0ed;
+  --stay-color-border-dashed: #d6ddd7;
+  --stay-color-shadow: rgb(20 40 30 / 2%);
+
+  display: grid;
+  gap: 18px;
+}
+
+.stay-dashboard__eyebrow {
+  margin: 0 0 5px;
+  color: var(--tenant-color-primary);
+  font-size: var(--tenant-font-size-caption);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+/* ボタン */
+.tenant-content .stay-dashboard__button {
+  min-height: 38px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: var(--tenant-radius-small);
+  color: var(--tenant-color-primary);
+  background: var(--tenant-color-surface);
+  text-decoration: none;
+  font-size: var(--tenant-font-size-body);
+  font-weight: 700;
+}
+
+.tenant-content .stay-dashboard__button--primary {
+  border-color: var(--tenant-color-primary);
+  color: var(--tenant-color-surface);
+  background: var(--tenant-color-primary);
+}
+
+.stay-dashboard__button--wide {
+  width: 100%;
+}
+
+/* カード */
+.stay-dashboard__card {
+  padding: 20px;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: var(--tenant-radius-medium);
+  background: var(--tenant-color-surface);
+  box-shadow: 0 1px 0 var(--stay-color-shadow);
+}
+
+.stay-dashboard__card-heading {
+  margin-bottom: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.stay-dashboard__card-heading h3,
+.stay-dashboard__card-heading p {
+  margin: 0;
+}
+
+.stay-dashboard__card-heading h3 {
+  font-size: var(--tenant-font-size-subheading);
+}
+
+.stay-dashboard__card-heading p {
+  margin-top: 4px;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+}
+
+/* 公開状態 */
+.stay-status {
+  padding: 5px 8px;
+  display: inline-flex;
+  border-radius: 999px;
+  font-size: var(--tenant-font-size-caption);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stay-status--published {
+  color: var(--tenant-color-primary);
+  background: var(--tenant-color-primary-soft);
+}
+
+.stay-status--draft {
+  color: var(--tenant-color-warning);
+  background: var(--tenant-color-warning-soft);
+}
+
+.stay-status--closed,
+.stay-status--archived {
+  color: var(--tenant-color-muted);
+  background: var(--stay-color-surface-subtle);
+}
+
+/* 今日の集計 */
+.stay-dashboard__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stay-dashboard__metrics article {
+  padding: 17px;
+  display: grid;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: var(--tenant-radius-medium);
+  background: var(--tenant-color-surface);
+}
+
+.stay-dashboard__metrics span,
+.stay-dashboard__metrics small {
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+}
+
+.stay-dashboard__metrics strong {
+  margin: 6px 0 3px;
+  font-size: 27px;
+}
+
+/* 施設別運営ダッシュボード */
+.stay-dashboard__header {
+  padding: 3px 0 5px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.stay-dashboard__header h2,
+.stay-dashboard__header p {
+  margin: 0;
+}
+
+.stay-dashboard__header h2 {
+  font-size: var(--tenant-font-size-heading);
+  letter-spacing: -0.02em;
+}
+
+.stay-dashboard__header > div:first-child > p:last-child {
+  margin-top: 7px;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-body);
+}
+
+.stay-dashboard__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.stay-dashboard__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.75fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.stay-dashboard__badge {
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: var(--tenant-color-muted);
+  background: var(--stay-color-surface-subtle);
+  font-size: var(--tenant-font-size-caption);
+  font-weight: 700;
+}
+
+.stay-dashboard__empty-state {
+  min-height: 180px;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 1px dashed var(--stay-color-border-dashed);
+  border-radius: var(--tenant-radius-medium);
+  color: var(--tenant-color-muted);
+  background: var(--stay-color-surface-muted);
+}
+
+.stay-dashboard__empty-state > span {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--tenant-color-primary);
+  background: var(--tenant-color-primary-soft);
+  font-weight: 800;
+}
+
+.stay-dashboard__empty-state strong {
+  display: block;
+  color: var(--tenant-color-ink);
+  font-size: var(--tenant-font-size-body);
+}
+
+.stay-dashboard__empty-state p {
+  max-width: 430px;
+  margin: 5px 0 0;
+  font-size: var(--tenant-font-size-small);
+  line-height: 1.7;
+}
+
+.stay-dashboard__facility-summary dl {
+  margin: 0 0 18px;
+  display: grid;
+}
+
+.stay-dashboard__facility-summary dl > div {
+  padding: 11px 0;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  border-top: 1px solid var(--tenant-color-border);
+}
+
+.stay-dashboard__facility-summary dt {
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+}
+
+.stay-dashboard__facility-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--tenant-font-size-body);
+  font-weight: 700;
+}
+
+/* 狭い管理画面ではカードを縦に並べる */
+@media (max-width: 1100px) {
+  .stay-dashboard__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stay-dashboard__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

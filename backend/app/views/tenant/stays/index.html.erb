@@ -15,7 +15,15 @@
     <% if @listings.any? %>
       <div class="tenant-listing-index__table-wrapper">
         <table class="tenant-listing-index__table">
-          <thead><tr><th scope="col">施設</th><th scope="col">所在地</th><th scope="col">状態</th><th scope="col">更新日</th><th scope="col"><span class="visually-hidden">操作</span></th></tr></thead>
+          <thead>
+            <tr>
+              <th scope="col">施設</th>
+              <th scope="col">所在地</th>
+              <th scope="col">状態</th>
+              <th scope="col">更新日</th>
+              <th scope="col"><span class="visually-hidden">操作</span></th>
+            </tr>
+          </thead>
           <tbody>
             <% @listings.each do |listing| %>
               <tr>
@@ -23,7 +31,7 @@
                 <td><%= listing.tenant_location&.name.presence || "未設定" %></td>
                 <td><span class="tenant-listing-status tenant-listing-status--<%= listing.status %>"><%= listing_status_labels.fetch(listing.status, listing.status) %></span></td>
                 <td><%= l(listing.updated_at, format: :short) %></td>
-                <td><span class="tenant-listing-index__actions"><%= link_to "詳細", tenant_stay_path(listing) %><%= link_to "編集", edit_tenant_stay_path(listing) %></span></td>
+                <td><span class="tenant-listing-index__actions"><%= link_to "管理画面", tenant_stay_path(listing) %><%= link_to "編集", edit_tenant_stay_path(listing) %></span></td>
               </tr>
             <% end %>
           </tbody>
