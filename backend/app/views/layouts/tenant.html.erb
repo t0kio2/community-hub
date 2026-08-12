@@ -23,16 +23,23 @@
 
     <div class="tenant-shell">
       <aside class="tenant-sidebar">
-        <%= link_to tenant_root_path, class: "tenant-brand", aria: { label: "Community Hub テナント管理画面" } do %>
-          <span class="tenant-brand-mark">C</span>
-          <span>
-            <strong>Community Hub</strong>
-            <small>Tenant workspace</small>
-          </span>
+        <% if content_for?(:tenant_sidebar_brand) %>
+          <%= yield :tenant_sidebar_brand %>
+        <% else %>
+          <%= link_to tenant_root_path, class: "tenant-brand", aria: { label: "Community Hub テナント管理画面" } do %>
+            <span class="tenant-brand-mark">C</span>
+            <span>
+              <strong>Community Hub</strong>
+              <small>Tenant workspace</small>
+            </span>
+          <% end %>
         <% end %>
 
         <% if signed_in %>
-          <nav class="tenant-navigation" aria-label="テナント管理">
+          <% if content_for?(:tenant_sidebar_navigation) %>
+            <%= yield :tenant_sidebar_navigation %>
+          <% else %>
+            <nav class="tenant-navigation" aria-label="テナント管理">
             <%= link_to tenant_root_path, class: ["tenant-home-link", current_page?(tenant_root_path) && "active"] do %>
               <span class="tenant-nav-icon tenant-nav-icon--home" aria-hidden="true">
                 <svg viewBox="0 0 24 24" focusable="false"><path d="m3 11 9-7 9 7M5.5 9.5V20h13V9.5M9.5 20v-6h5v6"/></svg>
@@ -96,7 +103,8 @@
                 </div>
               </section>
             <% end %>
-          </nav>
+            </nav>
+          <% end %>
         <% else %>
           <div class="tenant-session-context">
             <span></span>

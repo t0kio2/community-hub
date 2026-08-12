@@ -1,19 +1,99 @@
-<% content_for :title, @listing.title %>
-<% content_for :page_title, "宿泊施設詳細" %>
-<% content_for :stylesheets do %><%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %><% end %>
-<% content_for :back_link do %><%= link_to "← 宿泊施設一覧へ戻る", tenant_stays_path, class: "tenant-back-link" %><% end %>
+<% content_for :title, "#{@listing.title} - 宿泊管理" %>
+<% content_for :page_title, "運営ダッシュボード" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "tenant/stay_dashboard", "data-turbo-track": "reload" %>
+<% end %>
 
-<section class="tenant-listing-detail" aria-labelledby="tenant-page-title">
-  <div class="tenant-listing-detail__overview">
-    <span class="tenant-listing-detail__icon" aria-hidden="true">S</span>
-    <div class="tenant-listing-detail__identity"><span class="tenant-listing-type">宿泊施設</span><h2><%= @listing.title %></h2></div>
-    <div class="tenant-listing-detail__overview-actions"><span class="tenant-listing-status tenant-listing-status--<%= @listing.status %>"><%= @listing.status %></span><%= link_to "編集", edit_tenant_stay_path(@listing), class: "tenant-listing-button" %></div>
+<% content_for :tenant_sidebar_brand do %>
+  <%= link_to tenant_stay_path(@listing), class: "tenant-brand tenant-brand--facility", aria: { label: "#{@listing.title} 宿泊施設管理" } do %>
+    <span class="tenant-brand-mark tenant-brand-mark--facility" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false"><path d="M3 18V7M21 18v-6.5A2.5 2.5 0 0 0 18.5 9H9v6h12M3 15h18M6 9V6h3.5A2.5 2.5 0 0 1 12 8.5V9M3 18v2M21 18v2"/></svg>
+    </span>
+    <span class="tenant-brand-copy">
+      <small>Community Hub</small>
+      <strong><%= @listing.title %></strong>
+      <span>宿泊施設管理</span>
+    </span>
+  <% end %>
+<% end %>
+
+<% content_for :tenant_sidebar_navigation do %>
+  <nav class="tenant-navigation stay-facility-navigation" aria-label="<%= @listing.title %>の宿泊施設管理">
+    <%= link_to tenant_stays_path, class: "stay-facility-navigation__back" do %>
+      <span aria-hidden="true">←</span>
+      宿泊施設一覧へ戻る
+    <% end %>
+
+    <div class="stay-facility-navigation__divider"></div>
+
+    <%= link_to tenant_stay_path(@listing), class: "stay-facility-navigation__item active", aria: { current: "page" } do %>
+      <span class="stay-facility-navigation__icon" aria-hidden="true">⌂</span>
+      <span><strong>運営ダッシュボード</strong><small>今日の状況と要対応</small></span>
+    <% end %>
+
+    <% [
+      ["予約業務", "到着・出発・承認", "▦"],
+      ["予約一覧", "予約の検索と確認", "≡"],
+      ["販売管理", "在庫・料金・販売状況", "▥"],
+      ["客室管理", "客室タイプ・客室", "▤"],
+      ["施設設定", "基本情報・公開設定", "⚙"]
+    ].each do |label, description, icon| %>
+      <span class="stay-facility-navigation__item stay-facility-navigation__item--disabled" aria-disabled="true">
+        <span class="stay-facility-navigation__icon" aria-hidden="true"><%= icon %></span>
+        <span><strong><%= label %></strong><small><%= description %></small></span>
+        <em>準備中</em>
+      </span>
+    <% end %>
+  </nav>
+<% end %>
+
+<% content_for :back_link do %>
+  <p class="tenant-breadcrumb">STAY MANAGEMENT / <%= @listing.title %></p>
+<% end %>
+
+<% status_labels = { "published" => "公開中", "draft" => "下書き", "closed" => "公開終了", "archived" => "アーカイブ" } %>
+
+<section class="stay-dashboard" aria-labelledby="tenant-page-title">
+  <header class="stay-dashboard__header">
+    <div>
+      <p class="stay-dashboard__eyebrow">TODAY'S OPERATIONS</p>
+      <h2><%= @listing.title %>の今日の運営</h2>
+      <p>予約対応、到着・出発、販売状況を施設単位で確認します。</p>
+    </div>
+    <div class="stay-dashboard__header-actions">
+      <span class="stay-status stay-status--<%= @listing.status %>"><%= status_labels.fetch(@listing.status, @listing.status) %></span>
+      <%= link_to "施設情報を編集", edit_tenant_stay_path(@listing), class: "stay-dashboard__button" %>
+    </div>
+  </header>
+
+  <div class="stay-dashboard__metrics" aria-label="今日の状況">
+    <article><span>到着予定</span><strong>--</strong><small>予約機能の接続後に表示</small></article>
+    <article><span>出発予定</span><strong>--</strong><small>予約機能の接続後に表示</small></article>
+    <article><span>宿泊中</span><strong>--</strong><small>予約機能の接続後に表示</small></article>
+    <article><span>未処理予約</span><strong>--</strong><small>予約機能の接続後に表示</small></article>
   </div>
-  <section class="tenant-listing-detail__card"><div class="tenant-listing-card-heading"><h3>施設情報</h3><p>施設の基本情報と所在地</p></div>
-    <dl class="tenant-listing-detail__definition-list">
-      <div class="tenant-listing-detail__wide"><dt>施設紹介</dt><dd><%= @listing.description.presence || "-" %></dd></div>
-      <div><dt>拠点</dt><dd><%= @listing.tenant_location&.name.presence || "未設定" %></dd></div>
-      <div><dt>住所</dt><dd><%= @listing.tenant_location&.full_address.presence || "未設定" %></dd></div>
-    </dl>
-  </section>
+
+  <div class="stay-dashboard__grid">
+    <section class="stay-dashboard__card">
+      <div class="stay-dashboard__card-heading">
+        <div><h3>要対応</h3><p>対応が必要な業務をここに表示します</p></div>
+        <span class="stay-dashboard__badge">準備中</span>
+      </div>
+      <div class="stay-dashboard__empty-state">
+        <span aria-hidden="true">✓</span>
+        <div><strong>予約機能はまだ接続されていません</strong><p>予約モデルと業務フローの実装後、未確定予約や在庫不足を表示します。</p></div>
+      </div>
+    </section>
+
+    <aside class="stay-dashboard__card stay-dashboard__facility-summary">
+      <div class="stay-dashboard__card-heading"><div><h3>施設情報</h3><p>現在選択中の宿泊施設</p></div></div>
+      <dl>
+        <div><dt>施設名</dt><dd><%= @listing.title %></dd></div>
+        <div><dt>拠点</dt><dd><%= @listing.tenant_location&.name.presence || "未設定" %></dd></div>
+        <div><dt>住所</dt><dd><%= @listing.tenant_location&.full_address.presence || "未設定" %></dd></div>
+        <div><dt>公開状態</dt><dd><%= status_labels.fetch(@listing.status, @listing.status) %></dd></div>
+      </dl>
+      <%= link_to "施設情報を編集", edit_tenant_stay_path(@listing), class: "stay-dashboard__button stay-dashboard__button--wide" %>
+    </aside>
+  </div>
 </section>
