@@ -10,7 +10,7 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     sign_in @account
   end
 
-  test "宿泊一覧には自テナントの宿泊施設だけを表示する" do
+  test "宿泊施設一覧には自テナントの宿泊施設だけを表示する" do
     stay = create_listing(@tenant, "stay", "表示する宿泊施設")
     job = create_listing(@tenant, "job", "表示しない求人")
     other_tenant, = create_tenant_account("tenant-stays-other@example.com")

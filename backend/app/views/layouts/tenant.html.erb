@@ -78,7 +78,7 @@
               </div>
               <div class="tenant-menu-items">
                 <%= link_to tenant_stays_path, class: [(stays_section_active && action_name == "index") && "active"] do %>
-                  宿泊一覧
+                  宿泊施設一覧
                 <% end %>
                 <%= link_to new_tenant_stay_path, class: [(stays_section_active && %w[new create].include?(action_name)) && "active"] do %>
                   宿泊施設を登録
