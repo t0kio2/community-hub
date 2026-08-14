@@ -1,0 +1,4 @@
+- EC2をインターネットに公開し、アクセスを受け付ける
+	- EC2はVPC内に置く必要があるので、まずVPCを作成する
+	- しかし、private NWはおかず、すべてpublicにする。
+	- 理由は、今回の構成はdocker上にRailsとPostgresQLがある構成で、private NWを作るとすると、それをprivateに置くことになる。となると、os imageの取得など諸々インターネットに繋ぐ必要がありNatGatewayやVPCエンドポイントが必要だがそれはコストがかかるのでやらない。

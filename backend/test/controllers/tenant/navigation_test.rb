@@ -19,18 +19,18 @@ class Tenant::NavigationTest < ActionDispatch::IntegrationTest
     assert_select ".tenant-menu-section.has-active", count: 1
     assert_select ".tenant-menu-section.has-active .tenant-menu-heading strong", text: "求人管理"
     assert_select ".tenant-menu-items a.active[href=?]", tenant_jobs_path, text: "求人一覧"
-    assert_select ".tenant-menu-items a[href=?]:not(.active)", tenant_stays_path, text: "宿泊一覧"
+    assert_select ".tenant-menu-items a[href=?]:not(.active)", tenant_stays_path, text: "宿泊施設一覧"
     assert_select ".tenant-nav-icon--home[aria-hidden='true'] svg[viewBox='0 0 24 24']", count: 1
     assert_select ".tenant-menu-icon--jobs[aria-hidden='true'] svg[viewBox='0 0 24 24']", count: 1
   end
 
-  test "宿泊一覧では宿泊管理だけをアクティブ表示する" do
+  test "宿泊施設一覧では宿泊管理だけをアクティブ表示する" do
     get tenant_stays_path
 
     assert_response :success
     assert_select ".tenant-menu-section.has-active", count: 1
     assert_select ".tenant-menu-section.has-active .tenant-menu-heading strong", text: "宿泊管理"
-    assert_select ".tenant-menu-items a.active[href=?]", tenant_stays_path, text: "宿泊一覧"
+    assert_select ".tenant-menu-items a.active[href=?]", tenant_stays_path, text: "宿泊施設一覧"
     assert_select ".tenant-menu-items a[href=?]:not(.active)", tenant_jobs_path, text: "求人一覧"
     assert_select ".tenant-menu-icon--stays[aria-hidden='true'] svg[viewBox='0 0 24 24']", count: 1
     assert_select ".tenant-menu-icon--organization[aria-hidden='true'] svg[viewBox='0 0 24 24']", count: 1
