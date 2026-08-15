@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_12_013300) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_15_001000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,10 +88,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_013300) do
   end
 
   create_table "listings", force: :cascade do |t|
+    t.datetime "archived_at"
     t.datetime "closed_at"
+    t.string "closed_reason"
     t.datetime "created_at", null: false
     t.bigint "created_by_tenant_member_id"
     t.text "description"
+    t.datetime "last_published_at"
     t.string "listing_type", null: false
     t.datetime "published_at"
     t.string "status", default: "draft", null: false
@@ -167,24 +170,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_013300) do
   end
 
   create_table "stay_listings", force: :cascade do |t|
-    t.string "address"
-    t.text "amenities"
     t.integer "approval_deadline_hours", default: 24, null: false
-    t.date "available_from"
-    t.date "available_until"
     t.integer "booking_close_hours_before", default: 0, null: false
     t.string "booking_confirmation_mode", default: "approval_required", null: false
     t.integer "booking_open_days_before", default: 365, null: false
-    t.integer "capacity"
     t.time "check_in_time"
     t.time "check_out_time"
     t.datetime "created_at", null: false
     t.text "house_rules"
+    t.time "latest_check_in_time"
     t.bigint "listing_id", null: false
-    t.integer "price_per_night"
     t.date "stay_available_ends_on"
     t.date "stay_available_starts_on"
-    t.string "stay_type"
     t.string "time_zone", default: "Asia/Tokyo", null: false
     t.datetime "updated_at", null: false
     t.index ["listing_id"], name: "index_stay_listings_on_listing_id", unique: true

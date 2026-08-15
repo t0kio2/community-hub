@@ -56,14 +56,14 @@ class Api::V1::Public::ListingsController < Api::V1::Public::BaseController
       }
     else
       {
-        stay_type: detail.stay_type,
-        address: detail.address,
-        capacity: detail.capacity,
-        price_per_night: detail.price_per_night,
-        available_from: detail.available_from,
-        available_until: detail.available_until
+        check_in_time: detail.check_in_time,
+        latest_check_in_time: detail.latest_check_in_time,
+        check_out_time: detail.check_out_time,
+        time_zone: detail.time_zone,
+        stay_available_starts_on: detail.stay_available_starts_on,
+        stay_available_ends_on: detail.stay_available_ends_on,
+        house_rules: detail.house_rules
       }
     end
   end
 end
-

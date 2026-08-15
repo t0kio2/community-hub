@@ -365,7 +365,8 @@
   grid-column: 1 / -1;
 }
 
-.listing-form .field label {
+.listing-form .field label,
+.listing-form-field-label {
   color: #425047;
   font-size: var(--tenant-font-size-body);
   font-weight: 700;
@@ -377,6 +378,7 @@
 }
 
 .listing-form .field :is(input, select, textarea) {
+  box-sizing: border-box;
   width: 100%;
   padding: 10px 11px;
   border: 1px solid #d8ded8;
@@ -384,8 +386,74 @@
   font-size: var(--tenant-font-size-body);
 }
 
+.listing-form .field :is(input:not([type="hidden"]), select),
+.stay-fixed-value {
+  height: 42px;
+}
+
 .listing-form .field textarea {
   resize: vertical;
+}
+
+.stay-native-picker {
+  position: relative;
+  width: min(100%, 220px);
+}
+
+.listing-form .field .stay-native-picker-field {
+  padding-right: 42px;
+  cursor: pointer;
+}
+
+.stay-native-picker-field::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.stay-picker-icon {
+  position: absolute;
+  top: 0;
+  right: 11px;
+  bottom: 0;
+  width: 24px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.stay-picker-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: #607066;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.stay-fixed-value {
+  box-sizing: border-box;
+  padding: 10px 11px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #d8ded8;
+  border-radius: 9px;
+  color: var(--tenant-color-ink);
+  background: #f5f7f4;
+  font-size: var(--tenant-font-size-body);
+}
+
+.listing-form-field-hint {
+  display: block;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+  line-height: 1.6;
 }
 
 .stay-registration-location > p {

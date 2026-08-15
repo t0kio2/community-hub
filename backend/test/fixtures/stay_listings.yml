@@ -1,12 +1,13 @@
 one:
   listing: stay
-  stay_type: private_room
-  address: 京都府京都市
-  capacity: 2
-  price_per_night: 8000
+  booking_confirmation_mode: approval_required
+  approval_deadline_hours: 24
   check_in_time: "15:00:00"
+  latest_check_in_time: "20:00:00"
   check_out_time: "10:00:00"
-  available_from: 2026-05-01
-  available_until: 2026-05-31
-  amenities: Wi-Fi
+  time_zone: Asia/Tokyo
+  stay_available_starts_on: 2026-05-01
+  stay_available_ends_on: 2026-06-01
+  booking_open_days_before: 365
+  booking_close_hours_before: 0
   house_rules: 禁煙

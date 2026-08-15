@@ -74,6 +74,61 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, @location.name
   end
 
+  test "宿泊施設の登録画面に宿泊時刻と予約受付の入力欄を表示する" do
+    get new_tenant_stay_path
+
+    assert_response :success
+    assert_select "section[aria-label='宿泊時刻設定']", count: 1
+    assert_select "section[aria-label='予約受付設定']", count: 1
+    assert_select ".stay-time-picker input.stay-native-picker-field[type='time'][name='listing[stay_listing][check_in_time]']", count: 1
+    assert_select ".stay-time-picker input.stay-native-picker-field[type='time'][name='listing[stay_listing][latest_check_in_time]']", count: 1
+    assert_select ".stay-time-picker input.stay-native-picker-field[type='time'][name='listing[stay_listing][check_out_time]']", count: 1
+    assert_select ".stay-time-picker .stay-picker-icon[aria-hidden='true'] svg circle", count: 3
+    assert_select ".stay-fixed-value", text: "日本時間（Asia/Tokyo）"
+    assert_select "input[type='hidden'][name='listing[stay_listing][time_zone]'][value='Asia/Tokyo']", count: 1
+    assert_select "select[name='listing[stay_listing][time_zone]']", count: 0
+    assert_select "select[name='listing[stay_listing][booking_confirmation_mode]'] option[value='approval_required'][selected]", text: "承認制"
+    assert_select "input[type='number'][name='listing[stay_listing][approval_deadline_hours]'][min='1'][max='72'][value='24']", count: 1
+    assert_select "input[type='number'][name='listing[stay_listing][booking_open_days_before]'][min='1'][max='365'][value='365']", count: 1
+    assert_select "input[type='number'][name='listing[stay_listing][booking_close_hours_before]'][min='0'][max='720'][value='0']", count: 1
+    assert_select ".stay-date-picker input.stay-native-picker-field[type='date'][name='listing[stay_listing][stay_available_starts_on]']", count: 1
+    assert_select ".stay-date-picker input.stay-native-picker-field[type='date'][name='listing[stay_listing][stay_available_ends_on]']", count: 1
+    assert_select ".stay-date-picker .stay-picker-icon[aria-hidden='true'] svg rect", count: 2
+    assert_select "textarea[name='listing[stay_listing][house_rules]']", count: 1
+  end
+
+  test "宿泊施設の編集画面に保存済みの宿泊設定を表示する" do
+    listing = create_listing(@tenant, "stay", "設定済み施設")
+    StayListing.create!(
+      listing: listing,
+      booking_confirmation_mode: "instant",
+      approval_deadline_hours: 12,
+      check_in_time: "15:00",
+      latest_check_in_time: "21:00",
+      check_out_time: "10:00",
+      time_zone: "Asia/Tokyo",
+      stay_available_starts_on: Date.new(2026, 9, 1),
+      stay_available_ends_on: Date.new(2026, 12, 1),
+      booking_open_days_before: 180,
+      booking_close_hours_before: 6,
+      house_rules: "館内禁煙"
+    )
+
+    get edit_tenant_stay_path(listing)
+
+    assert_response :success
+    assert_select "select[name='listing[stay_listing][booking_confirmation_mode]'] option[value='instant'][selected]", text: "即時予約"
+    assert_select "input[name='listing[stay_listing][approval_deadline_hours]'][value='12']", count: 1
+    assert_select "input[name='listing[stay_listing][check_in_time]'][value='15:00:00.000']", count: 1
+    assert_select "input[name='listing[stay_listing][latest_check_in_time]'][value='21:00:00.000']", count: 1
+    assert_select "input[name='listing[stay_listing][check_out_time]'][value='10:00:00.000']", count: 1
+    assert_select "input[name='listing[stay_listing][stay_available_starts_on]'][value='2026-09-01']", count: 1
+    assert_select "input[name='listing[stay_listing][stay_available_ends_on]'][value='2026-12-01']", count: 1
+    assert_select "input[name='listing[stay_listing][booking_open_days_before]'][value='180']", count: 1
+    assert_select "input[name='listing[stay_listing][booking_close_hours_before]'][value='6']", count: 1
+    assert_select "textarea[name='listing[stay_listing][house_rules]']", text: "館内禁煙"
+  end
+
   test "宿泊施設一覧には施設管理画面への導線を表示する" do
     listing = create_listing(@tenant, "stay", "管理対象施設")
     StayListing.create!(listing: listing)

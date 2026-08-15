@@ -138,8 +138,103 @@
         </section>
       <% end %>
     <% else %>
+      <%= fields_for "listing[stay_listing]", detail do |detail_form| %>
+        <section class="form-section" aria-label="宿泊時刻設定">
+          <div class="listing-form-section-heading field-wide">
+            <h2>宿泊時刻</h2>
+            <p>利用者へ案内するチェックイン・チェックアウト時刻を設定します。</p>
+          </div>
+
+          <div class="field">
+            <%= detail_form.label :check_in_time, "チェックイン開始時刻" %>
+            <div class="stay-native-picker stay-time-picker">
+              <%= detail_form.time_field :check_in_time, class: "stay-native-picker-field" %>
+              <span class="stay-picker-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>
+              </span>
+            </div>
+          </div>
+          <div class="field">
+            <%= detail_form.label :latest_check_in_time, "最終チェックイン時刻" %>
+            <div class="stay-native-picker stay-time-picker">
+              <%= detail_form.time_field :latest_check_in_time, class: "stay-native-picker-field" %>
+              <span class="stay-picker-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>
+              </span>
+            </div>
+            <small class="listing-form-field-hint">チェックイン開始時刻より後の時刻を設定してください。</small>
+          </div>
+          <div class="field">
+            <%= detail_form.label :check_out_time, "チェックアウト時刻" %>
+            <div class="stay-native-picker stay-time-picker">
+              <%= detail_form.time_field :check_out_time, class: "stay-native-picker-field" %>
+              <span class="stay-picker-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>
+              </span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="listing-form-field-label">タイムゾーン</span>
+            <div class="stay-fixed-value">日本時間（Asia/Tokyo）</div>
+            <%= detail_form.hidden_field :time_zone, value: "Asia/Tokyo" %>
+            <small class="listing-form-field-hint">初期仕様では日本時間に固定されます。</small>
+          </div>
+        </section>
+
+        <section class="form-section" aria-label="予約受付設定">
+          <div class="listing-form-section-heading field-wide">
+            <h2>予約受付</h2>
+            <p>予約の確定方法と、予約を受け付ける期間を設定します。</p>
+          </div>
+
+          <div class="field">
+            <%= detail_form.label :booking_confirmation_mode, "予約確定方式" %>
+            <%= detail_form.select :booking_confirmation_mode,
+                                   [["承認制", "approval_required"], ["即時予約", "instant"]] %>
+          </div>
+          <div class="field">
+            <%= detail_form.label :approval_deadline_hours, "承認期限" %>
+            <%= detail_form.number_field :approval_deadline_hours, min: 1, max: 72, step: 1 %>
+            <small class="listing-form-field-hint">予約申請から承認までの期限を時間単位で設定します。</small>
+          </div>
+          <div class="field">
+            <%= detail_form.label :booking_open_days_before, "予約受付開始" %>
+            <%= detail_form.number_field :booking_open_days_before, min: 1, max: 365, step: 1 %>
+            <small class="listing-form-field-hint">チェックイン日の何日前から受け付けるかを設定します。</small>
+          </div>
+          <div class="field">
+            <%= detail_form.label :booking_close_hours_before, "予約受付終了" %>
+            <%= detail_form.number_field :booking_close_hours_before, min: 0, max: 720, step: 1 %>
+            <small class="listing-form-field-hint">チェックインの何時間前に締め切るかを設定します。</small>
+          </div>
+          <div class="field">
+            <%= detail_form.label :stay_available_starts_on, "宿泊可能期間の開始日" %>
+            <div class="stay-native-picker stay-date-picker">
+              <%= detail_form.date_field :stay_available_starts_on, class: "stay-native-picker-field" %>
+              <span class="stay-picker-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14" rx="2"></rect><path d="M8 3.5v4M16 3.5v4M4 9.5h16"></path></svg>
+              </span>
+            </div>
+          </div>
+          <div class="field">
+            <%= detail_form.label :stay_available_ends_on, "宿泊可能期間の終了日" %>
+            <div class="stay-native-picker stay-date-picker">
+              <%= detail_form.date_field :stay_available_ends_on, class: "stay-native-picker-field" %>
+              <span class="stay-picker-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14" rx="2"></rect><path d="M8 3.5v4M16 3.5v4M4 9.5h16"></path></svg>
+              </span>
+            </div>
+            <small class="listing-form-field-hint">この日はチェックアウト日として扱い、宿泊日は前日までです。</small>
+          </div>
+          <div class="field field-wide">
+            <%= detail_form.label :house_rules, "ハウスルール" %>
+            <%= detail_form.text_area :house_rules, rows: 5, placeholder: "館内禁煙、消灯時間など、宿泊者へ案内するルールを入力してください" %>
+          </div>
+        </section>
+      <% end %>
+
       <section class="stay-registration-next-steps" aria-label="登録後の設定">
-        <div><span>1</span><strong>施設を登録</strong><small>施設名・紹介・拠点</small></div>
+        <div><span>1</span><strong>施設を登録</strong><small>基本情報・宿泊・予約設定</small></div>
         <i aria-hidden="true">→</i>
         <div><span>2</span><strong>客室と在庫</strong><small>Room Type・Room／Bed</small></div>
         <i aria-hidden="true">→</i>

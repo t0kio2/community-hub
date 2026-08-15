@@ -52,7 +52,20 @@ class Tenant::StaysController < Tenant::BaseController
   private
 
   def tenant_stay_layout
-    action_name == "show" ? "tenant/stay" : "tenant"
+    # action_name == "show" ? "tenant/stay" : "tenant"
+
+    layout_stay = "tenant/stay"
+    layout_tenant = "tenant"
+
+    case action_name
+    when "show"
+      layout_stay
+    when "edit"
+      layout_stay
+    else
+      layout_tenant
+    end
+
   end
 
   def set_listing
