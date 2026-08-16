@@ -5,10 +5,10 @@
   "archived" => "アーカイブ"
 } %>
 
-<div class="listing-form-page">
+<div class="management-form-page">
   <%= render "tenant/shared/forms/errors", records: [listing, job_listing] %>
 
-  <%= form_with model: listing, url: form_url, local: true, class: "listing-form" do |form| %>
+  <%= form_with model: listing, url: form_url, local: true, class: "management-form" do |form| %>
     <section class="form-section" aria-labelledby="job-basic-heading">
       <%= render "tenant/shared/forms/section_heading",
                  id: "job-basic-heading",

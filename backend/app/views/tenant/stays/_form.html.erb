@@ -1,7 +1,7 @@
-<div class="listing-form-page">
+<div class="management-form-page">
   <%= render "tenant/shared/forms/errors", records: [listing, stay_listing] %>
 
-  <%= form_with model: listing, url: form_url, local: true, class: "listing-form" do |form| %>
+  <%= form_with model: listing, url: form_url, local: true, class: "management-form" do |form| %>
     <section class="form-section" aria-labelledby="stay-basic-heading">
       <%= render "tenant/shared/forms/section_heading",
                  id: "stay-basic-heading",
@@ -15,25 +15,19 @@
       </div>
 
       <div class="field field-wide">
-        <%= form.label :title do %>
-          施設名<span class="required-badge">必須</span>
-        <% end %>
+        <%= form.label :title, "施設名", class: "form-label--required" %>
         <%= form.text_field :title, placeholder: "山のホテル", required: true %>
       </div>
 
       <%= form.hidden_field :status, value: "draft" unless listing.persisted? %>
 
       <div class="field field-wide">
-        <%= form.label :description do %>
-          施設紹介<span class="required-badge required-badge--publish">公開時必須</span>
-        <% end %>
+        <%= form.label :description, "施設紹介", class: "form-label--required-on-publish" %>
         <%= form.text_area :description, rows: 5, placeholder: "施設の特徴や周辺環境を入力してください" %>
       </div>
 
       <div class="field field-wide stay-registration-location">
-        <%= form.label :tenant_location_id do %>
-          所在地<span class="required-badge required-badge--publish">公開時必須</span>
-        <% end %>
+        <%= form.label :tenant_location_id, "所在地", class: "form-label--required-on-publish" %>
         <% locations = @tenant&.tenant_locations&.order(:name, :id) || [] %>
         <% if locations.any? %>
           <%= form.select :tenant_location_id,
@@ -58,9 +52,7 @@
                    description: "利用者へ案内するチェックイン・チェックアウト時刻を設定します。" %>
 
         <div class="field">
-          <%= detail_form.label :check_in_time do %>
-            チェックイン開始時刻<span class="required-badge required-badge--publish">公開時必須</span>
-          <% end %>
+          <%= detail_form.label :check_in_time, "チェックイン開始時刻", class: "form-label--required-on-publish" %>
           <div class="stay-native-picker stay-time-picker">
             <%= detail_form.time_field :check_in_time, class: "stay-native-picker-field" %>
             <span class="stay-picker-icon" aria-hidden="true">
@@ -69,21 +61,17 @@
           </div>
         </div>
         <div class="field">
-          <%= detail_form.label :latest_check_in_time do %>
-            最終チェックイン時刻<span class="required-badge required-badge--publish">公開時必須</span>
-          <% end %>
+          <%= detail_form.label :latest_check_in_time, "最終チェックイン時刻", class: "form-label--required-on-publish" %>
           <div class="stay-native-picker stay-time-picker">
             <%= detail_form.time_field :latest_check_in_time, class: "stay-native-picker-field" %>
             <span class="stay-picker-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>
             </span>
           </div>
-          <small class="listing-form-field-hint">チェックイン開始時刻より後の時刻を設定してください。</small>
+          <small class="form-field-hint">チェックイン開始時刻より後の時刻を設定してください。</small>
         </div>
         <div class="field">
-          <%= detail_form.label :check_out_time do %>
-            チェックアウト時刻<span class="required-badge required-badge--publish">公開時必須</span>
-          <% end %>
+          <%= detail_form.label :check_out_time, "チェックアウト時刻", class: "form-label--required-on-publish" %>
           <div class="stay-native-picker stay-time-picker">
             <%= detail_form.time_field :check_out_time, class: "stay-native-picker-field" %>
             <span class="stay-picker-icon" aria-hidden="true">
@@ -92,10 +80,10 @@
           </div>
         </div>
         <div class="field">
-          <span class="listing-form-field-label">タイムゾーン</span>
+          <span class="form-field-label">タイムゾーン</span>
           <div class="stay-fixed-value">日本時間（Asia/Tokyo）</div>
           <%= detail_form.hidden_field :time_zone, value: "Asia/Tokyo" %>
-          <small class="listing-form-field-hint">初期仕様では日本時間に固定されます。</small>
+          <small class="form-field-hint">初期仕様では日本時間に固定されます。</small>
         </div>
       </section>
 
@@ -113,17 +101,17 @@
         <div class="field">
           <%= detail_form.label :approval_deadline_hours, "承認期限" %>
           <%= detail_form.number_field :approval_deadline_hours, min: 1, max: 72, step: 1 %>
-          <small class="listing-form-field-hint">予約申請から承認までの期限を時間単位で設定します。</small>
+          <small class="form-field-hint">予約申請から承認までの期限を時間単位で設定します。</small>
         </div>
         <div class="field">
           <%= detail_form.label :booking_open_days_before, "予約受付開始" %>
           <%= detail_form.number_field :booking_open_days_before, min: 1, max: 365, step: 1 %>
-          <small class="listing-form-field-hint">チェックイン日の何日前から受け付けるかを設定します。</small>
+          <small class="form-field-hint">チェックイン日の何日前から受け付けるかを設定します。</small>
         </div>
         <div class="field">
           <%= detail_form.label :booking_close_hours_before, "予約受付終了" %>
           <%= detail_form.number_field :booking_close_hours_before, min: 0, max: 720, step: 1 %>
-          <small class="listing-form-field-hint">チェックインの何時間前に締め切るかを設定します。</small>
+          <small class="form-field-hint">チェックインの何時間前に締め切るかを設定します。</small>
         </div>
         <div class="field">
           <%= detail_form.label :stay_available_starts_on, "宿泊可能期間の開始日" %>
@@ -142,7 +130,7 @@
               <svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14" rx="2"></rect><path d="M8 3.5v4M16 3.5v4M4 9.5h16"></path></svg>
             </span>
           </div>
-          <small class="listing-form-field-hint">この日はチェックアウト日として扱い、宿泊日は前日までです。</small>
+          <small class="form-field-hint">この日はチェックアウト日として扱い、宿泊日は前日までです。</small>
         </div>
         <div class="field field-wide">
           <%= detail_form.label :house_rules, "ハウスルール" %>

@@ -60,12 +60,12 @@
   gap: 15px;
 }
 
-.stay-dashboard__card-heading h3,
+.stay-dashboard__card-heading :is(h2, h3),
 .stay-dashboard__card-heading p {
   margin: 0;
 }
 
-.stay-dashboard__card-heading h3 {
+.stay-dashboard__card-heading :is(h2, h3) {
   font-size: var(--tenant-font-size-subheading);
 }
 
@@ -96,7 +96,8 @@
 }
 
 .stay-status--closed,
-.stay-status--archived {
+.stay-status--archived,
+.stay-status--inactive {
   color: var(--tenant-color-muted);
   background: var(--stay-color-surface-subtle);
 }

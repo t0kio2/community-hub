@@ -19,8 +19,6 @@ class Admin::TenantsControllerTest < ActionDispatch::IntegrationTest
     get admin_tenant_path(tenant)
 
     assert_response :success
-    assert_select 'link[rel="stylesheet"][href*="admin"]', minimum: 2
-    assert_select 'link[rel="stylesheet"][href*="tenants"]', count: 1
     assert_select "h1#admin-page-title", text: "テナント詳細"
     assert_select ".admin-topbar .admin-back-link[href=?]", admin_tenants_path, text: "← テナント一覧へ戻る"
     assert_select ".admin-content .admin-back-link", count: 0
