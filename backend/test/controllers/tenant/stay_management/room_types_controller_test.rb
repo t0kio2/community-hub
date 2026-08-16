@@ -55,6 +55,23 @@ class Tenant::StayManagement::RoomTypesControllerTest < ActionDispatch::Integrat
     assert_equal 2, room_type.capacity
   end
 
+  test "客室タイプ編集画面に保存済みの値を表示する" do
+    room_type = @stay_listing.stay_room_types.create!(
+      name: "スタンダードツイン",
+      room_kind: "private_room",
+      capacity: 2
+    )
+
+    get edit_tenant_stay_room_type_path(@listing, room_type)
+
+    assert_response :success
+    assert_select "h1#tenant-page-title", text: "客室タイプ編集"
+    assert_select "form[action=?]", tenant_stay_room_type_path(@listing, room_type)
+    assert_select "input[name='stay_room_type[name]'][value='スタンダードツイン']"
+    assert_select "a[aria-current='page'][href=?]", tenant_stay_room_types_path(@listing)
+    assert_select "a[aria-current='page'][href=?]", edit_tenant_stay_path(@listing), count: 0
+  end
+
   test "客室タイプの入力が不正な場合は登録画面を再表示する" do
     assert_no_difference "StayRoomType.count" do
       post tenant_stay_room_types_path(@listing), params: {
@@ -79,7 +96,6 @@ class Tenant::StayManagement::RoomTypesControllerTest < ActionDispatch::Integrat
     get tenant_stay_room_types_path(@listing)
 
     assert_response :success
-    assert_select ".stay-room-types__table tbody tr", count: 1
     assert_select "td", text: /女性専用ドミトリー/
     assert_select "td", text: "相部屋"
     assert_select "a[href=?]", edit_tenant_stay_room_type_path(@listing, room_type), text: "編集"

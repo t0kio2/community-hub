@@ -1,0 +1,9 @@
+<% content_for :title, "客室タイプ編集" %>
+<% content_for :back_link do %>
+  <%= link_to "← 客室タイプ一覧へ戻る", tenant_stay_room_types_path(@listing), class: "tenant-back-link" %>
+<% end %>
+
+<%= render "form",
+           room_type: @room_type,
+           form_url: tenant_stay_room_type_path(@listing, @room_type),
+           submit_label: "客室タイプを更新" %>

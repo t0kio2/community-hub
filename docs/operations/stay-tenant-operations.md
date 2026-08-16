@@ -71,7 +71,7 @@
 | 設定 | 内容 |
 | --- | --- |
 | 名称・説明 | 利用者向けのRoom Type情報 |
-| 販売形態 | `entire_place / private_room / shared_room` |
+| 利用形態 | `entire_place / private_room / shared_room` |
 | 定員 | Room単位の最大人数。相部屋はBed単位で1人 |
 | 画像 | 客室内、寝具、客室内設備などRoom Typeを説明する販売用画像 |
 | Amenities | Room Type単位の利用者向け設備 |

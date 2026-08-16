@@ -1,21 +1,144 @@
 /* 管理画面共通テーブル部品 */
 .tenant-shell {
   --table-actions-font-size: var(--tenant-font-size-small);
+  --data-table-font-size: var(--tenant-font-size-body);
+  --data-table-heading-font-size: var(--tenant-font-size-small);
+  --data-table-color-border: #edf0ed;
+  --data-table-color-heading: var(--tenant-color-muted);
+  --data-table-color-heading-background: #f7f8f5;
+  --data-table-color-muted: var(--tenant-color-muted);
+  --table-actions-color-primary: var(--tenant-color-primary);
+  --table-actions-color-primary-soft: var(--tenant-color-primary-soft);
+  --table-actions-color-danger: var(--tenant-color-danger);
+  --table-actions-color-danger-hover: #7f2822;
+  --table-actions-color-surface: var(--tenant-color-surface);
 }
 
 .admin-shell {
   --table-actions-font-size: var(--admin-font-size-small);
+  --data-table-font-size: var(--admin-font-size-body);
+  --data-table-heading-font-size: var(--admin-font-size-small);
+  --data-table-color-border: var(--admin-color-border);
+  --data-table-color-heading: var(--admin-color-muted);
+  --data-table-color-heading-background: var(--admin-color-canvas);
+  --data-table-color-muted: var(--admin-color-muted);
+  --table-actions-color-primary: var(--admin-color-primary);
+  --table-actions-color-primary-soft: var(--admin-color-primary-soft);
+  --table-actions-color-danger: var(--admin-color-danger);
+  --table-actions-color-danger-hover: #873838;
+  --table-actions-color-surface: var(--admin-color-surface);
+}
+
+.data-table-wrapper {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--data-table-color-border);
+  text-align: left;
+  vertical-align: middle;
+  font-size: var(--data-table-font-size);
+}
+
+.data-table th {
+  color: var(--data-table-color-heading);
+  background: var(--data-table-color-heading-background);
+  font-size: var(--data-table-heading-font-size);
+  letter-spacing: 0.05em;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.data-table th:last-child,
+.data-table td:last-child {
+  width: 1%;
+  text-align: right;
+}
+
+.data-table td:last-child .table-actions {
+  justify-content: flex-end;
+}
+
+.data-table__primary,
+.data-table__secondary {
+  display: block;
+}
+
+.data-table__secondary {
+  margin-top: 4px;
+  color: var(--data-table-color-muted);
+  line-height: 1.6;
+}
+
+.data-table__inline-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.data-table__inline-detail .data-table__secondary {
+  margin-top: 0;
 }
 
 .table-actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 12px;
   white-space: nowrap;
 }
 
-.table-actions a {
+.table-actions form {
+  margin: 0;
+}
+
+.table-actions :is(a, button),
+.table-action {
   font-size: var(--table-actions-font-size);
   font-weight: 700;
   text-decoration: none;
+}
+
+.table-action--secondary {
+  min-height: 34px;
+  padding: 7px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  color: var(--table-actions-color-primary);
+  background: var(--table-actions-color-primary-soft);
+}
+
+.table-action--secondary:hover {
+  color: var(--table-actions-color-surface);
+  background: var(--table-actions-color-primary);
+}
+
+.table-actions button.table-action--danger {
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--table-actions-color-danger);
+  background: transparent;
+  box-shadow: none;
+}
+
+.table-actions button.table-action--danger:hover {
+  border: 0;
+  color: var(--table-actions-color-danger-hover);
+  background: transparent;
+  text-decoration: underline;
+  box-shadow: none;
 }
