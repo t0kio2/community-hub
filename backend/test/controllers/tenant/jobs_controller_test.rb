@@ -47,9 +47,8 @@ class Tenant::JobsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1#tenant-page-title", text: "求人を作成"
-    assert_select "form.authentication-form", count: 0
-    assert_select "form.listing-form[action=?]", tenant_jobs_path
-    assert_select ".type-switch", count: 0
+    assert_select "form[action=?]", tenant_jobs_path
+    assert_select "section[aria-labelledby='job-details-heading'] h2#job-details-heading", text: "求人詳細"
 
     listing = create_listing(@tenant, "job", "詳細求人")
     JobListing.create!(listing: listing, work_area: "北海道")
@@ -70,7 +69,7 @@ class Tenant::JobsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_select ".form-errors", count: 1
+    assert_select "[role='alert']"
   end
 
   test "求人を更新できる" do

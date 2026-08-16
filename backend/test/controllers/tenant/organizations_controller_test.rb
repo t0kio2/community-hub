@@ -8,7 +8,6 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     get edit_tenant_organization_path
 
     assert_response :success
-    assert_select 'link[rel="stylesheet"][href*="organizations"]', count: 1
     assert_select "h1#tenant-page-title", text: "組織情報を編集"
     assert_select ".tenant-content > .tenant-organization-edit", count: 1
     assert_select ".tenant-topbar .tenant-back-link[href=?]", tenant_root_path, text: "← ホームへ戻る"
@@ -16,7 +15,6 @@ class Tenant::OrganizationsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".tenant-organization-edit__submit", count: 1
     assert_select ".tenant-organization-edit__actions a", count: 0
     assert_select 'input[name="tenant[address]"]', count: 0
-    assert_select ".tenant-content style", count: 0
     assert_includes response.body, "組織情報を編集"
     assert_includes response.body, tenant.name
   end

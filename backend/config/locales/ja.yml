@@ -1,0 +1,31 @@
+ja:
+  date:
+    formats:
+      long: "%Y年%m月%d日"
+  time:
+    formats:
+      long: "%Y年%m月%d日 %H:%M"
+      short: "%Y/%m/%d %H:%M"
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: "can't be blank"
+      inclusion: "is not included in the list"
+      required: "must exist"
+  activerecord:
+    attributes:
+      stay_room_type:
+        name: "名称"
+        room_kind: "利用形態"
+        capacity: "定員"
+        status: "状態"
+    enums:
+      stay_room_type:
+        room_kind:
+          private_room: "個室"
+          shared_room: "共用客室（ドミトリー）"
+          entire_place: "一棟貸切"
+        status:
+          draft: "下書き"
+          published: "公開中"
+          inactive: "停止中"

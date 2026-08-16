@@ -1,0 +1,21 @@
+/* 管理画面共通テーブル部品 */
+.tenant-shell {
+  --table-actions-font-size: var(--tenant-font-size-small);
+}
+
+.admin-shell {
+  --table-actions-font-size: var(--admin-font-size-small);
+}
+
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.table-actions a {
+  font-size: var(--table-actions-font-size);
+  font-weight: 700;
+  text-decoration: none;
+}
