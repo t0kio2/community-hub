@@ -3,4 +3,5 @@
 <% content_for :stylesheets do %><%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %><% end %>
 <% content_for :back_link do %><%= link_to "← 宿泊施設一覧へ戻る", tenant_stays_path, class: "tenant-back-link" %><% end %>
 
-<%= render "tenant/shared/listing_form", listing: @listing, detail: @stay_listing, form_url: tenant_stays_path %>
+<%= render "registration_flow" %>
+<%= render "form", listing: @listing, stay_listing: @stay_listing, form_url: tenant_stays_path %>

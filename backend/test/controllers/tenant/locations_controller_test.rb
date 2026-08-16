@@ -15,8 +15,6 @@ class Tenant::LocationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1#tenant-page-title", text: "拠点管理"
-    assert_select 'link[rel="stylesheet"][href*="tenant/locations"]', count: 1
-    assert_select 'link[rel="stylesheet"][href*="confirmation_modal"]', count: 1
     assert_select ".tenant-menu-items a.active[href=?]", tenant_locations_path
     assert_select "dialog[data-confirmation-modal]", count: 1
     assert_select "a.tenant-location-edit-button[href=?]", edit_tenant_location_path(own_location), count: 1

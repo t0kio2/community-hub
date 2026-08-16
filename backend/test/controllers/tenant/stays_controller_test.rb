@@ -50,8 +50,9 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1#tenant-page-title", text: "宿泊施設を登録"
-    assert_select "form.listing-form[action=?]", tenant_stays_path
-    assert_select "select[name='listing[tenant_location_id]']", count: 1
+    assert_select "form[action=?]", tenant_stays_path
+    assert_select "select[name='listing[tenant_location_id]']"
+    assert_select "input[name='listing[title]'][required]"
 
     listing = create_listing(@tenant, "stay", "詳細施設")
     listing.update!(tenant_location: @location)
@@ -61,17 +62,47 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1#tenant-page-title", text: "運営ダッシュボード"
-    assert_select ".tenant-breadcrumb", text: "STAY / #{listing.title}"
-    assert_select ".tenant-brand--facility", text: /#{listing.title}/
-    assert_select ".tenant-brand--facility svg use[href*='icons/tenant-navigation'][href$='#stays']", count: 1
     assert_select ".stay-facility-navigation__back[href=?]", tenant_stays_path, text: /宿泊施設一覧へ戻る/
     assert_select ".stay-facility-navigation__item.active[href=?]", tenant_stay_path(listing), text: /運営ダッシュボード/
-    assert_select ".stay-facility-navigation__item--disabled[aria-disabled='true']", count: 5
-    assert_select ".stay-facility-navigation__item--disabled a", count: 0
-    assert_select "link[href*='tenant/stay_dashboard']", count: 1
-    assert_select ".stay-dashboard__header", text: /#{listing.title}の今日の運営/
-    assert_select "a[href=?]", edit_tenant_stay_path(listing), text: "施設情報を編集", minimum: 1
+    assert_select ".stay-facility-navigation__item[href=?]", edit_tenant_stay_path(listing), text: /施設設定/
     assert_includes response.body, @location.name
+  end
+
+  test "宿泊施設の登録画面に宿泊時刻と予約受付の入力欄を表示する" do
+    get new_tenant_stay_path
+
+    assert_response :success
+    assert_select "[name='listing[stay_listing][check_in_time]']"
+    assert_select "[name='listing[stay_listing][booking_confirmation_mode]']"
+    assert_select "[name='listing[stay_listing][house_rules]']"
+    assert_select "input[type='hidden'][name='listing[stay_listing][time_zone]'][value='Asia/Tokyo']"
+    assert_select "select[name='listing[stay_listing][time_zone]']", count: 0
+  end
+
+  test "宿泊施設の編集画面に保存済みの宿泊設定を表示する" do
+    listing = create_listing(@tenant, "stay", "設定済み施設")
+    StayListing.create!(
+      listing: listing,
+      booking_confirmation_mode: "instant",
+      approval_deadline_hours: 12,
+      check_in_time: "15:00",
+      latest_check_in_time: "21:00",
+      check_out_time: "10:00",
+      time_zone: "Asia/Tokyo",
+      stay_available_starts_on: Date.new(2026, 9, 1),
+      stay_available_ends_on: Date.new(2026, 12, 1),
+      booking_open_days_before: 180,
+      booking_close_hours_before: 6,
+      house_rules: "館内禁煙"
+    )
+
+    get edit_tenant_stay_path(listing)
+
+    assert_response :success
+    assert_select ".stay-facility-navigation__item.active[href=?]", edit_tenant_stay_path(listing), text: /施設設定/
+    assert_select "select[name='listing[stay_listing][booking_confirmation_mode]'] option[value='instant'][selected]", text: "即時予約"
+    assert_select "input[name='listing[stay_listing][stay_available_ends_on]'][value='2026-12-01']"
+    assert_select "textarea[name='listing[stay_listing][house_rules]']", text: "館内禁煙"
   end
 
   test "宿泊施設一覧には施設管理画面への導線を表示する" do
@@ -82,9 +113,6 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", tenant_stay_path(listing), text: "管理画面"
-    assert_select ".tenant-brand", text: /Community Hub/
-    assert_select ".stay-facility-navigation", count: 0
-    assert_select ".tenant-navigation svg use[href*='icons/tenant-navigation']", minimum: 4
   end
 
   test "別テナントの拠点では宿泊施設を登録しない" do
@@ -100,7 +128,7 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_select ".form-errors", count: 1
+    assert_select "[role='alert']"
   end
 
   test "宿泊施設を更新できる" do

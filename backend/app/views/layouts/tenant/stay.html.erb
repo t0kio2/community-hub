@@ -24,17 +24,44 @@
 
     <div class="stay-facility-navigation__divider"></div>
 
-    <%= link_to tenant_stay_path(@listing), class: "stay-facility-navigation__item active", aria: { current: "page" } do %>
+    <p class="stay-facility-navigation__section-label">運営</p>
+
+    <%= link_to tenant_stay_path(@listing),
+                class: ["stay-facility-navigation__item", action_name == "show" && "active"],
+                aria: (action_name == "show" ? { current: "page" } : {}) do %>
       <span class="stay-facility-navigation__icon" aria-hidden="true">⌂</span>
       <span><strong>運営ダッシュボード</strong><small>今日の状況と要対応</small></span>
     <% end %>
 
+    <span class="stay-facility-navigation__item stay-facility-navigation__item--disabled" aria-disabled="true">
+      <span class="stay-facility-navigation__icon" aria-hidden="true">≡</span>
+      <span><strong>予約管理</strong><small>予約の検索と確認</small></span>
+      <em>準備中</em>
+    </span>
+
+    <p class="stay-facility-navigation__section-label">施設管理</p>
+
+    <%= link_to edit_tenant_stay_path(@listing),
+                class: ["stay-facility-navigation__item", action_name == "edit" && "active"],
+                aria: (action_name == "edit" ? { current: "page" } : {}) do %>
+      <span class="stay-facility-navigation__icon" aria-hidden="true">⚙</span>
+      <span><strong>施設設定</strong><small>基本情報・宿泊・予約設定</small></span>
+    <% end %>
+
+    <%= link_to tenant_stay_room_types_path(@listing),
+                class: ["stay-facility-navigation__item", controller_path == "tenant/stay_management/room_types" && "active"],
+                aria: (controller_path == "tenant/stay_management/room_types" ? { current: "page" } : {}) do %>
+      <span class="stay-facility-navigation__icon" aria-hidden="true">▤</span>
+      <span><strong>客室タイプ</strong><small>販売する客室分類</small></span>
+    <% end %>
+
+
+    <!-- TODO: ActiveDecoratorを導入しそこに定義する -->
     <% [
-      ["予約業務", "到着・出発・承認", "▦"],
-      ["予約一覧", "予約の検索と確認", "≡"],
-      ["販売管理", "在庫・料金・販売状況", "▥"],
-      ["客室管理", "客室タイプ・客室", "▤"],
-      ["施設設定", "基本情報・公開設定", "⚙"]
+      ["Room/Bed", "物理客室と販売在庫", "▦"],
+      ["料金プラン", "販売条件と基本料金", "¥"],
+      ["販売カレンダー", "日別料金と販売上限", "▥"],
+      ["公開設定", "公開条件と受付状態", "✓"]
     ].each do |label, description, icon| %>
       <span class="stay-facility-navigation__item stay-facility-navigation__item--disabled" aria-disabled="true">
         <span class="stay-facility-navigation__icon" aria-hidden="true"><%= icon %></span>

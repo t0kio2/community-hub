@@ -46,7 +46,7 @@
                 <td><span class="tenant-listing-status tenant-listing-status--<%= listing.status %>"><%= listing_status_labels.fetch(listing.status, listing.status) %></span></td>
                 <td><%= l(listing.updated_at, format: :short) %></td>
                 <td>
-                  <span class="tenant-listing-index__actions">
+                  <span class="table-actions">
                     <%= link_to "詳細", tenant_job_path(listing) %>
                     <%= link_to "編集", edit_tenant_job_path(listing) %>
                   </span>

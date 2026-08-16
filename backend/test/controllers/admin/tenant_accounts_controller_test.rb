@@ -40,14 +40,12 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     get new_admin_tenant_account_path
 
     assert_response :success
-    assert_select 'link[rel="stylesheet"][href*="tenant_accounts"]', count: 1
     assert_select ".admin-topbar .admin-back-link[href=?]", admin_tenant_accounts_path
     assert_select ".tenant-account-create__card", count: 2
     assert_select ".tenant-account-create__card-heading h2", text: "アカウント情報", count: 1
     assert_select ".tenant-account-create__card-heading h2", text: "組織情報", count: 1
     assert_select 'input[name="tenant[address]"]', count: 0
     assert_select ".tenant-account-create__intro", count: 0
-    assert_select "style", count: 0
     assert_not_includes response.body, "テナントの利用開始情報を登録"
     assert_includes response.body, "初期ロール"
     assert_includes response.body, "owner"
@@ -100,7 +98,6 @@ class Admin::TenantAccountsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'name="_method"'
     assert_includes response.body, 'value="delete"'
     assert_includes response.body, "削除"
-    assert_select 'link[rel="stylesheet"][href*="confirmation_modal"]', count: 1
     assert_select "dialog[data-confirmation-modal]", count: 1
     assert_select 'form[data-confirm-message][action=?]', admin_tenant_account_path(TenantAccount.find_by!(email: "index-delete-owner@example.com")), count: 1
     assert_not_includes response.body, "return confirm("

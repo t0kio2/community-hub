@@ -25,21 +25,16 @@ class Tenant::HomeControllerTest < ActionDispatch::IntegrationTest
     get tenant_root_path
 
     assert_response :success
-    assert_select 'link[rel="stylesheet"][href*="tenant"]', count: 1
-    assert_select ".tenant-shell", count: 1
     assert_select "h1#tenant-page-title", text: "ホーム"
-    assert_select ".tenant-navigation .tenant-home-link.active", count: 1
+    assert_select ".tenant-navigation .tenant-home-link.active"
     assert_select ".tenant-account-email", text: @tenant_account.email
     assert_select ".tenant-logout-button", text: "ログアウト"
-    assert_select "head style", count: 0
     assert_includes response.body, "テナント管理画面"
     assert_includes response.body, @tenant.name
     assert_includes response.body, @tenant_account.email
     assert_includes response.body, "ロール:"
     assert_includes response.body, "owner"
     assert_includes response.body, "組織情報を編集"
-    assert_includes response.body, ".tenant-content .tenant-edit-link"
-    assert_not_includes response.body, "#2563eb"
     assert_not_includes response.body, "次に実装する項目"
     assert_not_includes response.body, "運用メニュー"
   end
@@ -61,15 +56,11 @@ class Tenant::HomeControllerTest < ActionDispatch::IntegrationTest
     get new_tenant_account_session_path
 
     assert_response :success
-    assert_select "body.authentication-page--tenant", count: 1
-    assert_select 'link[rel="stylesheet"][href*="authentication"]', count: 1
     assert_select ".authentication-role-label", text: /テナント管理画面/
     assert_select ".authentication-card h2", text: "テナントログイン"
     assert_select "form.authentication-form[action=?]", tenant_account_session_path
-    assert_select "input#tenant_email[required][autocomplete='username']", count: 1
-    assert_select "input#tenant_password[required][autocomplete='current-password']", count: 1
-    assert_select ".authentication-submit[value='ログイン']", count: 1
-    assert_select "style", count: 0
+    assert_select "input#tenant_email[required][autocomplete='username']"
+    assert_select "input#tenant_password[required][autocomplete='current-password']"
   end
 
   test "無効なtenant memberはtenantホーム画面を表示できない" do

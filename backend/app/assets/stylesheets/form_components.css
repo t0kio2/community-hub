@@ -1,0 +1,181 @@
+/* 管理画面共通フォーム部品 */
+.tenant-shell {
+  --form-color-ink: var(--tenant-color-ink);
+  --form-color-muted: var(--tenant-color-muted);
+  --form-color-border: var(--tenant-color-border);
+  --form-color-surface: var(--tenant-color-surface);
+  --form-color-primary: var(--tenant-color-primary);
+  --form-color-primary-hover: #12563e;
+  --form-color-danger: var(--tenant-color-danger);
+  --form-color-danger-soft: var(--tenant-color-danger-soft);
+  --form-radius-medium: var(--tenant-radius-medium);
+  --form-font-size-small: var(--tenant-font-size-small);
+  --form-font-size-body: var(--tenant-font-size-body);
+  --form-font-size-subheading: var(--tenant-font-size-subheading);
+}
+
+.admin-shell {
+  --form-color-ink: var(--admin-color-ink);
+  --form-color-muted: var(--admin-color-muted);
+  --form-color-border: var(--admin-color-border);
+  --form-color-surface: var(--admin-color-surface);
+  --form-color-primary: var(--admin-color-primary);
+  --form-color-primary-hover: #5744bf;
+  --form-color-danger: var(--admin-color-danger);
+  --form-color-danger-soft: var(--admin-color-danger-soft);
+  --form-radius-medium: var(--admin-radius-medium);
+  --form-font-size-small: var(--admin-font-size-small);
+  --form-font-size-body: var(--admin-font-size-body);
+  --form-font-size-subheading: var(--admin-font-size-subheading);
+}
+
+.form-label--required::after,
+.form-label--required-on-publish::after {
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #a23a32;
+  background: #fae9e7;
+  font-size: 11px;
+  font-weight: 800;
+  vertical-align: 1px;
+}
+
+.form-label--required::after {
+  content: "必須";
+}
+
+.form-label--required-on-publish::after {
+  content: "公開時必須";
+  color: #8a5a12;
+  background: #fff3d8;
+}
+
+.management-form-page,
+.management-form {
+  display: grid;
+  gap: 18px;
+}
+
+.form-errors {
+  padding: 15px 17px;
+  border: 1px solid #e7bcb8;
+  border-radius: var(--form-radius-medium);
+  color: var(--form-color-danger);
+  background: var(--form-color-danger-soft);
+  font-size: var(--form-font-size-body);
+}
+
+.form-errors strong {
+  display: block;
+}
+
+.form-errors ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.management-form .form-section {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  border: 1px solid var(--form-color-border);
+  border-radius: 13px;
+  background: var(--form-color-surface);
+  box-shadow: 0 1px 0 rgb(20 40 30 / 2%);
+}
+
+.form-section-heading {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--form-color-border);
+}
+
+.form-section-heading h2,
+.form-section-heading p {
+  margin: 0;
+}
+
+.form-section-heading h2 {
+  font-size: var(--form-font-size-subheading);
+}
+
+.form-section-heading p {
+  margin-top: 5px;
+  color: var(--form-color-muted);
+  font-size: var(--form-font-size-small);
+}
+
+.management-form .field {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+
+.management-form .field-wide {
+  grid-column: 1 / -1;
+}
+
+.management-form .field label,
+.form-field-label {
+  color: #425047;
+  font-size: var(--form-font-size-body);
+  font-weight: 700;
+}
+
+.management-form .field strong {
+  color: var(--form-color-ink);
+  font-size: var(--form-font-size-body);
+}
+
+.management-form .field :is(input, select, textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid #d8ded8;
+  border-radius: 9px;
+  font-size: var(--form-font-size-body);
+}
+
+.management-form .field :is(input:not([type="hidden"]), select) {
+  height: 42px;
+}
+
+.management-form .field textarea {
+  resize: vertical;
+}
+
+.form-field-hint {
+  display: block;
+  color: var(--form-color-muted);
+  font-size: var(--form-font-size-small);
+  line-height: 1.6;
+}
+
+.management-form .form-actions {
+  padding-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--form-color-border);
+}
+
+.management-form :is(input, button).form-submit {
+  color: #ffffff;
+  border-color: var(--form-color-primary);
+  background: var(--form-color-primary);
+}
+
+.management-form :is(input, button).form-submit:hover {
+  color: #ffffff;
+  border-color: var(--form-color-primary-hover);
+  background: var(--form-color-primary-hover);
+}
+
+@media (max-width: 760px) {
+  .management-form .form-section {
+    grid-template-columns: 1fr;
+  }
+}

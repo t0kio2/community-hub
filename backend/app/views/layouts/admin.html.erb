@@ -6,7 +6,10 @@
     <title><%= content_for?(:title) ? yield(:title) : "運営管理画面" %> | Community Hub</title>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "utilities", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "admin", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "form_components", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "table_components", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "confirmation_modal", "data-turbo-track": "reload" %>
     <%= yield :stylesheets if content_for?(:stylesheets) %>
   </head>
