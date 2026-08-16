@@ -11,6 +11,7 @@
     <title><%= authentication_title %> | Community Hub</title>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "utilities", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "authentication", "data-turbo-track": "reload" %>
   </head>
   <body class="authentication-page authentication-page--<%= authentication_role %>">

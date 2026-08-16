@@ -6,6 +6,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "body.authentication-page--admin", count: 1
+    assert_select 'link[rel="stylesheet"][href*="utilities"]', count: 1
     assert_select 'link[rel="stylesheet"][href*="authentication"]', count: 1
     assert_select ".authentication-role-label", text: /運営管理画面/
     assert_select ".authentication-card h2", text: "運営管理者ログイン"

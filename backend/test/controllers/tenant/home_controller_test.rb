@@ -26,6 +26,7 @@ class Tenant::HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select 'link[rel="stylesheet"][href*="tenant"]', count: 1
+    assert_select 'link[rel="stylesheet"][href*="form_components"]', count: 1
     assert_select ".tenant-shell", count: 1
     assert_select "h1#tenant-page-title", text: "ホーム"
     assert_select ".tenant-navigation .tenant-home-link.active", count: 1

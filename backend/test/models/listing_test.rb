@@ -37,4 +37,18 @@ class ListingTest < ActiveSupport::TestCase
     assert_not listing.valid?
     assert listing.errors.of_kind?(:title, :blank)
   end
+
+  test "ライフサイクル管理カラムを保持する" do
+    expected_columns = {
+      "last_published_at" => :datetime,
+      "closed_reason" => :string,
+      "archived_at" => :datetime
+    }
+
+    expected_columns.each do |name, type|
+      column = Listing.columns_hash.fetch(name)
+      assert_equal type, column.type
+      assert column.null
+    end
+  end
 end
