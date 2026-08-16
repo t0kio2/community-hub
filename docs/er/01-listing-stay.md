@@ -383,7 +383,7 @@ erDiagram
 
 `stay_room_type_images`、`stay_listing_amenities`、`stay_room_type_amenities`、`stay_rooms`、`stay_beds`、`stay_room_blocks`、`stay_bed_blocks`、`stay_room_type_daily_sales_controls`、`stay_rate_plans`、`stay_room_type_rates`、`stay_room_type_rate_daily_prices`は、関連をたどった`stay_listing_id`または`tenant_id`が一致しなければならない。`stay_rooms.stay_room_type_id`を設定する場合は、そのRoom Typeの`stay_listing_id`がRoom自身の`stay_listing_id`と一致しなければならない。異なるテナントの固有Amenitiesや異なる施設のレコード同士を紐づけない。
 
-Roomは施設直下の物理台帳としてRoom Typeより先に登録できる。`stay_room_type_id IS NULL`の未分類RoomとそのBedは販売在庫、公開条件、予約可能数および自動割り当て候補に含めない。Room Typeへ分類する際は販売形態に対応する構成を満たすこと。将来期間に有効な予約割り当てを持つRoomのRoom Type変更・未分類化は許可しない。
+Roomは施設直下の物理台帳としてRoom Typeより先に登録できる。`stay_room_type_id IS NULL`の未分類RoomとそのBedは販売在庫、公開条件、予約可能数および自動割り当て候補に含めない。Room Typeへ分類する際は利用形態に対応する構成を満たすこと。将来期間に有効な予約割り当てを持つRoomのRoom Type変更・未分類化は許可しない。
 
 `stay_room_types.capacity` は `entire_place / private_room` では1 Roomあたりの最大宿泊人数とし、`shared_room` では1 Bedあたり1人を表すため1とする。相部屋の物理Room全体の収容人数は、そのRoomに属する有効なBed数から算出する。
 
