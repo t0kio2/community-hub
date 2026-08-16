@@ -37,8 +37,11 @@
       </div>
 
       <div class="field <%= "field-wide" if listing.listing_type == "stay" %>">
-        <%= form.label :title, listing.listing_type == "stay" ? "施設名" : "タイトル" %>
-        <%= form.text_field :title, placeholder: listing.listing_type == "stay" ? "山のホテル" : nil %>
+        <%= form.label :title do %>
+          <%= listing.listing_type == "stay" ? "施設名" : "タイトル" %>
+          <% if listing.listing_type == "stay" %><span class="required-badge">必須</span><% end %>
+        <% end %>
+        <%= form.text_field :title, placeholder: listing.listing_type == "stay" ? "山のホテル" : nil, required: true %>
       </div>
 
       <% if listing.listing_type == "job" %>
@@ -51,13 +54,18 @@
       <% end %>
 
       <div class="field field-wide">
-        <%= form.label :description, listing.listing_type == "stay" ? "施設紹介" : "説明" %>
+        <%= form.label :description do %>
+          <%= listing.listing_type == "stay" ? "施設紹介" : "説明" %>
+          <% if listing.listing_type == "stay" %><span class="required-badge required-badge--publish">公開時必須</span><% end %>
+        <% end %>
         <%= form.text_area :description, rows: 5, placeholder: listing.listing_type == "stay" ? "施設の特徴や周辺環境を入力してください" : nil %>
       </div>
 
       <% if listing.listing_type == "stay" %>
         <div class="field field-wide stay-registration-location">
-          <%= form.label :tenant_location_id, "所在地" %>
+          <%= form.label :tenant_location_id do %>
+            所在地<span class="required-badge required-badge--publish">公開時必須</span>
+          <% end %>
           <% locations = @tenant&.tenant_locations&.order(:name, :id) || [] %>
           <% if locations.any? %>
             <%= form.select :tenant_location_id,
@@ -146,7 +154,9 @@
           </div>
 
           <div class="field">
-            <%= detail_form.label :check_in_time, "チェックイン開始時刻" %>
+            <%= detail_form.label :check_in_time do %>
+              チェックイン開始時刻<span class="required-badge required-badge--publish">公開時必須</span>
+            <% end %>
             <div class="stay-native-picker stay-time-picker">
               <%= detail_form.time_field :check_in_time, class: "stay-native-picker-field" %>
               <span class="stay-picker-icon" aria-hidden="true">
@@ -155,7 +165,9 @@
             </div>
           </div>
           <div class="field">
-            <%= detail_form.label :latest_check_in_time, "最終チェックイン時刻" %>
+            <%= detail_form.label :latest_check_in_time do %>
+              最終チェックイン時刻<span class="required-badge required-badge--publish">公開時必須</span>
+            <% end %>
             <div class="stay-native-picker stay-time-picker">
               <%= detail_form.time_field :latest_check_in_time, class: "stay-native-picker-field" %>
               <span class="stay-picker-icon" aria-hidden="true">
@@ -165,7 +177,9 @@
             <small class="listing-form-field-hint">チェックイン開始時刻より後の時刻を設定してください。</small>
           </div>
           <div class="field">
-            <%= detail_form.label :check_out_time, "チェックアウト時刻" %>
+            <%= detail_form.label :check_out_time do %>
+              チェックアウト時刻<span class="required-badge required-badge--publish">公開時必須</span>
+            <% end %>
             <div class="stay-native-picker stay-time-picker">
               <%= detail_form.time_field :check_out_time, class: "stay-native-picker-field" %>
               <span class="stay-picker-icon" aria-hidden="true">
@@ -233,13 +247,6 @@
         </section>
       <% end %>
 
-      <section class="stay-registration-next-steps" aria-label="登録後の設定">
-        <div><span>1</span><strong>施設を登録</strong><small>基本情報・宿泊・予約設定</small></div>
-        <i aria-hidden="true">→</i>
-        <div><span>2</span><strong>客室と在庫</strong><small>Room Type・Room／Bed</small></div>
-        <i aria-hidden="true">→</i>
-        <div><span>3</span><strong>料金と公開</strong><small>料金プラン・販売設定</small></div>
-      </section>
     <% end %>
 
     <div class="form-actions">

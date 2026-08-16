@@ -1,0 +1,79 @@
+<% content_for :title, "Room Type管理" %>
+<% content_for :page_title, "Room Type" %>
+
+<% room_kind_labels = {
+  "entire_place" => "一棟貸し",
+  "private_room" => "個室",
+  "shared_room" => "相部屋"
+} %>
+<% status_labels = {
+  "published" => "公開中",
+  "draft" => "下書き",
+  "inactive" => "停止中"
+} %>
+
+<section class="stay-dashboard stay-room-types" aria-labelledby="tenant-page-title">
+  <header class="stay-dashboard__header">
+    <div>
+      <p class="stay-dashboard__eyebrow">ROOM TYPE MANAGEMENT</p>
+      <h2>販売する客室分類</h2>
+      <p>宿泊者が予約時に選ぶ客室の種類、販売形態、定員を管理します。</p>
+    </div>
+    <div class="stay-dashboard__header-actions">
+      <span class="stay-dashboard__badge">登録機能は準備中</span>
+    </div>
+  </header>
+
+  <section class="stay-dashboard__card">
+    <div class="stay-dashboard__card-heading">
+      <div>
+        <h3>Room Type一覧</h3>
+        <p><%= @room_types.size %>件のRoom Typeが登録されています</p>
+      </div>
+    </div>
+
+    <% if @room_types.any? %>
+      <div class="stay-room-types__table-wrapper">
+        <table class="stay-room-types__table">
+          <thead>
+            <tr>
+              <th scope="col">名称</th>
+              <th scope="col">販売形態</th>
+              <th scope="col">定員</th>
+              <th scope="col">状態</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @room_types.each do |room_type| %>
+              <tr>
+                <td>
+                  <strong><%= room_type.name %></strong>
+                  <% if room_type.description.present? %>
+                    <small><%= truncate(room_type.description, length: 80) %></small>
+                  <% end %>
+                </td>
+                <td><%= room_kind_labels.fetch(room_type.room_kind, room_type.room_kind) %></td>
+                <td><%= room_type.capacity.present? ? "#{room_type.capacity}名" : "未設定" %></td>
+                <td>
+                  <span class="stay-status stay-status--<%= room_type.status %>">
+                    <%= status_labels.fetch(room_type.status, room_type.status) %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <%= link_to new_tenant_stay_room_type_path(@listing), class: "text-decoration-none" do %>
+        <div class="stay-dashboard__empty-state">
+          <span aria-hidden="true">＋</span>
+          <div>
+            <strong>Room Typeがまだ登録されていません</strong>
+            <p>シングル、ダブル、女性専用ドミトリーなど、宿泊者が選ぶ客室分類を登録してください。</p>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+</section>

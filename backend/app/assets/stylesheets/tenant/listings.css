@@ -479,6 +479,7 @@
 }
 
 .stay-registration-next-steps {
+  margin-bottom: 18px;
   padding: 18px 20px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);

@@ -54,7 +54,13 @@ Rails.application.routes.draw do
     resources :locations, only: [:index, :new, :create, :edit, :update, :destroy]
 
     resources :jobs, only: %i[index show new create edit update]
-    resources :stays, only: %i[index show new create edit update]
+    resources :stays, only: %i[index show new create edit update] do
+      scope module: :stay_management do
+        resources :room_types, only: %i[index show new create edit update]
+        resources :rooms
+        resources :rate_plans
+      end
+    end
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

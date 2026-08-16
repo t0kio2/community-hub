@@ -7,7 +7,8 @@ class Tenant::StaysController < Tenant::BaseController
 
   def index
     authorize @tenant, :index?, with: Tenant::ListingPolicy
-    @listings = @tenant.listings.where(listing_type: "stay").order(updated_at: :desc, id: :desc)
+    @listings = @tenant.listings.where(listing_type: "stay")
+    .order(updated_at: :desc, id: :desc)
   end
 
   def show
@@ -52,8 +53,6 @@ class Tenant::StaysController < Tenant::BaseController
   private
 
   def tenant_stay_layout
-    # action_name == "show" ? "tenant/stay" : "tenant"
-
     layout_stay = "tenant/stay"
     layout_tenant = "tenant"
 
