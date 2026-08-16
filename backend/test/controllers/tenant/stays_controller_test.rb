@@ -56,6 +56,7 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='listing[title]'][required]", count: 1
     assert_select ".required-badge--publish", text: "公開時必須", count: 5
     assert_select ".stay-registration-next-steps[aria-label='登録後の設定']", count: 1
+    assert_select ".form-actions .listing-form-submit[value='施設を登録して設定へ進む']", count: 1
 
     listing = create_listing(@tenant, "stay", "詳細施設")
     listing.update!(tenant_location: @location)
@@ -78,8 +79,8 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     get new_tenant_stay_path
 
     assert_response :success
-    assert_select "section[aria-label='宿泊時刻設定']", count: 1
-    assert_select "section[aria-label='予約受付設定']", count: 1
+    assert_select "section[aria-labelledby='stay-times-heading'] h2#stay-times-heading", text: "宿泊時刻", count: 1
+    assert_select "section[aria-labelledby='stay-booking-heading'] h2#stay-booking-heading", text: "予約受付", count: 1
     %w[
       check_in_time latest_check_in_time check_out_time booking_confirmation_mode
       approval_deadline_hours booking_open_days_before booking_close_hours_before
@@ -118,6 +119,7 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='listing[stay_listing][booking_confirmation_mode]'] option[value='instant'][selected]", text: "即時予約"
     assert_select "input[name='listing[stay_listing][stay_available_ends_on]'][value='2026-12-01']", count: 1
     assert_select "textarea[name='listing[stay_listing][house_rules]']", text: "館内禁煙"
+    assert_select ".form-actions .listing-form-submit[value='更新する']", count: 1
   end
 
   test "宿泊施設一覧には施設管理画面への導線を表示する" do

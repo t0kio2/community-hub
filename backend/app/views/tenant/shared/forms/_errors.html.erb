@@ -1,0 +1,11 @@
+<% messages = records.flat_map { |record| record.errors.full_messages } %>
+<% if messages.any? %>
+  <section class="form-errors" role="alert" aria-label="入力エラー">
+    <strong>入力内容を確認してください</strong>
+    <ul>
+      <% messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

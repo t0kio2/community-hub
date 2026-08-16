@@ -50,6 +50,9 @@ class Tenant::JobsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form.authentication-form", count: 0
     assert_select "form.listing-form[action=?]", tenant_jobs_path
     assert_select ".type-switch", count: 0
+    assert_select "section[aria-labelledby='job-basic-heading'] h2#job-basic-heading", text: "基本情報", count: 1
+    assert_select "section[aria-labelledby='job-details-heading'] h2#job-details-heading", text: "求人詳細", count: 1
+    assert_select ".form-actions .listing-form-submit[value='作成する']", count: 1
 
     listing = create_listing(@tenant, "job", "詳細求人")
     JobListing.create!(listing: listing, work_area: "北海道")

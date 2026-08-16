@@ -1,0 +1,106 @@
+<% listing_status_labels = {
+  "published" => "公開中",
+  "draft" => "下書き",
+  "closed" => "公開終了",
+  "archived" => "アーカイブ"
+} %>
+
+<div class="listing-form-page">
+  <%= render "tenant/shared/forms/errors", records: [listing, job_listing] %>
+
+  <%= form_with model: listing, url: form_url, local: true, class: "listing-form" do |form| %>
+    <section class="form-section" aria-labelledby="job-basic-heading">
+      <%= render "tenant/shared/forms/section_heading",
+                 id: "job-basic-heading",
+                 title: "基本情報",
+                 description: "掲載の種別、タイトル、公開状態を設定します。" %>
+
+      <div class="field">
+        <label>種別</label>
+        <strong>求人</strong>
+        <%= form.hidden_field :listing_type %>
+      </div>
+
+      <div class="field">
+        <%= form.label :title, "タイトル" %>
+        <%= form.text_field :title, required: true %>
+      </div>
+
+      <div class="field">
+        <%= form.label :status, "ステータス" %>
+        <%= form.select :status, Listing::STATUSES.map { |status| [listing_status_labels.fetch(status, status), status] } %>
+      </div>
+
+      <div class="field field-wide">
+        <%= form.label :description, "説明" %>
+        <%= form.text_area :description, rows: 5 %>
+      </div>
+    </section>
+
+    <%= fields_for "listing[job_listing]", job_listing do |detail_form| %>
+      <section class="form-section" aria-labelledby="job-details-heading">
+        <%= render "tenant/shared/forms/section_heading",
+                   id: "job-details-heading",
+                   title: "求人詳細",
+                   description: "勤務条件、給与、応募条件を設定します。" %>
+
+        <div class="field">
+          <%= detail_form.label :employment_type, "雇用形態" %>
+          <%= detail_form.select :employment_type, [["", ""]] + JobListing::EMPLOYMENT_TYPES.map { |type| [type, type] } %>
+        </div>
+        <div class="field">
+          <%= detail_form.label :job_category, "職種" %>
+          <%= detail_form.text_field :job_category %>
+        </div>
+        <div class="field">
+          <%= detail_form.label :work_area, "勤務エリア" %>
+          <%= detail_form.text_field :work_area %>
+        </div>
+        <div class="field">
+          <%= detail_form.label :work_address, "勤務先住所" %>
+          <%= detail_form.text_field :work_address %>
+        </div>
+        <div class="field">
+          <%= detail_form.label :salary_type, "給与種別" %>
+          <%= detail_form.select :salary_type, [["", ""]] + JobListing::SALARY_TYPES.map { |type| [type, type] } %>
+        </div>
+        <div class="field">
+          <%= detail_form.label :salary_min, "給与下限" %>
+          <%= detail_form.number_field :salary_min, min: 0 %>
+        </div>
+        <div class="field">
+          <%= detail_form.label :salary_max, "給与上限" %>
+          <%= detail_form.number_field :salary_max, min: 0 %>
+        </div>
+        <div class="field">
+          <%= detail_form.label :working_hours, "勤務時間" %>
+          <%= detail_form.text_field :working_hours %>
+        </div>
+        <div class="field">
+          <%= detail_form.label :work_days, "勤務日" %>
+          <%= detail_form.text_field :work_days %>
+        </div>
+        <div class="field">
+          <%= detail_form.label :application_limit, "応募上限" %>
+          <%= detail_form.number_field :application_limit, min: 0 %>
+        </div>
+        <div class="field field-wide">
+          <%= detail_form.label :required_skills, "必須スキル" %>
+          <%= detail_form.text_area :required_skills, rows: 4 %>
+        </div>
+        <div class="field field-wide">
+          <%= detail_form.label :welcome_skills, "歓迎スキル" %>
+          <%= detail_form.text_area :welcome_skills, rows: 4 %>
+        </div>
+        <div class="field field-wide">
+          <%= detail_form.label :benefits, "待遇" %>
+          <%= detail_form.text_area :benefits, rows: 4 %>
+        </div>
+      </section>
+    <% end %>
+
+    <%= render "tenant/shared/forms/actions",
+               form: form,
+               submit_label: listing.persisted? ? "更新する" : "作成する" %>
+  <% end %>
+</div>
