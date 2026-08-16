@@ -1,6 +1,10 @@
 class Tenant::StayManagement::RoomTypesController < Tenant::StayManagement::BaseController
+
+	before_action :set_room_type, only: %i[edit update]
+
+
   def index
-    @room_types = @listing.stay_listing&.stay_room_types&.order(:id) || StayRoomType.none
+    @room_types = stay_listing&.stay_room_types&.order(:id) || StayRoomType.none
   end
 
   def new
@@ -17,7 +21,7 @@ class Tenant::StayManagement::RoomTypesController < Tenant::StayManagement::Base
     end
   end
 
-	def edit
+	def edit	
 	end
 
 	def update
@@ -28,6 +32,10 @@ class Tenant::StayManagement::RoomTypesController < Tenant::StayManagement::Base
   def stay_listing
     @stay_listing ||= @listing.stay_listing
   end
+
+	def set_room_type
+		@room_type = stay_listing&.stay_room_types&.find(params[:id])
+	end
 
   def room_type_params
     params.require(:stay_room_type).permit(:name, :description, :room_kind, :capacity, :status)

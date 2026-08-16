@@ -16,6 +16,11 @@
 <% end %>
 
 <% content_for :tenant_sidebar_navigation do %>
+  <%
+    stay_dashboard_active = controller_path == "tenant/stays" && action_name == "show"
+    stay_settings_active = controller_path == "tenant/stays" && action_name == "edit"
+    room_types_active = controller_path == "tenant/stay_management/room_types"
+  %>
   <nav class="tenant-navigation stay-facility-navigation" aria-label="<%= @listing.title %>の宿泊施設管理">
     <%= link_to tenant_stays_path, class: "stay-facility-navigation__back" do %>
       <span aria-hidden="true">←</span>
@@ -27,8 +32,8 @@
     <p class="stay-facility-navigation__section-label">運営</p>
 
     <%= link_to tenant_stay_path(@listing),
-                class: ["stay-facility-navigation__item", action_name == "show" && "active"],
-                aria: (action_name == "show" ? { current: "page" } : {}) do %>
+                class: ["stay-facility-navigation__item", stay_dashboard_active && "active"],
+                aria: (stay_dashboard_active ? { current: "page" } : {}) do %>
       <span class="stay-facility-navigation__icon" aria-hidden="true">⌂</span>
       <span><strong>運営ダッシュボード</strong><small>今日の状況と要対応</small></span>
     <% end %>
@@ -42,15 +47,15 @@
     <p class="stay-facility-navigation__section-label">施設管理</p>
 
     <%= link_to edit_tenant_stay_path(@listing),
-                class: ["stay-facility-navigation__item", action_name == "edit" && "active"],
-                aria: (action_name == "edit" ? { current: "page" } : {}) do %>
+                class: ["stay-facility-navigation__item", stay_settings_active && "active"],
+                aria: (stay_settings_active ? { current: "page" } : {}) do %>
       <span class="stay-facility-navigation__icon" aria-hidden="true">⚙</span>
       <span><strong>施設設定</strong><small>基本情報・宿泊・予約設定</small></span>
     <% end %>
 
     <%= link_to tenant_stay_room_types_path(@listing),
-                class: ["stay-facility-navigation__item", controller_path == "tenant/stay_management/room_types" && "active"],
-                aria: (controller_path == "tenant/stay_management/room_types" ? { current: "page" } : {}) do %>
+                class: ["stay-facility-navigation__item", room_types_active && "active"],
+                aria: (room_types_active ? { current: "page" } : {}) do %>
       <span class="stay-facility-navigation__icon" aria-hidden="true">▤</span>
       <span><strong>客室タイプ</strong><small>販売する客室分類</small></span>
     <% end %>
