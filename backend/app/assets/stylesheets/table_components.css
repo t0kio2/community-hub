@@ -9,7 +9,6 @@
 
 .table-actions {
   display: flex;
-  justify-content: flex-end;
   gap: 12px;
   white-space: nowrap;
 }

@@ -1,3 +1,55 @@
+はい、_form.html.erbへ切り出すのが適切です。
+
+  ただし、現在ワークスペース上のedit.html.erbは空でした。エディタ上で未保存の可能性があります。
+
+  おすすめ構成:
+
+  room_types/
+  ├── _form.html.erb
+  ├── new.html.erb
+  └── edit.html.erb
+
+  _form.html.erbにはフォーム本体だけを移し、以下をlocalsで受け取ります。
+
+  <%# _form.html.erb %>
+  <%= render "tenant/shared/forms/errors", records: [room_type] %>
+
+  <%= form_with model: room_type,
+                url: form_url,
+                local: true,
+                class: "management-form" do |form| %>
+    <!-- 共通フィールド -->
+
+    <%= render "tenant/shared/forms/actions",
+               form: form,
+               submit_label: submit_label %>
+  <% end %>
+
+  new.html.erb:
+
+  <% content_for :title, "客室タイプ登録" %>
+  <% content_for :page_title, "客室タイプ登録" %>
+
+  <%= render "form",
+             room_type: @room_type,
+             form_url: tenant_stay_room_types_path(@listing),
+             submit_label: "客室タイプを登録" %>
+
+  edit.html.erb:
+
+  <% content_for :title, "客室タイプ編集" %>
+  <% content_for :page_title, "客室タイプ編集" %>
+
+  <%= render "form",
+             room_type: @room_type,
+             form_url: tenant_stay_room_type_path(@listing, @room_type),
+             submit_label: "客室タイプを更新" %>
+
+  タイトル、戻るリンク、URL、送信文言は画面固有なのでnew・editに残し、入力フィールドとエラー表示だけを共通化するのがよい境界です。
+
+  なお、コントローラーのedit・updateも現在空なので、@listingに属する客室タイプを取得する処理が別途必要です。
+***
+
 stay_roomがstay_listingに紐づいてない
 $ docker exec a2a279d0b43d rails g migration AddStayListingIdToStayRoom
 

@@ -1,0 +1,50 @@
+<div class="management-form-page">
+  <%= render "tenant/shared/forms/errors", records: [room_type] %>
+
+  <%= form_with model: room_type,
+                url: form_url,
+                local: true,
+                class: "management-form" do |form| %>
+    <section class="form-section" aria-labelledby="room-type-basic-heading">
+      <%= render "tenant/shared/forms/section_heading",
+                 id: "room-type-basic-heading",
+                 title: "客室タイプの基本情報",
+                 description: "宿泊者が選ぶ客室分類と利用形態を設定します。" %>
+
+      <div class="field field-wide">
+        <%= form.label :name, "名称", class: "form-label--required" %>
+        <%= form.text_field :name, placeholder: "スタンダードツイン", required: true %>
+      </div>
+
+      <div class="field field-wide">
+        <%= form.label :description, "説明" %>
+        <%= form.text_area :description,
+                           rows: 4,
+                           placeholder: "客室の特徴、ベッド構成、眺望などを入力してください" %>
+      </div>
+
+      <div class="field">
+        <%= form.label :room_kind, "利用形態", class: "form-label--required" %>
+        <%= form.select :room_kind,
+                        StayRoomType.room_kinds.keys.map { |kind|
+                          [t("activerecord.enums.stay_room_type.room_kind.#{kind}"), kind]
+                        },
+                        { include_blank: "利用形態を選択してください" },
+                        required: true %>
+      </div>
+
+      <div class="field">
+        <%= form.label :capacity, "定員" %>
+        <%= form.number_field :capacity, min: 1, step: 1, placeholder: "2" %>
+        <small class="form-field-hint">この客室タイプを利用できる最大人数を入力します。</small>
+      </div>
+
+      <div class="field">
+        <%= form.label :status, "状態" %>
+        <%= form.select :status, [["下書き", "draft"], ["公開中", "published"], ["停止中", "inactive"]] %>
+      </div>
+    </section>
+
+    <%= render "tenant/shared/forms/actions", form: form, submit_label: submit_label %>
+  <% end %>
+</div>
