@@ -25,37 +25,65 @@
     </div>
 
     <% if @room_types.any? %>
-      <div class="stay-room-types__table-wrapper">
-        <table class="stay-room-types__table">
+      <div class="data-table-wrapper">
+        <table class="data-table">
           <thead>
             <tr>
               <th scope="col">名称</th>
-              <th scope="col">販売形態</th>
+              <th scope="col">利用形態</th>
               <th scope="col">定員</th>
+              <th scope="col">割当て客室</th>
               <th scope="col">状態</th>
-              <th scope="col"></th>
+              <th scope="col"><span class="visually-hidden">操作</span></th>
             </tr>
           </thead>
           <tbody>
             <% @room_types.each do |room_type| %>
               <tr>
                 <td>
-                  <strong><%= room_type.name %></strong>
+                  <strong class="data-table__primary"><%= room_type.name %></strong>
                   <% if room_type.description.present? %>
-                    <small><%= truncate(room_type.description, length: 80) %></small>
+                    <small class="data-table__secondary">
+                      <%= truncate(room_type.description, length: 80) %>
+                    </small>
                   <% end %>
                 </td>
-                <td><%= room_kind_labels.fetch(room_type.room_kind, room_type.room_kind) %></td>
-                <td><%= room_type.capacity.present? ? "#{room_type.capacity}名" : "未設定" %></td>
+                <td>
+                  <%= room_kind_labels.fetch(room_type.room_kind, room_type.room_kind) %>
+                </td>
+                <td>
+                  <%= room_type.capacity.present? ? "#{room_type.capacity}名" : "未設定" %>
+                </td>
+                <td>
+                  <span class="data-table__inline-detail">
+                    <span class="data-table__primary">
+                      <%= room_type.stay_rooms.size %>室
+                    </span>
+                    <span class="data-table__secondary">
+                      <%= room_type.stay_rooms.any? ? "客室を見る" : "客室を割当てる" %>
+                    </span>
+                  </span>
+                </td>
                 <td>
                   <span class="stay-status stay-status--<%= room_type.status %>">
                     <%= status_labels.fetch(room_type.status, room_type.status) %>
                   </span>
                 </td>
                 <td>
-                  <span class="table-actions">
-                    <%= link_to "編集", edit_tenant_stay_room_type_path(@listing, room_type) %>
-                  </span>
+                  <div class="table-actions">
+                    <%= link_to "編集",
+                                edit_tenant_stay_room_type_path(@listing, room_type),
+                                class: "table-action table-action--secondary" %>
+                    <%= button_to "削除",
+                                tenant_stay_room_type_path(@listing, room_type),
+                                method: :delete,
+                                class: "table-action table-action--danger",
+                                form: {
+                                  data: {
+                                    confirm_message: "#{room_type.name}を削除します。この操作は取り消せません。"
+                                  }
+                                } %>
+                  </div>
                 </td>
               </tr>
             <% end %>

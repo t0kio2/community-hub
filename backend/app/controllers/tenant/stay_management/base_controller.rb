@@ -3,13 +3,18 @@ class Tenant::StayManagement::BaseController < Tenant::BaseController
 
 	before_action :require_current_tenant!
 	before_action :set_listing
+	before_action :set_stay_listing
 
 	private
 
 	def set_listing
 		@listing = @tenant.listings
-											.where(listing_type: "stay")
-											.find(params[:stay_id])
+						.where(listing_type: "stay")
+						.find(params[:stay_id])
 	end
+
+	def set_stay_listing
+    @stay_listing ||= @listing.stay_listing
+  end
 
 end

@@ -16,7 +16,7 @@ Room Typeはシステム共通マスターではなく、テナントが自ら�
 
 Room Type未設定のRoomは「未分類」とし、Roomおよび配下Bedが有効でも販売在庫、公開条件、予約可能数、自動割り当て候補に含めない。Room Typeを設定する場合はRoomと同じ施設に属するものだけを選択できる。
 
-将来期間に`requested / confirmed`予約の割り当てを持つRoomは、予約内容との不整合を防ぐためRoom Type変更・未分類化を禁止する。割り当てがないRoomは、変更先Room Typeの販売形態に構成を合わせたうえで分類を変更できる。
+将来期間に`requested / confirmed`予約の割り当てを持つRoomは、予約内容との不整合を防ぐためRoom Type変更・未分類化を禁止する。割り当てがないRoomは、変更先Room Typeの利用形態に構成を合わせたうえで分類を変更できる。
 
 ```text
 Tenant
@@ -28,7 +28,7 @@ Tenant
       └─ RatePlan（食事・キャンセル等の販売条件）
 ```
 
-| `room_kind` | 販売形態 | 販売・在庫の単位 |
+| `room_kind` | 利用形態 | 販売・在庫の単位 |
 | --- | --- | --- |
 | `entire_place` | 一棟または独立した空間を貸し切る | Room |
 | `private_room` | 施設内の個室を貸し切る | Room |
@@ -235,7 +235,7 @@ Room TypeとRate Planは、単純な有効フラグではなく`status`で公開
 | `published` | 公開中。ほかの販売条件も満たす場合に新規予約で選択できる |
 | `inactive` | 公開停止。一般ユーザーには表示せず、新規予約で選択できない |
 
-初期値は`draft`とする。Room Typeを`published`へ遷移するには、名称、説明、販売形態、定員、利用者向け画像1件以上、および販売形態に対応する有効な物理在庫を必須とする。貸切・個室は有効なRoomが1件以上、相部屋は有効なRoomに属する有効なBedが1件以上必要である。Amenitiesは任意とする。
+初期値は`draft`とする。Room Typeを`published`へ遷移するには、名称、説明、利用形態、定員、利用者向け画像1件以上、および利用形態に対応する有効な物理在庫を必須とする。貸切・個室は有効なRoomが1件以上、相部屋は有効なRoomに属する有効なBedが1件以上必要である。Amenitiesは任意とする。
 
 Rate Planを`published`へ遷移するには、名称、食事条件およびキャンセル種別を必須とし、説明とRoom Type別料金は必須としない。Rate Plan単体を先に公開できるが、有効なRoom Type別料金と結び付くまでは予約候補にならない。
 
@@ -313,7 +313,7 @@ Room TypeとRate Planの組み合わせに料金を設定する。初期仕様�
 Room Type名は施設内で一意かつ最大100文字、説明は最大5,000文字とする。Rate Plan名は施設内で一意かつ最大100文字、説明は最大2,000文字とする。Amenity名は最大100文字とする。いずれも前後の空白を除去し、説明文はプレーンテキストとして扱う。
 
 - `stay_listings`は予約確定方式、承認期限、時刻、宿泊可能期間、予約受付期間、ハウスルールを持つ。
-- `stay_room_types`は名称、販売形態、定員、公開状態を持ち、料金、在庫数、Amenitiesの自由入力値は持たない。
+- `stay_room_types`は名称、利用形態、定員、公開状態を持ち、料金、在庫数、Amenitiesの自由入力値は持たない。
 - `stay_amenities`と2つの関連テーブルは、共通・テナント固有Amenitiesと施設・Room Typeへの設定を持つ。
 - `stay_room_type_images`は利用者向けのRoom Type画像と表示順を持つ。
 - `stay_rooms / stay_beds`は物理在庫の根拠を持つ。
@@ -357,7 +357,7 @@ Stay Listingの公開条件と、指定日程に対する予約可否は分け�
 
 ```text
 status = published のRoom Type
-＋ 販売形態に対応するactiveなRoomまたはBed
+＋ 利用形態に対応するactiveなRoomまたはBed
 ＋ status = published のRate Plan
 ＋ active = true のRoom Type別料金
 ＋ 1円以上のJPY料金
@@ -393,7 +393,7 @@ status = published のRoom Type
 
 - 自テナントの施設にのみRoom Type、Room、Bed、Rate Plan、Room Type別料金を作成・更新できること。
 - Roomは必ず施設に属し、Room Type未設定でも登録できること。
-- Room Typeを設定したRoomとRoom Type、RoomとBedが同じ施設および許可された販売形態で紐づくこと。
+- Room Typeを設定したRoomとRoom Type、RoomとBedが同じ施設および許可された利用形態で紐づくこと。
 - 未分類Room・Bedを販売在庫、公開条件、予約可能数および自動割り当て候補に含めないこと。
 - 将来予約の割り当てを持つRoomを別Room Typeへ変更または未分類化できないこと。
 - 貸切・個室はRoom、相部屋はBedを基本在庫として数えること。
@@ -404,7 +404,7 @@ status = published のRoom Type
 - 販売上限が物理在庫数を超えても実際の予約可能数が物理空き数を超えないこと。
 - 期間・曜日による販売上限の一括設定が対象日だけを作成または更新すること。
 - 公開するRoom Typeの`capacity`が1以上で、相部屋では1であること。
-- Room Typeは名称、説明、販売形態、定員、画像1件以上および対応する有効な物理在庫がなければ公開できないこと。
+- Room Typeは名称、説明、利用形態、定員、画像1件以上および対応する有効な物理在庫がなければ公開できないこと。
 - 施設全体画像をRoom Type画像の代わりにせず、物理Roomへ公開画像を紐づけないこと。
 - Amenitiesなしでも施設とRoom Typeを公開できること。
 - テナントが共通Amenitiesを変更できず、自テナント固有Amenitiesだけを作成・変更・無効化できること。

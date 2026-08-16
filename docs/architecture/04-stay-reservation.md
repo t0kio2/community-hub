@@ -287,7 +287,7 @@ total_amount = accommodation_subtotal_amount
              - discount_total_amount
 ```
 
-`price_snapshot`はスキーマバージョン、通貨、料金単位、Room Type、Rate Plan、施設・Room TypeのAmenities、数量、宿泊人数、日別料金明細、各合計を保持する。名称、販売形態、定員、食事条件も複製し、元レコードの変更や無効化後も予約時の内容を再現できるようにする。
+`price_snapshot`はスキーマバージョン、通貨、料金単位、Room Type、Rate Plan、施設・Room TypeのAmenities、数量、宿泊人数、日別料金明細、各合計を保持する。名称、利用形態、定員、食事条件も複製し、元レコードの変更や無効化後も予約時の内容を再現できるようにする。
 
 ```json
 {
@@ -400,7 +400,7 @@ JSONB内部の値を検索・集計の正とせず、予約検索や金額集計
 - 予約置換に失敗した場合、旧予約の状態、スナップショットおよび割り当てを維持すること。
 - 置換元予約の在庫だけを再利用でき、他予約の在庫を使用できないこと。
 - 置換元から置換先を参照でき、置換済みの旧予約を再度置換できないこと。
-- `guest_count`とRoom Typeの定員・販売形態の条件を検証すること。
+- `guest_count`とRoom Typeの定員・利用形態の条件を検証すること。
 - 代表宿泊者が常に1名で、登録済み宿泊者数が`guest_count`を超えないこと。
 - `requested / confirmed`かつ`check_in_at`未満の場合だけ予約者本人または対象テナントのMemberが宿泊者情報を変更できること。
 - 宿泊者情報の変更で予約条件と状態が変わらず、個人情報を含まない`guest_updated`イベントが作成されること。

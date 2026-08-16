@@ -437,7 +437,7 @@ function renderRoomTypeEditor(roomType) {
       <div class="field-grid">
         ${field("名称", `roomType.${roomType.id}.name`, roomType.name)}
         ${selectField("状態", `roomType.${roomType.id}.status`, roomType.status, [["draft", "draft"], ["published", "published"], ["inactive", "inactive"]])}
-        ${selectField("販売形態", `roomType.${roomType.id}.roomKind`, roomType.roomKind, [["entire_place", "一棟貸し"], ["private_room", "個室"], ["shared_room", "相部屋"]])}
+        ${selectField("利用形態", `roomType.${roomType.id}.roomKind`, roomType.roomKind, [["entire_place", "一棟貸し"], ["private_room", "個室"], ["shared_room", "相部屋"]])}
         ${field("1販売単位の定員", `roomType.${roomType.id}.capacity`, roomType.capacity, "number")}
         ${textarea("説明", `roomType.${roomType.id}.description`, roomType.description, "field-wide")}
       </div>
@@ -688,7 +688,7 @@ function handleClick(event) {
 function openModal(type, roomId, inventoryId) {
   const definitions = {
     listing: ["宿泊施設を追加", field("施設名", "modal.name", "")],
-    "room-type": ["Room Typeを追加", `${field("名称", "modal.name", "")}${selectField("販売形態", "modal.kind", "private_room", [["private_room", "個室"], ["shared_room", "相部屋"], ["entire_place", "一棟貸し"]])}${field("定員", "modal.capacity", 2, "number")}`],
+    "room-type": ["Room Typeを追加", `${field("名称", "modal.name", "")}${selectField("利用形態", "modal.kind", "private_room", [["private_room", "個室"], ["shared_room", "相部屋"], ["entire_place", "一棟貸し"]])}${field("定員", "modal.capacity", 2, "number")}`],
     room: ["物理Roomを登録", `${selectField("所属Room Type", "modal.roomTypeId", "", [["", "未分類（販売対象外）"], ...state.roomTypes.map((item) => [item.id, item.name])], "field-wide")}${field("管理名", "modal.name", "", "text", "field-wide")}`],
     bed: ["Bedを追加", field("管理名", "modal.name", "")],
     "rate-plan": ["Rate Planを追加", `${field("名称", "modal.name", "")}${selectField("食事", "modal.meal", "room_only", [["room_only", "素泊まり"], ["breakfast", "朝食"], ["dinner", "夕食"], ["breakfast_and_dinner", "朝夕食"]])}${selectField("キャンセル", "modal.policy", "standard", [["standard", "標準"], ["non_refundable", "返金不可"]])}`],

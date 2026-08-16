@@ -50,36 +50,6 @@
   background: var(--tenant-color-surface);
 }
 
-.tenant-location-index__table-wrapper {
-  overflow-x: auto;
-}
-
-.tenant-location-index__table {
-  width: 100%;
-  min-width: 820px;
-  border-collapse: collapse;
-}
-
-.tenant-location-index__table th,
-.tenant-location-index__table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid #edf0ed;
-  text-align: left;
-  vertical-align: middle;
-  font-size: var(--tenant-font-size-body);
-}
-
-.tenant-location-index__table th {
-  color: var(--tenant-color-muted);
-  background: #f7f8f5;
-  font-size: var(--tenant-font-size-small);
-  letter-spacing: 0.05em;
-}
-
-.tenant-location-index__table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
 .tenant-location-index__identity {
   min-width: 180px;
   display: flex;
@@ -111,58 +81,6 @@
   color: var(--tenant-color-primary);
   background: var(--tenant-color-primary-soft);
   font-weight: 700;
-}
-
-.tenant-location-index__actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  white-space: nowrap;
-}
-
-.tenant-location-edit-button {
-  min-height: 34px;
-  padding: 7px 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--tenant-color-border);
-  border-radius: 8px;
-  color: var(--tenant-color-primary);
-  background: #ffffff;
-  text-decoration: none;
-  font-size: var(--tenant-font-size-small);
-  font-weight: 700;
-}
-
-.tenant-location-edit-button:hover {
-  border-color: #83a694;
-  background: var(--tenant-color-primary-soft);
-}
-
-.tenant-location-index__actions form {
-  margin: 0;
-}
-
-.tenant-content button.tenant-location-delete-button {
-  padding: 4px 0;
-  border: 0;
-  border-radius: 0;
-  color: var(--tenant-color-danger);
-  background: transparent;
-  font-size: var(--tenant-font-size-small);
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: none;
-}
-
-.tenant-content button.tenant-location-delete-button:hover {
-  border: 0;
-  color: #7f2822;
-  background: transparent;
-  text-decoration: underline;
-  box-shadow: none;
 }
 
 .tenant-location-empty {

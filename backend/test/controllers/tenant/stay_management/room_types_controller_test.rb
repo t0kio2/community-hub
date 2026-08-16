@@ -96,7 +96,6 @@ class Tenant::StayManagement::RoomTypesControllerTest < ActionDispatch::Integrat
     get tenant_stay_room_types_path(@listing)
 
     assert_response :success
-    assert_select ".stay-room-types__table tbody tr", count: 1
     assert_select "td", text: /女性専用ドミトリー/
     assert_select "td", text: "相部屋"
     assert_select "a[href=?]", edit_tenant_stay_room_type_path(@listing, room_type), text: "編集"

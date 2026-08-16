@@ -24,8 +24,8 @@
 
   <div class="tenant-location-index__card">
     <% if @locations.any? %>
-      <div class="tenant-location-index__table-wrapper">
-        <table class="tenant-location-index__table">
+      <div class="data-table-wrapper">
+        <table class="data-table">
           <thead>
             <tr>
               <th scope="col">拠点</th>
@@ -53,13 +53,19 @@
                 <td><%= location.full_address.presence || "住所未設定" %></td>
                 <td><%= location.listings.size %>件</td>
                 <td>
-                  <div class="tenant-location-index__actions">
-                    <%= link_to "編集", edit_tenant_location_path(location), class: "tenant-location-edit-button" %>
+                  <div class="table-actions">
+                    <%= link_to "編集",
+                                edit_tenant_location_path(location),
+                                class: "table-action table-action--secondary" %>
                     <%= button_to "削除",
                                   tenant_location_path(location),
                                   method: :delete,
-                                  class: "tenant-location-delete-button",
-                                  form: { data: { confirm_message: "#{location.name}を削除します。この操作は取り消せません。" } } %>
+                                  class: "table-action table-action--danger",
+                                  form: {
+                                    data: {
+                                      confirm_message: "#{location.name}を削除します。この操作は取り消せません。"
+                                    }
+                                  } %>
                   </div>
                 </td>
               </tr>

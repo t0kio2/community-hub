@@ -1,53 +1,69 @@
-はい、_form.html.erbへ切り出すのが適切です。
+• データ構造上はすでに次の関係になっています。
 
-  ただし、現在ワークスペース上のedit.html.erbは空でした。エディタ上で未保存の可能性があります。
+  宿泊施設
+  └── 客室タイプ（例：スタンダードツイン）
+      └── 物理客室（例：201号室、202号室）
+          └── ベッド（ドミトリーの場合）
 
-  おすすめ構成:
+  UIは「客室タイプの配下に物理客室がある」と理解できる導線にするのがよいです。
 
-  room_types/
-  ├── _form.html.erb
-  ├── new.html.erb
-  └── edit.html.erb
+  おすすめは、客室タイプ一覧と物理客室一覧の両方から行き来できる構成です。
 
-  _form.html.erbにはフォーム本体だけを移し、以下をlocalsで受け取ります。
+  客室タイプ一覧には、紐づく客室数と客室管理リンクを追加します。
 
-  <%# _form.html.erb %>
-  <%= render "tenant/shared/forms/errors", records: [room_type] %>
+  名称                 利用形態   定員   登録客室   状態
+  スタンダードツイン   個室       2名    5室        公開中
+                                    [客室を見る] [編集]
 
-  <%= form_with model: room_type,
-                url: form_url,
-                local: true,
-                class: "management-form" do |form| %>
-    <!-- 共通フィールド -->
+  「客室を見る」の遷移先は物理客室一覧へ送り、客室タイプで絞り込みます。
 
-    <%= render "tenant/shared/forms/actions",
-               form: form,
-               submit_label: submit_label %>
-  <% end %>
+  /tenant/stays/:stay_id/rooms?room_type_id=:room_type_id
 
-  new.html.erb:
+  物理客室一覧は客室タイプごとにグループ化すると関係が明確です。
 
-  <% content_for :title, "客室タイプ登録" %>
-  <% content_for :page_title, "客室タイプ登録" %>
+  物理客室
 
-  <%= render "form",
-             room_type: @room_type,
-             form_url: tenant_stay_room_types_path(@listing),
-             submit_label: "客室タイプを登録" %>
+  [すべて] [スタンダードツイン] [女性専用ドミトリー]
 
-  edit.html.erb:
+  スタンダードツイン（2名）
+  ├── 201号室  使用中
+  ├── 202号室  使用中
+  └── 203号室  停止中
 
-  <% content_for :title, "客室タイプ編集" %>
-  <% content_for :page_title, "客室タイプ編集" %>
+  女性専用ドミトリー（6名）
+  └── 301号室
+      ├── ベッドA
+      ├── ベッドB
+      └── ベッドC
 
-  <%= render "form",
-             room_type: @room_type,
-             form_url: tenant_stay_room_type_path(@listing, @room_type),
-             submit_label: "客室タイプを更新" %>
+  物理客室の登録画面では、客室タイプを必須選択にします。
 
-  タイトル、戻るリンク、URL、送信文言は画面固有なのでnew・editに残し、入力フィールドとエラー表示だけを共通化するのがよい境界です。
+  客室名       [201号室]
+  客室タイプ   [スタンダードツイン ▼]
+  状態         [使用中]
+  備考         [...]
 
-  なお、コントローラーのedit・updateも現在空なので、@listingに属する客室タイプを取得する処理が別途必要です。
+  客室タイプ一覧の「客室を追加」から遷移した場合は、クエリパラメータでタイプを初期選択できます。
+
+  /rooms/new?room_type_id=123
+
+  ルートは深くネストさせず、現在の構成を維持するのがおすすめです。
+
+  /tenant/stays/:stay_id/rooms
+
+  room_types/:room_type_id/roomsまでネストするとURLやControllerが複雑になります。客室タイプとの関連はフォームのstay_room_type_idと絞り込み条件で表現すれば十分です。
+
+  また、サイドナビゲーションのRoom/Bedは、次のように日本語へ変更すると明確です。
+
+  客室・ベッド
+  物理客室とベッドを管理
+
+  販売単位は利用形態によって変わります。
+
+  - 個室・一棟貸切：物理客室を販売単位にする
+  - 共用客室：物理客室内のベッドを販売単位にする
+
+  したがって、最初は「物理客室」まで実装し、shared_roomの場合だけ客室詳細に「ベッド管理」を表示する段階的な設計が扱いやすいです。
 ***
 
 stay_roomがstay_listingに紐づいてない

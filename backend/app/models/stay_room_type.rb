@@ -4,6 +4,8 @@ class StayRoomType < ApplicationRecord
 
   belongs_to :stay_listing
 
+  has_many :stay_rooms
+
   validates :name, presence: true, length: { maximum: 50 }, uniqueness: { scope: :stay_listing_id }
   validates :room_kind, inclusion: { in: ROOM_KINDS }
   validates :status, inclusion: { in: STATUSES }
