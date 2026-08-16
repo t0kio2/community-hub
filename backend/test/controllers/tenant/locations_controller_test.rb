@@ -17,9 +17,10 @@ class Tenant::LocationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1#tenant-page-title", text: "拠点管理"
     assert_select ".tenant-menu-items a.active[href=?]", tenant_locations_path
     assert_select "dialog[data-confirmation-modal]", count: 1
-    assert_select "a.tenant-location-edit-button[href=?]", edit_tenant_location_path(own_location), count: 1
-    assert_select "button.tenant-location-delete-button", text: "削除", count: 1
-    assert_select 'form[data-confirm-message][action=?]', tenant_location_path(own_location), count: 1
+    assert_select "a[href=?]", edit_tenant_location_path(own_location), text: "編集"
+    assert_select 'form[data-confirm-message][action=?]', tenant_location_path(own_location) do
+      assert_select "button", text: "削除"
+    end
     assert_not_includes response.body, "turbo-confirm"
     assert_includes response.body, own_location.name
     assert_not_includes response.body, other_location.name

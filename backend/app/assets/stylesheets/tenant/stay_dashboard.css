@@ -238,47 +238,6 @@
   font-weight: 700;
 }
 
-/* Room Type一覧 */
-.stay-room-types__table-wrapper {
-  overflow-x: auto;
-}
-
-.stay-room-types__table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--tenant-font-size-body);
-}
-
-.stay-room-types__table th,
-.stay-room-types__table td {
-  padding: 14px 12px;
-  border-top: 1px solid var(--tenant-color-border);
-  text-align: left;
-  vertical-align: middle;
-}
-
-.stay-room-types__table th {
-  color: var(--tenant-color-muted);
-  font-size: var(--tenant-font-size-small);
-  font-weight: 700;
-}
-
-.stay-room-types__table td:first-child {
-  min-width: 240px;
-}
-
-.stay-room-types__table td strong,
-.stay-room-types__table td small {
-  display: block;
-}
-
-.stay-room-types__table td small {
-  max-width: 520px;
-  margin-top: 4px;
-  color: var(--tenant-color-muted);
-  line-height: 1.6;
-}
-
 /* 狭い管理画面ではカードを縦に並べる */
 @media (max-width: 1100px) {
   .stay-dashboard__grid {
