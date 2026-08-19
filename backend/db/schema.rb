@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_15_001000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_17_205352) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -275,9 +275,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_001000) do
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.text "notes"
-    t.bigint "stay_room_type_id", null: false
+    t.bigint "stay_listing_id", null: false
+    t.bigint "stay_room_type_id"
     t.datetime "updated_at", null: false
-    t.index ["stay_room_type_id", "name"], name: "index_stay_rooms_on_stay_room_type_id_and_name", unique: true
+    t.index ["stay_listing_id", "name"], name: "index_stay_rooms_on_stay_listing_id_and_name", unique: true
+    t.index ["stay_room_type_id", "active"], name: "index_stay_rooms_on_stay_room_type_id_and_active"
     t.index ["stay_room_type_id"], name: "index_stay_rooms_on_stay_room_type_id"
   end
 
@@ -381,6 +383,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_001000) do
   add_foreign_key "stay_room_type_rates", "stay_rate_plans"
   add_foreign_key "stay_room_type_rates", "stay_room_types"
   add_foreign_key "stay_room_types", "stay_listings"
+  add_foreign_key "stay_rooms", "stay_listings"
   add_foreign_key "stay_rooms", "stay_room_types"
   add_foreign_key "tenant_locations", "tenants", on_delete: :cascade
   add_foreign_key "tenant_members", "accounts"

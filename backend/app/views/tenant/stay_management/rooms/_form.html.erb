@@ -1,0 +1,49 @@
+<div class="management-form-page">
+  <%= render "tenant/shared/forms/errors", records: [room] %>
+
+  <%= form_with model: room,
+                url: form_url,
+                local: true,
+                class: "management-form" do |form| %>
+    <section class="form-section" aria-labelledby="room-basic-heading">
+      <%= render "tenant/shared/forms/section_heading",
+                 id: "room-basic-heading",
+                 title: "客室の基本情報",
+                 description: "施設内で管理する物理的な客室と、販売する客室タイプを設定します。" %>
+
+      <div class="field field-wide">
+        <%= form.label :name, "客室名", class: "form-label--required" %>
+        <%= form.text_field :name, placeholder: "101号室", required: true %>
+        <small class="form-field-hint">施設内で客室を識別する名称や部屋番号を入力します。</small>
+      </div>
+
+      <div class="field">
+        <%= form.label :stay_room_type_id, "客室タイプ" %>
+        <%= form.collection_select :stay_room_type_id,
+                                   @stay_listing.stay_room_types.order(:name),
+                                   :id,
+                                   :name,
+                                   { include_blank: "未割当て" } %>
+        <small class="form-field-hint">未割当てのまま客室だけを先に登録できます。</small>
+      </div>
+
+      <div class="field">
+        <%= form.label :active %>
+        <%= form.select :active,
+                        [[t("options.stay_room.active.true"), true],
+                         [t("options.stay_room.active.false"), false]] %>
+        <small class="form-field-hint">相部屋では、客室全体を停止すると所属するすべてのベッドが販売対象外になります。</small>
+      </div>
+
+      <div class="field field-wide">
+        <%= form.label :notes, "管理メモ" %>
+        <%= form.text_area :notes,
+                           rows: 4,
+                           placeholder: "清掃や設備など、施設内で共有する情報を入力してください" %>
+        <small class="form-field-hint">宿泊者には公開されない施設内の管理情報です。</small>
+      </div>
+    </section>
+
+    <%= render "tenant/shared/forms/actions", form: form, submit_label: submit_label %>
+  <% end %>
+</div>

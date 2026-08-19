@@ -1,0 +1,27 @@
+<tr id="<%= dom_id(bed) %>">
+  <td><strong class="data-table__primary"><%= bed.name %></strong></td>
+  <td>
+    <span class="stay-status stay-status--<%= bed.active? ? "active" : "inactive" %>">
+      <%= t("options.stay_bed.active.#{bed.active}") %>
+    </span>
+  </td>
+  <td><%= bed.notes.presence || "—" %></td>
+  <td>
+    <div class="table-actions">
+      <%= link_to "編集",
+                  edit_tenant_stay_room_bed_path(listing, room, bed),
+                  class: "table-action table-action--secondary",
+                  data: { turbo_frame: "stay-bed-form" } %>
+      <%= button_to "削除",
+                    tenant_stay_room_bed_path(listing, room, bed),
+                    method: :delete,
+                    class: "table-action table-action--danger",
+                    form: {
+                      data: {
+                        turbo_stream: true,
+                        confirm_message: "#{bed.name}を削除します。この操作は取り消せません。"
+                      }
+                    } %>
+    </div>
+  </td>
+</tr>

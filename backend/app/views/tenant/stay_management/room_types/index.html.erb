@@ -12,7 +12,7 @@
   "inactive" => "停止中"
 } %>
 
-<section class="stay-dashboard stay-room-types" aria-labelledby="tenant-page-title">
+<section class="stay-dashboard" aria-labelledby="tenant-page-title">
   <section class="stay-dashboard__card">
     <div class="stay-dashboard__card-heading">
       <div>
@@ -55,14 +55,13 @@
                   <%= room_type.capacity.present? ? "#{room_type.capacity}名" : "未設定" %>
                 </td>
                 <td>
-                  <span class="data-table__inline-detail">
-                    <span class="data-table__primary">
-                      <%= room_type.stay_rooms.size %>室
-                    </span>
-                    <span class="data-table__secondary">
-                      <%= room_type.stay_rooms.any? ? "客室を見る" : "客室を割当てる" %>
-                    </span>
-                  </span>
+                  <% active_room_count = room_type.stay_rooms.count(&:active?) %>
+                  <strong class="data-table__primary">
+                    <%= room_type.stay_rooms.any? ? "#{active_room_count} / #{room_type.stay_rooms.size}室 稼働中" : "未割当て" %>
+                  </strong>
+                  <%= link_to room_type.stay_rooms.any? ? "客室を見る" : "客室を割当てる",
+                              tenant_stay_rooms_path(@listing, stay_room_type_id: room_type.id),
+                              class: "data-table__secondary data-table__link" %>
                 </td>
                 <td>
                   <span class="stay-status stay-status--<%= room_type.status %>">

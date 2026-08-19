@@ -2,6 +2,7 @@ class StayListing < ApplicationRecord
   BOOKING_CONFIRMATION_MODES = %w[instant approval_required].freeze
 
   has_many :stay_room_types
+  has_many :stay_rooms
 
   belongs_to :listing
 

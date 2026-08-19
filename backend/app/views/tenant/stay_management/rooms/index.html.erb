@@ -1,0 +1,101 @@
+<% content_for :title, "割当て客室管理" %>
+<% content_for :page_title, "割当て客室管理" %>
+
+<section class="stay-dashboard" aria-labelledby="tenant-page-title">
+  <section class="stay-dashboard__card">
+    <div class="stay-dashboard__card-heading">
+      <div>
+        <h2>割当て客室一覧</h2>
+        <p><%= @rooms.size %>件の客室が登録されています</p>
+      </div>
+      <%= link_to "客室を登録",
+                  new_tenant_stay_room_path(@listing),
+                  class: "stay-dashboard__button stay-dashboard__button--primary" %>
+    </div>
+
+    <% if @rooms.any? %>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">名称</th>
+              <th scope="col">割当て客室タイプ</th>
+              <th scope="col">ベッド</th>
+              <th scope="col">客室全体の状態</th>
+              <th scope="col">メモ</th>
+              <th scope="col"><span class="visually-hidden">操作</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @rooms.each do |room| %>
+              <tr>
+                <td>
+                  <strong class="data-table__primary"><%= room.name %></strong>
+                </td>
+                <td>
+                  <%= room.stay_room_type&.name || "未割当て" %>
+                </td>
+                <td>
+                  <% if room.stay_room_type&.shared_room? %>
+                    <% active_bed_count = room.stay_beds.count(&:active?) %>
+                    <strong class="data-table__primary">
+                      <% if room.stay_beds.empty? %>
+                        未登録
+                      <% elsif room.active? %>
+                        <%= "#{active_bed_count} / #{room.stay_beds.size}床 利用可能" %>
+                      <% else %>
+                        客室停止中
+                      <% end %>
+                    </strong>
+                    <% if room.stay_beds.any? && !room.active? %>
+                      <span class="data-table__secondary"><%= "個別設定: #{active_bed_count} / #{room.stay_beds.size}床 利用可能" %></span>
+                    <% end %>
+                    <%= link_to "ベッドを管理",
+                                edit_tenant_stay_room_path(@listing, room, anchor: "stay-beds-section"),
+                                class: "data-table__secondary data-table__link" %>
+                  <% elsif room.stay_room_type.present? %>
+                    <span class="data-table__secondary">対象外</span>
+                  <% else %>
+                    <span class="data-table__secondary">—</span>
+                  <% end %>
+                </td>
+                <td>
+                  <span class="stay-status stay-status--<%= room.active? ? "active" : "inactive" %>">
+                    <%= t("options.stay_room.active.#{room.active}") %>
+                  </span>
+                </td>
+                <td><%= room.notes.presence || "—" %></td>
+                <td>
+                  <div class="table-actions">
+                    <%= link_to "編集",
+                                edit_tenant_stay_room_path(@listing, room),
+                                class: "table-action table-action--secondary" %>
+                    <%= button_to "削除",
+                                tenant_stay_room_path(@listing, room),
+                                method: :delete,
+                                class: "table-action table-action--danger",
+                                form: {
+                                  data: {
+                                    confirm_message: "#{room.name}を削除します。この操作は取り消せません。"
+                                  }
+                                } %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <%= link_to new_tenant_stay_room_path(@listing), class: "text-decoration-none" do %>
+        <div class="stay-dashboard__empty-state">
+          <span aria-hidden="true">＋</span>
+          <div>
+            <strong>客室がまだ登録されていません</strong>
+            <p>客室タイプに割り当てるお部屋・ベッドを登録してください。</p>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+</section>
