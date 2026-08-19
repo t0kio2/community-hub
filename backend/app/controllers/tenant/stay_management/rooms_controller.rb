@@ -41,9 +41,13 @@ class Tenant::StayManagement::RoomsController < Tenant::StayManagement::BaseCont
 	end
 
 	def destroy
-		@room.destroy
-		redirect_to tenant_stay_rooms_path(@listing),
-                notice: "客室を削除しました"
+		if @room.destroy
+			redirect_to tenant_stay_rooms_path(@listing),
+									notice: "客室を削除しました"
+		else
+			redirect_to tenant_stay_rooms_path(@listing),
+                  alert: "ベッドが登録されているため客室を削除できません"
+		end
 	end
 
 	private
