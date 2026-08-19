@@ -1,17 +1,6 @@
 <% content_for :title, "客室タイプ管理" %>
 <% content_for :page_title, "客室タイプ" %>
 
-<% room_kind_labels = {
-  "entire_place" => "一棟貸し",
-  "private_room" => "個室",
-  "shared_room" => "相部屋"
-} %>
-<% status_labels = {
-  "published" => "公開中",
-  "draft" => "下書き",
-  "inactive" => "停止中"
-} %>
-
 <section class="stay-dashboard" aria-labelledby="tenant-page-title">
   <section class="stay-dashboard__card">
     <div class="stay-dashboard__card-heading">
@@ -49,7 +38,7 @@
                   <% end %>
                 </td>
                 <td>
-                  <%= room_kind_labels.fetch(room_type.room_kind, room_type.room_kind) %>
+                  <%= I18n.t("activerecord.enums.stay_room_type.room_kind.#{room_type.room_kind}") %>
                 </td>
                 <td>
                   <%= room_type.capacity.present? ? "#{room_type.capacity}名" : "未設定" %>
@@ -65,7 +54,7 @@
                 </td>
                 <td>
                   <span class="stay-status stay-status--<%= room_type.status %>">
-                    <%= status_labels.fetch(room_type.status, room_type.status) %>
+                    <%= I18n.t("activerecord.enums.stay_room_type.status.#{room_type.status}") %>
                   </span>
                 </td>
                 <td>

@@ -30,12 +30,20 @@
                           [t("activerecord.enums.stay_room_type.room_kind.#{kind}"), kind]
                         },
                         { include_blank: "利用形態を選択してください" },
-                        required: true %>
+                        required: true,
+                        data: {
+                          room_kind_select: true,
+                          shared_room_value: StayRoomType.room_kinds.fetch("shared_room")
+                        } %>
       </div>
 
       <div class="field">
         <%= form.label :capacity, "定員" %>
-        <%= form.number_field :capacity, min: 1, step: 1, placeholder: "2" %>
+        <%= form.number_field :capacity,
+                              min: 1,
+                              step: 1,
+                              placeholder: "2",
+                              data: { room_capacity_input: true } %>
         <small class="form-field-hint">この客室タイプを利用できる最大人数を入力します。</small>
       </div>
 
@@ -48,3 +56,25 @@
     <%= render "tenant/shared/forms/actions", form: form, submit_label: submit_label %>
   <% end %>
 </div>
+
+<script>
+  (function () {
+    var script = document.currentScript;
+    var formPage = script && script.closest(".management-form-page");
+    if (!formPage) return;
+
+    var roomKindSelect = formPage.querySelector("[data-room-kind-select]");
+    var capacityInput = formPage.querySelector("[data-room-capacity-input]");
+    if (!roomKindSelect || !capacityInput) return;
+
+    function updateCapacity() {
+      var sharedRoomSelected = roomKindSelect.value === roomKindSelect.dataset.sharedRoomValue;
+
+      if (sharedRoomSelected) capacityInput.value = "1";
+      capacityInput.readOnly = sharedRoomSelected;
+    }
+
+    roomKindSelect.addEventListener("change", updateCapacity);
+    updateCapacity();
+  })();
+</script>

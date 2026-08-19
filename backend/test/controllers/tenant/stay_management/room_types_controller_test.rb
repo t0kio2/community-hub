@@ -98,7 +98,8 @@ class Tenant::StayManagement::RoomTypesControllerTest < ActionDispatch::Integrat
 
     assert_response :success
     assert_select "td", text: /女性専用ドミトリー/
-    assert_select "td", text: "相部屋"
+    assert_select "td",
+                  text: I18n.t("activerecord.enums.stay_room_type.room_kind.shared_room")
     assert_includes response.body, "1 / 1室 稼働中"
     assert_select "a[href=?]",
                   tenant_stay_rooms_path(@listing, stay_room_type_id: room_type.id),
