@@ -12,7 +12,7 @@
   "inactive" => "停止中"
 } %>
 
-<section class="stay-dashboard stay-room-types" aria-labelledby="tenant-page-title">
+<section class="stay-dashboard" aria-labelledby="tenant-page-title">
   <section class="stay-dashboard__card">
     <div class="stay-dashboard__card-heading">
       <div>
@@ -60,7 +60,10 @@
                       <%= room_type.stay_rooms.size %>室
                     </span>
                     <span class="data-table__secondary">
-                      <%= room_type.stay_rooms.any? ? "客室を見る" : "客室を割当てる" %>
+                      <%= room_type.stay_rooms.any? ?
+                        "客室を見る" :
+                        "客室を割当てる"
+                      %>
                     </span>
                   </span>
                 </td>

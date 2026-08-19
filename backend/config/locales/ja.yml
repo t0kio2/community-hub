@@ -19,6 +19,8 @@ ja:
         room_kind: "利用形態"
         capacity: "定員"
         status: "状態"
+      stay_room:
+        active: "運用状態"
     enums:
       stay_room_type:
         room_kind:
@@ -29,3 +31,8 @@ ja:
           draft: "下書き"
           published: "公開中"
           inactive: "停止中"
+  options:
+    stay_room:
+      active:
+        "true": "利用可能"
+        "false": "停止中"
