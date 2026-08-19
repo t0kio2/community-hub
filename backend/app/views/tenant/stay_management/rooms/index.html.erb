@@ -19,8 +19,10 @@
           <thead>
             <tr>
               <th scope="col">名称</th>
-              <th scope="col">状態</th>
-							<th scope="col">メモ</th>
+              <th scope="col">割当て客室タイプ</th>
+              <th scope="col">ベッド</th>
+              <th scope="col">客室全体の状態</th>
+              <th scope="col">メモ</th>
               <th scope="col"><span class="visually-hidden">操作</span></th>
             </tr>
           </thead>
@@ -31,13 +33,38 @@
                   <strong class="data-table__primary"><%= room.name %></strong>
                 </td>
                 <td>
-                  <span class="stay-status stay-status--<%= room.active %>">
-                    <%= room.active? ? "有効" : "無効" %>
+                  <%= room.stay_room_type&.name || "未割当て" %>
+                </td>
+                <td>
+                  <% if room.stay_room_type&.shared_room? %>
+                    <% active_bed_count = room.stay_beds.count(&:active?) %>
+                    <strong class="data-table__primary">
+                      <% if room.stay_beds.empty? %>
+                        未登録
+                      <% elsif room.active? %>
+                        <%= "#{active_bed_count} / #{room.stay_beds.size}床 利用可能" %>
+                      <% else %>
+                        客室停止中
+                      <% end %>
+                    </strong>
+                    <% if room.stay_beds.any? && !room.active? %>
+                      <span class="data-table__secondary"><%= "個別設定: #{active_bed_count} / #{room.stay_beds.size}床 利用可能" %></span>
+                    <% end %>
+                    <%= link_to "ベッドを管理",
+                                edit_tenant_stay_room_path(@listing, room, anchor: "stay-beds-section"),
+                                class: "data-table__secondary data-table__link" %>
+                  <% elsif room.stay_room_type.present? %>
+                    <span class="data-table__secondary">対象外</span>
+                  <% else %>
+                    <span class="data-table__secondary">—</span>
+                  <% end %>
+                </td>
+                <td>
+                  <span class="stay-status stay-status--<%= room.active? ? "active" : "inactive" %>">
+                    <%= t("options.stay_room.active.#{room.active}") %>
                   </span>
                 </td>
-								<td>
-									<%= room.note %>
-								</td>
+                <td><%= room.notes.presence || "—" %></td>
                 <td>
                   <div class="table-actions">
                     <%= link_to "編集",

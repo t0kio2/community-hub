@@ -91,6 +91,16 @@
   margin-top: 0;
 }
 
+.data-table__link {
+  color: var(--table-actions-color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.data-table__link:hover {
+  text-decoration: underline;
+}
+
 .table-actions {
   display: flex;
   align-items: center;

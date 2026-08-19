@@ -1,0 +1,18 @@
+<% content_for :title, "客室編集" %>
+<% content_for :back_link do %>
+  <%= link_to "← 客室一覧へ戻る", tenant_stay_rooms_path(@listing), class: "tenant-back-link" %>
+<% end %>
+
+<%= render "form",
+           room: @room,
+           form_url: tenant_stay_room_path(@listing, @room),
+           submit_label: "客室を更新" %>
+
+<% if @room.stay_room_type&.shared_room? %>
+  <%= render "tenant/stay_management/beds/section", listing: @listing, room: @room %>
+<% elsif @room.stay_room_type.nil? %>
+  <section class="stay-beds-guide">
+    <strong>ベッド管理を利用するには客室タイプを割り当ててください</strong>
+    <p>相部屋の客室タイプを保存すると、この画面でベッドを登録できます。</p>
+  </section>
+<% end %>

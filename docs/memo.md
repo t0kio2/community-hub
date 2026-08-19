@@ -1,160 +1,73 @@
-• データ構造上はすでに次の関係になっています。
+一通りの画面は揃っていますが、「実装完了」とするにはまだ不足があります。現状はUIと基本CRUDの骨格が完成した段階です。
 
-  宿泊施設
-  └── 客室タイプ（例：スタンダードツイン）
-      └── 物理客室（例：201号室、202号室）
-          └── ベッド（ドミトリーの場合）
+  主な未完了事項：
 
-  UIは「客室タイプの配下に物理客室がある」と理解できる導線にするのがよいです。
+  1. Room Typeの施設整合性検証
 
-  おすすめは、客室タイプ一覧と物理客室一覧の両方から行き来できる構成です。
+  backend/app/models/stay_room.rbには、選択したstay_room_typeが同じstay_listingに属する検証がありません。
 
-  客室タイプ一覧には、紐づく客室数と客室管理リンクを追加します。
+  フォーム表示は絞り込まれていますが、リクエストを直接送れば別施設のRoom Type IDを指定できます。
 
-  名称                 利用形態   定員   登録客室   状態
-  スタンダードツイン   個室       2名    5室        公開中
-                                    [客室を見る] [編集]
+  2. Roomの基本バリデーション
 
-  「客室を見る」の遷移先は物理客室一覧へ送り、客室タイプで絞り込みます。
+  現在、DB制約だけに依存しています。
 
-  /tenant/stays/:stay_id/rooms?room_type_id=:room_type_id
+  - nameの必須
+  - 同一施設内での名称重複
+  - activeの必須
 
-  物理客室一覧は客室タイプごとにグループ化すると関係が明確です。
+  少なくとも以下が必要です。
 
-  物理客室
+  validates :name,
+            presence: true,
+            uniqueness: { scope: :stay_listing_id }
 
-  [すべて] [スタンダードツイン] [女性専用ドミトリー]
+  3. 削除失敗時の処理
 
-  スタンダードツイン（2名）
-  ├── 201号室  使用中
-  ├── 202号室  使用中
-  └── 203号室  停止中
+  RoomにBedがある場合はrestrict_with_errorで削除できませんが、Controllerは結果を確認せず「削除しました」と表示します。
 
-  女性専用ドミトリー（6名）
-  └── 301号室
-      ├── ベッドA
-      ├── ベッドB
-      └── ベッドC
+  @room.destroy
+  redirect_to ..., notice: "客室を削除しました"
 
-  物理客室の登録画面では、客室タイプを必須選択にします。
+  Room Typeも割当て済みRoomが存在すると、外部キーエラーになる可能性があります。削除可否とエラー表示の設計が必要です。
 
-  客室名       [201号室]
-  客室タイプ   [スタンダードツイン ▼]
-  状態         [使用中]
-  備考         [...]
+  4. 不要なshowルート
 
-  客室タイプ一覧の「客室を追加」から遷移した場合は、クエリパラメータでタイプを初期選択できます。
+  Room TypeとRoomのルートにshowがありますが、ControllerとViewにshowはありません。
 
-  /rooms/new?room_type_id=123
+  resources :room_types, only: %i[index show new create edit update destroy]
+  resources :rooms, only: %i[index show new create edit update destroy]
 
-  ルートは深くネストさせず、現在の構成を維持するのがおすすめです。
+  使わないならshowを削除すべきです。現在アクセスするとActionNotFoundになります。
 
-  /tenant/stays/:stay_id/rooms
+  5. Room Typeの業務ルール
 
-  room_types/:room_type_id/roomsまでネストするとURLやControllerが複雑になります。客室タイプとの関連はフォームのstay_room_type_idと絞り込み条件で表現すれば十分です。
+  ER設計にある次の条件は未実装です。
 
-  また、サイドナビゲーションのRoom/Bedは、次のように日本語へ変更すると明確です。
+  - shared_roomのcapacityは1
+  - 公開時に必要な情報の検証
+  - 予約割当てがあるRoomのRoom Type変更制限
+  - 販売可否のRoom／Bed親子判定
 
-  客室・ベッド
-  物理客室とベッドを管理
+  予約機能がまだなら後回しでも構いませんが、少なくともshared_roomの定員ルールは現段階で検討が必要です。
 
-  販売単位は利用形態によって変わります。
+  6. テスト不足
 
-  - 個室・一棟貸切：物理客室を販売単位にする
-  - 共用客室：物理客室内のベッドを販売単位にする
+  現在確認できているのは主に以下です。
 
-  したがって、最初は「物理客室」まで実装し、shared_roomの場合だけ客室詳細に「ベッド管理」を表示する段階的な設計が扱いやすいです。
-***
+  - Room Typeの登録・一覧・編集表示
+  - Bedの登録
+  - Bedの施設境界
+  - 一覧での割当て状況
 
-stay_roomがstay_listingに紐づいてない
-$ docker exec a2a279d0b43d rails g migration AddStayListingIdToStayRoom
+  不足している重要なケース：
 
-stay_listingsにaddress, amenitiesは不要
+  - Roomの登録・更新
+  - 別施設Room Typeの割当て拒否
+  - Bedの更新・削除
+  - BedありRoomの削除拒否
+  - RoomありRoom Typeの削除拒否
+  - 入力エラー時の再表示
 
-実装にstay_typeはstay_listingsにあり、個室・相部屋・一棟借り、など。
-ERにはなく、room_kindが正しい？
-
-capacityがstay_room_typesにあるが、stay_roomsにあるべきでは？
-room_kindがstay_listingsにあるが、stay_room_typesにあるべきでは？
-
-
-業務フロー 抽象
-1. 施設名登録 => listing情報
-2. 部屋の登録 => stay_rooms情報。stay_listingsに紐づき、stay_room_typeとは独立。
-3. プラン、料金設定 => stay_room_type_ratesに料金をもたせ、条件を持つstay_rate_plans(食事、キャンセルポリシー)との組み合わせでプランを作る
-
-具体
-1. 山の上ホテルを登録。住所/説明/画像/タイムゾーン/チェックイン開始・チェックイン終了・チェックアウト/予約可能期間/予約確定方式(自動・承認)
-2. 部屋を登録。101, 102, 201, 202を登録。　201, 202は相部屋で、ベットを01, 02, 03, 04の４台。また、別棟で一棟貸
-3. プラン、料金を割り当てる。
-    - 女性専用ドミトリー 朝食夕食付き 一泊6,000円
-    - 女性専用ドミトリー 素泊まり 一泊3,000円
-    - シングル(大人1名) 朝食夕食付き 一泊9,000円
-    - シングル(大人1名) 素泊まり 一泊7,000円
-    - ダブル(大人2名) 朝食夕食付き 一泊12,000円
-    - ダブル(大人2名) 素泊まり 一泊9,000円
-    - 一棟まるまるプラン  一泊60,000円
-
-       Room Type             room_kind         capacity    Rate Plan                 料金単位
-  ━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━  ━━━━━━━━━━━━  ━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━
-   女性専用ドミトリー    shared_room              1    朝食夕食付き      6,000円／Bed・泊
-  ────────────────────  ──────────────  ────────────  ──────────────  ────────────────────
-   女性専用ドミトリー    shared_room              1    素泊まり          3,000円／Bed・泊
-  ────────────────────  ──────────────  ────────────  ──────────────  ────────────────────
-   シングル              private_room             1    朝食夕食付き     9,000円／Room・泊
-  ────────────────────  ──────────────  ────────────  ──────────────  ────────────────────
-   シングル              private_room             1    素泊まり         7,000円／Room・泊
-  ────────────────────  ──────────────  ────────────  ──────────────  ────────────────────
-   ダブル                private_room             2    朝食夕食付き    12,000円／Room・泊
-  ────────────────────  ──────────────  ────────────  ──────────────  ────────────────────
-   ダブル                private_room             2    素泊まり         9,000円／Room・泊
-  ────────────────────  ──────────────  ────────────  ──────────────  ────────────────────
-   一棟まるまる          entire_place    一棟の定員    素泊まり等      60,000円／Room・泊
-
-room_types
-	- name *スタンダードシングル など利用者が選ぶ名前
-	- description
-	- room_kind
-	- capacity
-
-stay_rate_plans
-	- name *素泊まり、朝食・夕食付き、など販売条件名
-	- description
-	- meal_type
-	- キャンセルポリシー
-
-room_type_rates
-	- FK: room_type_id
-	- FK: rate_plan_id
-	- price_per_night_amount
-	- currency
-
-
-
-    
-
-**********
-
-StayListingを作る。
-
-listigテーブル
-id
-tenant_id : not null
-created_by_tenant_member_id : 
-updated_by_tenant_member_id
-listing_type :not null => enum
-title
-description
-status : => enum
-published_at
-last_published_at ＊欠如
-closed_at
-closed_reason *欠如
-archived_at *欠如
-
-
-# 仕様書との差分
-listingテーブルは以下実装にない。
-last_published_at ＊欠如
-closed_reason *欠如
-archived_at *欠如
+  結論として、UIはほぼ完成していますが、データ整合性・削除制御・ルート整理・重要テストが残っています。特に「別施設のRoom Typeを割り当てられる問題」と「削除失敗
+  を成功表示する問題」は、完了前に修正すべきです。
