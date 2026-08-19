@@ -20,6 +20,7 @@
     stay_dashboard_active = controller_path == "tenant/stays" && action_name == "show"
     stay_settings_active = controller_path == "tenant/stays" && action_name == "edit"
     room_types_active = controller_path == "tenant/stay_management/room_types"
+    rooms_active = controller_path == "tenant/stay_management/rooms"
   %>
   <nav class="tenant-navigation stay-facility-navigation" aria-label="<%= @listing.title %>の宿泊施設管理">
     <%= link_to tenant_stays_path, class: "stay-facility-navigation__back" do %>
@@ -60,10 +61,16 @@
       <span><strong>客室タイプ</strong><small>販売する客室分類</small></span>
     <% end %>
 
+    <%= link_to tenant_stay_rooms_path(@listing),
+                class: ["stay-facility-navigation__item", rooms_active && "active"],
+                aria: (rooms_active ? { current: "page" } : {}) do %>
+      <span class="stay-facility-navigation__icon" aria-hidden="true">▤</span>
+      <span><strong>割り当て客室管理</strong><small>物理客室と販売在庫</small></span>
+    <% end %>
+
 
     <!-- TODO: ActiveDecoratorを導入しそこに定義する -->
     <% [
-      ["Room/Bed", "物理客室と販売在庫", "▦"],
       ["料金プラン", "販売条件と基本料金", "¥"],
       ["販売カレンダー", "日別料金と販売上限", "▥"],
       ["公開設定", "公開条件と受付状態", "✓"]

@@ -1,0 +1,9 @@
+<% content_for :title, "客室登録" %>
+<% content_for :back_link do %>
+  <%= link_to "← 客室一覧へ戻る", tenant_stay_rooms_path(@listing), class: "tenant-back-link" %>
+<% end %>
+
+<%= render "form",
+           room: @room,
+           form_url: tenant_stay_rooms_path(@listing),
+           submit_label: "客室を登録" %>
