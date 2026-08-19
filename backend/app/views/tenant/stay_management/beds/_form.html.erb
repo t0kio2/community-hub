@@ -1,0 +1,33 @@
+<%= render "tenant/shared/forms/errors", records: [bed] %>
+
+<%= form_with model: bed,
+              url: form_url,
+              class: "management-form stay-bed-form" do |form| %>
+  <div class="field">
+    <%= form.label :name, "ベッド名", class: "form-label--required" %>
+    <%= form.text_field :name, placeholder: "ベッド1", required: true %>
+  </div>
+
+  <div class="field">
+    <%= form.label :active %>
+    <%= form.select :active,
+                    [[t("options.stay_bed.active.true"), true],
+                     [t("options.stay_bed.active.false"), false]] %>
+    <small class="form-field-hint">客室全体が停止中の場合、利用可能に設定しても販売対象にはなりません。</small>
+  </div>
+
+  <div class="field field-wide">
+    <%= form.label :notes, "管理メモ" %>
+    <%= form.text_area :notes,
+                       rows: 3,
+                       placeholder: "位置や設備など、施設内で共有する情報を入力してください" %>
+  </div>
+
+  <div class="form-actions field-wide">
+    <%= link_to "キャンセル",
+                edit_tenant_stay_room_path(listing, room),
+                class: "tenant-back-link",
+                data: { turbo_frame: "stay-beds-section" } %>
+    <%= form.submit submit_label, class: "form-submit" %>
+  </div>
+<% end %>

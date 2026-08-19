@@ -57,7 +57,9 @@ Rails.application.routes.draw do
     resources :stays, only: %i[index show new create edit update] do
       scope module: :stay_management do
         resources :room_types, only: %i[index show new create edit update destroy]
-        resources :rooms, only: %i[index show new create edit update destroy]
+        resources :rooms, only: %i[index show new create edit update destroy] do
+          resources :beds, only: %i[new create edit update destroy]
+        end
         resources :rate_plans, only: %i[index show new create edit update destroy]
       end
     end

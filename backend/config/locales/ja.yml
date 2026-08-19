@@ -20,7 +20,9 @@ ja:
         capacity: "定員"
         status: "状態"
       stay_room:
-        active: "運用状態"
+        active: "客室全体の運用状態"
+      stay_bed:
+        active: "ベッドの運用状態"
     enums:
       stay_room_type:
         room_kind:
@@ -33,6 +35,10 @@ ja:
           inactive: "停止中"
   options:
     stay_room:
+      active:
+        "true": "稼働中"
+        "false": "停止中"
+    stay_bed:
       active:
         "true": "利用可能"
         "false": "停止中"

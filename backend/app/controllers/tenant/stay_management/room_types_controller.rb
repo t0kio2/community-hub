@@ -27,11 +27,18 @@ class Tenant::StayManagement::RoomTypesController < Tenant::StayManagement::Base
 	end
 
 	def update
+    if @room_type.update(room_type_params)
+      redirect_to tenant_stay_room_types_path(@listing),
+                  notice: "客室タイプを更新しました"
+    else
+      render :edit, status: :unprocessable_entity
+    end
 	end
 
 	def destroy
 		@room_type.destroy
-		redirect_to tenant_stay_room_types_path(@listing), notice: "客室タイプを削除しました"
+		redirect_to tenant_stay_room_types_path(@listing),
+                notice: "客室タイプを削除しました"
 	end
 
 

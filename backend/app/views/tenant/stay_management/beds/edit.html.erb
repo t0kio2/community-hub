@@ -1,0 +1,8 @@
+<%= turbo_frame_tag "stay-bed-form" do %>
+  <%= render "form",
+             bed: @bed,
+             listing: @listing,
+             room: @room,
+             form_url: tenant_stay_room_bed_path(@listing, @room, @bed),
+             submit_label: "ベッドを更新" %>
+<% end %>

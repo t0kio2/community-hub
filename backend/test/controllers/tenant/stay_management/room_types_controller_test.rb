@@ -92,12 +92,17 @@ class Tenant::StayManagement::RoomTypesControllerTest < ActionDispatch::Integrat
       capacity: 1,
       status: "published"
     )
+    @stay_listing.stay_rooms.create!(name: "ドミトリーA", stay_room_type: room_type, active: true)
 
     get tenant_stay_room_types_path(@listing)
 
     assert_response :success
     assert_select "td", text: /女性専用ドミトリー/
     assert_select "td", text: "相部屋"
+    assert_includes response.body, "1 / 1室 稼働中"
+    assert_select "a[href=?]",
+                  tenant_stay_rooms_path(@listing, stay_room_type_id: room_type.id),
+                  text: "客室を見る"
     assert_select "a[href=?]", edit_tenant_stay_room_type_path(@listing, room_type), text: "編集"
   end
 end

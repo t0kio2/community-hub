@@ -28,10 +28,11 @@
       </div>
 
       <div class="field">
-        <%= form.label :active, "運用状態" %>
+        <%= form.label :active %>
         <%= form.select :active,
                         [[t("options.stay_room.active.true"), true],
                          [t("options.stay_room.active.false"), false]] %>
+        <small class="form-field-hint">相部屋では、客室全体を停止すると所属するすべてのベッドが販売対象外になります。</small>
       </div>
 
       <div class="field field-wide">

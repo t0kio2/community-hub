@@ -1,0 +1,42 @@
+<%= turbo_frame_tag "stay-beds-section" do %>
+  <% beds = room.stay_beds.order(:id).to_a %>
+  <section class="stay-beds-section" aria-labelledby="stay-beds-heading">
+    <div class="stay-beds-section__heading">
+      <div>
+        <h2 id="stay-beds-heading">ベッド管理</h2>
+        <p><%= beds.size %>件のベッドが登録されています。</p>
+      </div>
+      <%= link_to "＋ ベッドを追加",
+                  new_tenant_stay_room_bed_path(listing, room),
+                  class: "stay-dashboard__button stay-dashboard__button--primary",
+                  data: { turbo_frame: "stay-bed-form" } %>
+    </div>
+
+    <%= turbo_frame_tag "stay-bed-form" %>
+
+    <% if beds.any? %>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">ベッド名</th>
+              <th scope="col">ベッドの状態</th>
+              <th scope="col">管理メモ</th>
+              <th scope="col"><span class="visually-hidden">操作</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <%= render partial: "tenant/stay_management/beds/bed",
+                       collection: beds,
+                       locals: { listing: listing, room: room } %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="stay-beds-section__empty">
+        <strong>ベッドがまだ登録されていません</strong>
+        <p>この客室で販売する物理ベッドを登録してください。</p>
+      </div>
+    <% end %>
+  </section>
+<% end %>
