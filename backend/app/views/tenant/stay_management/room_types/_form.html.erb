@@ -4,7 +4,11 @@
   <%= form_with model: room_type,
                 url: form_url,
                 local: true,
-                class: "management-form" do |form| %>
+                class: "management-form",
+                data: {
+                  controller: "room-type-capacity",
+                  room_type_capacity_shared_room_value: StayRoomType.room_kinds.fetch("shared_room")
+                } do |form| %>
     <section class="form-section" aria-labelledby="room-type-basic-heading">
       <%= render "tenant/shared/forms/section_heading",
                  id: "room-type-basic-heading",
@@ -32,8 +36,8 @@
                         { include_blank: "利用形態を選択してください" },
                         required: true,
                         data: {
-                          room_kind_select: true,
-                          shared_room_value: StayRoomType.room_kinds.fetch("shared_room")
+                          room_type_capacity_target: "roomKind",
+                          action: "change->room-type-capacity#update"
                         } %>
       </div>
 
@@ -43,7 +47,7 @@
                               min: 1,
                               step: 1,
                               placeholder: "2",
-                              data: { room_capacity_input: true } %>
+                              data: { room_type_capacity_target: "capacity" } %>
         <small class="form-field-hint">この客室タイプを利用できる最大人数を入力します。</small>
       </div>
 
@@ -56,25 +60,3 @@
     <%= render "tenant/shared/forms/actions", form: form, submit_label: submit_label %>
   <% end %>
 </div>
-
-<script>
-  (function () {
-    var script = document.currentScript;
-    var formPage = script && script.closest(".management-form-page");
-    if (!formPage) return;
-
-    var roomKindSelect = formPage.querySelector("[data-room-kind-select]");
-    var capacityInput = formPage.querySelector("[data-room-capacity-input]");
-    if (!roomKindSelect || !capacityInput) return;
-
-    function updateCapacity() {
-      var sharedRoomSelected = roomKindSelect.value === roomKindSelect.dataset.sharedRoomValue;
-
-      if (sharedRoomSelected) capacityInput.value = "1";
-      capacityInput.readOnly = sharedRoomSelected;
-    }
-
-    roomKindSelect.addEventListener("change", updateCapacity);
-    updateCapacity();
-  })();
-</script>
