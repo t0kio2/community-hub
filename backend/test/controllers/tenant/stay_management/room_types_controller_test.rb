@@ -106,4 +106,62 @@ class Tenant::StayManagement::RoomTypesControllerTest < ActionDispatch::Integrat
                   text: "客室を見る"
     assert_select "a[href=?]", edit_tenant_stay_room_type_path(@listing, room_type), text: "編集"
   end
+
+  test "客室タイプを更新する" do
+    room_type = @stay_listing.stay_room_types.create!(name: "ツイン", room_kind: "private_room", capacity: 2)
+
+    patch tenant_stay_room_type_path(@listing, room_type), params: {
+      stay_room_type: {
+        name: "デラックスツイン",
+        description: "高層階",
+        room_kind: "private_room",
+        capacity: 3,
+        status: "published"
+      }
+    }
+
+    assert_redirected_to tenant_stay_room_types_path(@listing)
+    room_type.reload
+    assert_equal "デラックスツイン", room_type.name
+    assert_equal "高層階", room_type.description
+    assert_equal 3, room_type.capacity
+    assert_equal "published", room_type.status
+  end
+
+  test "客室タイプの更新内容が不正な場合は編集画面を再表示する" do
+    room_type = @stay_listing.stay_room_types.create!(name: "ツイン", room_kind: "private_room", capacity: 2)
+
+    patch tenant_stay_room_type_path(@listing, room_type), params: {
+      stay_room_type: { name: "", room_kind: "private_room", capacity: 0, status: "published" }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "[role='alert']"
+    assert_equal "ツイン", room_type.reload.name
+  end
+
+  test "客室タイプを削除すると割当て客室を未割当てにする" do
+    room_type = @stay_listing.stay_room_types.create!(name: "ツイン", room_kind: "private_room")
+    room = @stay_listing.stay_rooms.create!(name: "101号室", stay_room_type: room_type)
+
+    assert_difference "@stay_listing.stay_room_types.count", -1 do
+      delete tenant_stay_room_type_path(@listing, room_type)
+    end
+
+    assert_redirected_to tenant_stay_room_types_path(@listing)
+    assert_nil room.reload.stay_room_type
+  end
+
+  test "別施設の客室タイプは更新できない" do
+    other_listing = @tenant.listings.create!(title: "別ホテル", listing_type: "stay", status: "draft")
+    other_stay_listing = StayListing.create!(listing: other_listing)
+    other_room_type = other_stay_listing.stay_room_types.create!(name: "別施設のタイプ", room_kind: "private_room")
+
+    patch tenant_stay_room_type_path(@listing, other_room_type), params: {
+      stay_room_type: { name: "不正な更新", room_kind: "private_room", status: "draft" }
+    }
+
+    assert_response :not_found
+    assert_equal "別施設のタイプ", other_room_type.reload.name
+  end
 end
