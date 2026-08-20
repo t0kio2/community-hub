@@ -54,4 +54,28 @@ class StayRoomTypeTest < ActiveSupport::TestCase
     assert_not duplicate.valid?
     assert_predicate duplicate.errors[:name], :any?
   end
+
+  test "別施設には同名の客室タイプを登録できる" do
+    other_listing = @stay_listing.listing.tenant.listings.create!(
+      title: "別ホテル",
+      listing_type: "stay",
+      status: "draft"
+    )
+    other_stay_listing = StayListing.create!(listing: other_listing)
+    @stay_listing.stay_room_types.create!(name: "ツイン", room_kind: "private_room")
+    room_type = other_stay_listing.stay_room_types.new(name: "ツイン", room_kind: "private_room")
+
+    assert_predicate room_type, :valid?
+  end
+
+  test "相部屋の定員は1にする" do
+    room_type = @stay_listing.stay_room_types.new(
+      name: "ドミトリー",
+      room_kind: "shared_room",
+      capacity: 2
+    )
+
+    assert_not room_type.valid?
+    assert_predicate room_type.errors[:capacity], :any?
+  end
 end
