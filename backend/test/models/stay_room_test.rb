@@ -29,4 +29,35 @@ class StayRoomTest < ActiveSupport::TestCase
     assert_not room.valid?
     assert_predicate room.errors[:stay_room_type], :any?
   end
+
+  test "客室名は必須" do
+    room = @stay_listing.stay_rooms.new(name: "", stay_room_type: @room_type)
+
+    assert_not room.valid?
+    assert_predicate room.errors[:name], :any?
+  end
+
+  test "同じ施設に同名の客室は登録できない" do
+    @stay_listing.stay_rooms.create!(name: "101号室", stay_room_type: @room_type)
+    duplicate = @stay_listing.stay_rooms.new(name: "101号室", stay_room_type: @room_type)
+
+    assert_not duplicate.valid?
+    assert_predicate duplicate.errors[:name], :any?
+  end
+
+  test "別施設には同名の客室を登録できる" do
+    @stay_listing.stay_rooms.create!(name: "101号室", stay_room_type: @room_type)
+    room = @other_stay_listing.stay_rooms.new(name: "101号室", stay_room_type: @other_room_type)
+
+    assert_predicate room, :valid?
+  end
+
+  test "ベッドがある客室は削除できない" do
+    room = @stay_listing.stay_rooms.create!(name: "101号室", stay_room_type: @room_type)
+    room.stay_beds.create!(name: "ベッド1")
+
+    assert_not room.destroy
+    assert_predicate room.errors[:base], :any?
+    assert_predicate StayRoom, :exists?, room.id
+  end
 end
