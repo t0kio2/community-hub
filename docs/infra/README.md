@@ -55,7 +55,7 @@ EC2（Public Subnet）
 3. [02-roadmap.md](02-roadmap.md): 全工程と現在地を把握する
 4. [03-prerequisites.md](03-prerequisites.md): AWSアカウントとローカル環境を準備する
 5. [04-terraform-bootstrap.md](04-terraform-bootstrap.md): Terraform Stateの保存先を作る
-6. [05-demo-infrastructure.md](05-demo-infrastructure.md): ネットワーク、EC2、EBSなどを作る
+6. [05-development-infrastructure.md](05-development-infrastructure.md): ネットワーク、EC2、EBSなどを作る
 7. [06-deployment.md](06-deployment.md): コンテナをEC2へデプロイする
 8. [07-operations.md](07-operations.md): バックアップ、監視、更新、破棄を行う
 
@@ -82,4 +82,3 @@ EC2（Public Subnet）
 - S3へDBバックアップを保存し、復元手順を確認できる
 - Terraformでデモ環境を作成・破棄できる
 - 破棄後に意図しない課金対象が残っていない
-
