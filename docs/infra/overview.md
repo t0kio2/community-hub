@@ -91,12 +91,12 @@ EC2（Public Subnet）
 Terraformは、常設する基盤と作成・破棄するデモ環境を分離する。
 
 ```text
-infra/
+infrastructure/
 ├── bootstrap/
 │   ├── Terraform State用S3
 │   └── Route 53 Hosted Zone
 ├── environments/
-│   └── demo/
+│   └── development/
 │       ├── network
 │       ├── compute
 │       ├── compute
@@ -151,7 +151,7 @@ Rails db:prepare / db:migrate
 将来的には次のようなコマンドへまとめる。
 
 ```sh
-make demo-up
+make development-up
 ```
 
 ### 破棄
@@ -169,7 +169,7 @@ terraform destroy
 将来的には次のようなコマンドへまとめる。
 
 ```sh
-make demo-down
+make development-down
 ```
 
 ## CI/CD

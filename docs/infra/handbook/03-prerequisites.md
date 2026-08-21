@@ -13,10 +13,10 @@ AWS Budgetsでは、小さい金額から段階的な通知を設定する。設
 | 項目 | 例 |
 |---|---|
 | Project | `community-hub` |
-| Environment | `demo` |
+| Environment | `development` |
 | AWS Region | `ap-northeast-1` |
-| リソース接頭辞 | `community-hub-demo` |
-| 公開ホスト | `demo.example.com` |
+| リソース接頭辞 | `community-hub-development` |
+| 公開ホスト | `development.example.com` |
 
 すべてのリソースへ`Project`、`Environment`、`ManagedBy=Terraform`タグを付ける。
 
@@ -45,9 +45,9 @@ Terraformの要求バージョンは、Terraformコードを追加するとき�
 長期アクセスキーより、IAM Identity CenterのSSOを優先する。
 
 ```sh
-aws configure sso --profile community-hub-demo
-aws sso login --profile community-hub-demo
-aws sts get-caller-identity --profile community-hub-demo
+aws configure sso --profile community-hub-development
+aws sso login --profile community-hub-development
+aws sts get-caller-identity --profile community-hub-development
 ```
 
 最後の出力にあるAccountとArnが、操作対象のAWSアカウントであることを確認する。
@@ -55,7 +55,7 @@ aws sts get-caller-identity --profile community-hub-demo
 作業シェルではProfileを明示する。
 
 ```sh
-export AWS_PROFILE=community-hub-demo
+export AWS_PROFILE=community-hub-development
 export AWS_REGION=ap-northeast-1
 aws sts get-caller-identity
 ```
@@ -97,4 +97,3 @@ git status --short
 - MFAと料金通知を設定した
 - CLIからAWSへ認証できた
 - `.env`や秘密鍵がGitの追跡対象になっていない
-
