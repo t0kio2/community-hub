@@ -1,8 +1,9 @@
 # VPCの作成
 resource "aws_vpc" "main" {
-  cidr_block = "192.168.250.0/24"
+  cidr_block = "10.0.0.0/16"
+  enable_dns_hostnames = true # DNSホスト名を有効化
   tags = {
-    Name = "sandbox-terraform"
+    Name = "${var.resource_prefix}-vpc"
   }
 }
 

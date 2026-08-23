@@ -24,6 +24,15 @@ provider "aws" {
   region = "ap-northeast-1" # 東京リージョン
 }
 
+# 自分のパブリックIP取得用
+provider "http" {}
+
 module "vpc" {
   source = "../../modules/vpc"
+  
+  resource_prefix = var.resource_prefix
+}
+
+module "ec2" {
+  source = "../../modules/ec2"
 }
