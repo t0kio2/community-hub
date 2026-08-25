@@ -1,9 +1,5 @@
 # インフラ構成案
 
-## 文書の位置づけ
-
-この文書は、Community Hubをポートフォリオとして公開するためのインフラ構成案である。2026年8月時点では未実装であり、Terraform実装時に採用サービス、サイズ、料金を再確認する。構築順序は[README.md](README.md)を正本とする。
-
 ## 目的
 
 - AWSのネットワーク、IAM、コンピュート、DB、ストレージを扱えることを示す
@@ -22,7 +18,7 @@
 - Solid Queue: バックグラウンドジョブ
 - Active Storage: Listing画像などのファイル管理
 
-## デモ環境の基本構成
+## デモ環境の基本構成 - パブリックVPC構成
 
 初期のデモ環境では、AWSとサーバー構築の両方を示しつつ、常時費用を抑えられる構成を採用する。
 
@@ -91,12 +87,12 @@ EC2（Public Subnet）
 Terraformは、常設する基盤と作成・破棄するデモ環境を分離する。
 
 ```text
-infra/
+infrastructure/
 ├── bootstrap/
 │   ├── Terraform State用S3
 │   └── Route 53 Hosted Zone
 ├── environments/
-│   └── demo/
+│   └── development/
 │       ├── network
 │       ├── compute
 │       ├── compute
@@ -151,7 +147,7 @@ Rails db:prepare / db:migrate
 将来的には次のようなコマンドへまとめる。
 
 ```sh
-make demo-up
+make development-up
 ```
 
 ### 破棄
@@ -169,7 +165,7 @@ terraform destroy
 将来的には次のようなコマンドへまとめる。
 
 ```sh
-make demo-down
+make development-down
 ```
 
 ## CI/CD

@@ -85,7 +85,7 @@ EC2を停止しても、EBS、Elastic IP、Snapshot、S3、ECR、CloudWatch Logs
 
 ```sh
 aws sts get-caller-identity
-cd infra/environments/demo
+cd infrastructure/environments/development
 terraform plan -destroy
 terraform destroy
 ```
@@ -116,4 +116,3 @@ terraform destroy
 - 不要なSSM Sessionと古いECR imageの確認
 
 PostgreSQLのmajor versionは、イメージタグを書き換えるだけで更新しない。バックアップと公式のupgrade手順を準備し、検証環境で確認する。
-

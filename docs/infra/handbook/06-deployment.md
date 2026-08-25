@@ -63,11 +63,11 @@ production用では次を守る。
 Terraformで作成したSSM Parameterへ、実際の値をTerraform外から登録する。パラメータ名の例:
 
 ```text
-/community-hub/demo/postgres-password
-/community-hub/demo/rails-master-key
-/community-hub/demo/secret-key-base
-/community-hub/demo/devise-jwt-secret-key
-/community-hub/demo/google-maps-embed-api-key
+/community-hub/development/postgres-password
+/community-hub/development/rails-master-key
+/community-hub/development/secret-key-base
+/community-hub/development/devise-jwt-secret-key
+/community-hub/development/google-maps-embed-api-key
 ```
 
 値をシェル履歴、ログ、GitHub Actionsの出力へ表示しない。EC2上では、取得した値から権限を制限した環境ファイルを生成するか、デプロイ処理からComposeへ渡す。
@@ -114,4 +114,3 @@ DB migrationが後方互換でない場合、イメージだけ戻しても復�
 - 画像をS3へ保存して再表示できる
 - workerがジョブを処理する
 - EC2再起動後にコンテナが起動し、DBデータが残る
-

@@ -1,4 +1,4 @@
-# デモ用AWS基盤の構築
+# development環境用AWS基盤の構築
 
 ## この章の範囲
 
@@ -77,12 +77,12 @@ CloudWatchには最低限、次を用意する。
 ## Terraform実装後の実行手順
 
 ```sh
-cd infra/environments/demo
+cd infrastructure/environments/development
 terraform init
 terraform fmt -check -recursive ../..
 terraform validate
-terraform plan -out=demo.tfplan
-terraform apply demo.tfplan
+terraform plan -out=development.tfplan
+terraform apply development.tfplan
 ```
 
 planファイルには環境情報が含まれる可能性があるためGitへcommitしない。
@@ -97,4 +97,3 @@ planファイルには環境情報が含まれる可能性があるためGitへc
 6. EC2を再起動し、EBSが再度マウントされることを確認する。
 
 アプリのデプロイ前に、ここまでを完了させる。
-
