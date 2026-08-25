@@ -60,7 +60,7 @@ Phase 8 CI/CD
 - [ ] 80/443だけを許可するSecurity Groupを作成した
 - [ ] EC2用IAM RoleとInstance Profileを作成した
 - [ ] EC2、EBS、Elastic IPを作成した
-- [ ] ECR、S3、SSM、CloudWatchを作成した
+- [ ] 必要なS3、SSM、CloudWatchを作成した
 
 到達条件: Session ManagerでEC2へ接続できる。
 
@@ -77,8 +77,7 @@ Phase 8 CI/CD
 ## Phase 5: アプリを配備する
 
 - [ ] RailsとNext.jsのproductionイメージをbuildできる
-- [ ] イメージをECRへpushできる
-- [ ] EC2がECRからpullできる
+- [ ] EC2上で対象commitのproductionイメージをbuildできる
 - [ ] SSMから秘密値を取得できる
 - [ ] production用Composeを起動できる
 - [ ] DB migrationとseedを実行できる
@@ -116,4 +115,3 @@ Phase 8 CI/CD
 - [ ] 直前のDockerイメージへ戻す手順を確認した
 
 到達条件: 固定アクセスキーなしで、再現可能なデプロイができる。
-
