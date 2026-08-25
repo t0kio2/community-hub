@@ -1,4 +1,4 @@
-# デモ用AWS基盤の構築
+# development環境用AWS基盤の構築
 
 ## この章の範囲
 
@@ -14,14 +14,13 @@ TerraformでAWS側の土台を作り、Session ManagerからEC2へ接続でき�
 - Public Subnet用Route Table
 - EC2用Security Group
 
-Security GroupのInboundは80と443だけを許可する。22、3000、3001、5432は許可しない。Outboundは、OS更新、ECR、S3、SSM、外部APIへの通信要件を確認して定義する。
+Security GroupのInboundは80と443だけを許可する。22、3000、3001、5432は許可しない。Outboundは、OS更新、Git、S3、SSM、外部APIへの通信要件を確認して定義する。
 
 ### 2. IAM
 
 EC2 Instance Roleへ必要最小限の権限を付与する。
 
 - Systems Managerで接続する権限
-- ECRからイメージをpullする権限
 - 指定したS3 Bucketへアクセスする権限
 - 指定したSSM Parameterを読む権限
 - CloudWatch Logsへ書き込む権限
@@ -33,7 +32,6 @@ EC2 Instance Roleへ必要最小限の権限を付与する。
 - PostgreSQL用EBS
 - Active Storage用S3 Bucket
 - DBバックアップ用S3 Bucketまたはprefix
-- ECR Repository
 
 PostgreSQL用EBSには削除保護方針を明示する。デモ環境と一緒に削除する場合も、誤削除に備えたSnapshotまたは`pg_dump`の扱いを決める。
 
@@ -45,7 +43,7 @@ PostgreSQL用EBSには削除保護方針を明示する。デモ環境と一緒�
 - Elastic IP
 - `user_data`による最低限の初期化
 
-ARM64インスタンスを使う場合、RailsとNext.jsのDockerイメージを`linux/arm64`でbuildできる必要がある。ローカルMacのCPUアーキテクチャだけを前提にせず、ECRへpushするイメージのplatformを明示する。
+ARM64インスタンスを使う場合、RailsとNext.jsのDockerイメージをEC2上で`linux/arm64`向けにbuildできる必要がある。使用するbase imageと依存パッケージがARM64に対応していることを確認する。
 
 ### 5. ParametersとMonitoring
 
@@ -77,12 +75,12 @@ CloudWatchには最低限、次を用意する。
 ## Terraform実装後の実行手順
 
 ```sh
-cd infra/environments/demo
+cd infrastructure/environments/development
 terraform init
 terraform fmt -check -recursive ../..
 terraform validate
-terraform plan -out=demo.tfplan
-terraform apply demo.tfplan
+terraform plan -out=development.tfplan
+terraform apply development.tfplan
 ```
 
 planファイルには環境情報が含まれる可能性があるためGitへcommitしない。
@@ -97,4 +95,3 @@ planファイルには環境情報が含まれる可能性があるためGitへc
 6. EC2を再起動し、EBSが再度マウントされることを確認する。
 
 アプリのデプロイ前に、ここまでを完了させる。
-

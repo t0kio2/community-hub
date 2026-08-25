@@ -65,3 +65,13 @@ tmp/
 
 # Removed local frontend leftovers
 web_tanstack_deleted/
+
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+
+# Terraformで生成するローカル秘密鍵
+**/.keys/

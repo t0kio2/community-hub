@@ -18,14 +18,14 @@ bootstrapで管理する候補は次のとおり。
 Terraform実装時にはリポジトリルートへ次を追加する。
 
 ```text
-infra/
+infrastructure/
 ├── bootstrap/
 │   ├── main.tf
 │   ├── variables.tf
 │   ├── outputs.tf
 │   └── terraform.tfvars.example
 ├── environments/
-│   └── demo/
+│   └── development/
 │       ├── backend.tf
 │       ├── main.tf
 │       ├── variables.tf
@@ -41,7 +41,7 @@ infra/
 現時点ではTerraformコードがまだないため、以下はコード追加後に実行する作業順序である。
 
 ```sh
-cd infra/bootstrap
+cd infrastructure/bootstrap
 terraform init
 terraform fmt -check
 terraform validate
@@ -51,13 +51,13 @@ terraform apply
 
 `apply`前に、planへ意図しないIAM権限や公開設定がないことを確認する。
 
-作成後、`environments/demo/backend.tf`へS3 backendを設定する。
+作成後、`environments/development/backend.tf`へS3 backendを設定する。
 
 ```hcl
 terraform {
   backend "s3" {
     bucket       = "実際のState用Bucket名"
-    key          = "community-hub/demo/terraform.tfstate"
+    key          = "community-hub/development/terraform.tfstate"
     region       = "ap-northeast-1"
     use_lockfile = true
     encrypt      = true
@@ -78,5 +78,4 @@ Bucket名は世界全体で一意である必要がある。実際の名前を�
 
 ## bootstrapを削除するとき
 
-先にデモ環境を破棄し、Stateが不要であることを確認する。State用Bucketの削除は通常の`demo`環境破棄へ含めず、最後に明示的に行う。
-
+先にデモ環境を破棄し、Stateが不要であることを確認する。State用Bucketの削除は通常の`development`環境破棄へ含めず、最後に明示的に行う。
