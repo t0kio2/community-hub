@@ -12,7 +12,6 @@ Community Hubのデモ環境は、次の4層に分けて考える。
 - EBS: EC2へ接続する永続ディスク
 - VPC: AWS内のネットワーク
 - Security Group: 通信を許可するファイアウォール
-- ECR: Dockerイメージ置き場
 - S3: 画像やバックアップの置き場
 - Route 53: ドメインとIPアドレスの対応付け
 - Systems Manager: SSHを公開せずEC2へ接続する仕組み
@@ -113,4 +112,3 @@ Terraformは、作成したAWSリソースとコードの対応をStateに保存
 - Auto Scalingできない
 
 これらはデモ環境として許容する。本格運用へ移る場合は、最初にPostgreSQLをRDSへ移す。
-
