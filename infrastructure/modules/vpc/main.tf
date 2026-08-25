@@ -62,7 +62,7 @@ locals {
 # Security Group作成
 resource "aws_security_group" "ec2_sg" {
   name = "${var.resource_prefix}-sg-ec2"
-  description = "EC2用セキュリティグループ"
+  description = "for EC2"
   vpc_id = aws_vpc.main.id
   tags = {
     Name = "${var.resource_prefix}-sg-ec2"
