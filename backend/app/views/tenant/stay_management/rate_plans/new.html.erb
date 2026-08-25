@@ -1,0 +1,11 @@
+<% content_for :title, "料金プラン登録" %>
+<% content_for :page_title, "料金プラン登録" %>
+<% content_for :back_link do %>
+  <%= link_to "← 料金プラン一覧へ戻る", tenant_stay_rate_plans_path(@listing), class: "tenant-back-link" %>
+<% end %>
+
+<%= render "form",
+           rate_plan: @rate_plan,
+           room_type_rates: @room_type_rates,
+           form_url: tenant_stay_rate_plans_path(@listing),
+           submit_label: "料金プランを登録" %>

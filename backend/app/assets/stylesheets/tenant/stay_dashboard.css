@@ -301,7 +301,169 @@
   font-size: var(--tenant-font-size-small);
 }
 
+/* 料金プラン詳細 */
+.rate-plan-details-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.rate-plan-details-table__label-column {
+  width: 180px;
+}
+
+.rate-plan-details-table th[scope="row"] {
+  white-space: nowrap;
+}
+
+.rate-plan-details-table td:last-child {
+  width: auto;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.rate-plan-prices-table th:last-child,
+.rate-plan-prices-table td:last-child {
+  width: 18%;
+  text-align: left;
+}
+
+.rate-plan-cancellation-policy {
+  margin-top: 22px;
+}
+
+.rate-plan-cancellation-policy h3 {
+  margin: 0 0 10px;
+  font-size: var(--tenant-font-size-body);
+}
+
+.cancellation-policy-details-list {
+  margin-top: 4px;
+}
+
+.cancellation-policy-details {
+  padding: 16px 18px;
+  border: 1px solid var(--tenant-color-border);
+  border-radius: var(--tenant-radius-medium);
+  color: var(--tenant-color-ink);
+  background: var(--stay-color-surface-muted);
+}
+
+.cancellation-policy-details--non_refundable {
+  border-color: #e7bcb8;
+  background: var(--tenant-color-danger-soft);
+}
+
+.cancellation-policy-details__title {
+  display: block;
+  font-size: var(--tenant-font-size-body);
+}
+
+.cancellation-policy-details p {
+  margin: 5px 0 0;
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+  line-height: 1.7;
+}
+
+.cancellation-policy-details__rules {
+  margin: 12px 0 0;
+  border-top: 1px solid var(--tenant-color-border);
+}
+
+.cancellation-policy-details__rules > div {
+  padding: 9px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  border-bottom: 1px solid var(--tenant-color-border);
+}
+
+.cancellation-policy-details__rules dt,
+.cancellation-policy-details__rules dd {
+  margin: 0;
+  font-size: var(--tenant-font-size-small);
+}
+
+.cancellation-policy-details__rules dd {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 料金プランのRoom Type別基本料金 */
+.rate-plan-rates-table {
+  min-width: 680px;
+  table-layout: fixed;
+}
+
+.rate-plan-rates-table__room-type-column {
+  width: 34%;
+}
+
+.rate-plan-rates-table__unit-column {
+  width: 20%;
+}
+
+.rate-plan-rates-table__sales-column {
+  width: 18%;
+}
+
+.rate-plan-rates-table__price-column {
+  width: 28%;
+}
+
+.rate-plan-rates-table th:last-child,
+.rate-plan-rates-table td:last-child {
+  width: auto;
+  text-align: left;
+}
+
+.rate-plan-rates-table__toggle,
+.rate-plan-rates-table__price {
+  display: inline-flex;
+  align-items: center;
+}
+
+.rate-plan-rates-table__toggle {
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.management-form .rate-plan-rates-table__toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 18px;
+  accent-color: var(--tenant-color-primary);
+}
+
+.management-form .rate-plan-rates-table__toggle label {
+  margin: 0;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.rate-plan-rates-table__price {
+  width: 100%;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.management-form .rate-plan-rates-table__price input[type="number"] {
+  width: min(160px, 100%);
+  min-width: 0;
+}
+
+.rate-plan-rates-table__price > span {
+  color: var(--tenant-color-muted);
+  font-size: var(--tenant-font-size-small);
+}
+
 @media (max-width: 760px) {
+  .rate-plan-details-table__label-column {
+    width: 120px;
+  }
+
   .stay-beds-section__heading {
     align-items: stretch;
     flex-direction: column;

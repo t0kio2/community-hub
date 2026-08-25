@@ -5,6 +5,8 @@ class StayRoomType < ApplicationRecord
   belongs_to :stay_listing
 
   has_many :stay_rooms, dependent: :nullify
+  has_many :stay_room_type_rates
+  has_many :stay_rate_plans, through: :stay_room_type_rates
 
   validates :name, presence: true, length: { maximum: 50 }, uniqueness: { scope: :stay_listing_id }
   validates :room_kind, inclusion: { in: ROOM_KINDS }
