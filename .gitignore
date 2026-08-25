@@ -72,3 +72,6 @@ web_tanstack_deleted/
 *.tfplan
 *.tfvars
 !*.tfvars.example
+
+# Terraformで生成するローカル秘密鍵
+**/.keys/
