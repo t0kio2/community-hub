@@ -1,0 +1,116 @@
+<% content_for :title, "料金プラン詳細" %>
+<% content_for :page_title, @rate_plan.name %>
+<% content_for :back_link do %>
+  <%= link_to "← 料金プラン一覧へ戻る", tenant_stay_rate_plans_path(@listing), class: "tenant-back-link" %>
+<% end %>
+
+<section class="stay-dashboard" aria-labelledby="tenant-page-title">
+  <section class="stay-dashboard__card">
+    <div class="stay-dashboard__card-heading">
+      <div>
+        <h2>販売条件</h2>
+        <p>宿泊者へ提示するプラン内容と状態です</p>
+      </div>
+      <%= link_to "編集",
+                  edit_tenant_stay_rate_plan_path(@listing, @rate_plan),
+                  class: "stay-dashboard__button stay-dashboard__button--primary" %>
+    </div>
+
+    <div class="data-table-wrapper">
+      <table class="data-table rate-plan-details-table">
+        <colgroup>
+          <col class="rate-plan-details-table__label-column">
+          <col>
+        </colgroup>
+        <tbody>
+          <tr>
+            <th scope="row">プラン名</th>
+            <td><strong class="data-table__primary"><%= @rate_plan.name %></strong></td>
+          </tr>
+          <tr>
+            <th scope="row">説明</th>
+            <td><%= @rate_plan.description.presence || "未設定" %></td>
+          </tr>
+          <tr>
+            <th scope="row">食事条件</th>
+            <td><%= t("activerecord.enums.stay_rate_plan.meal_type.#{@rate_plan.meal_type}") %></td>
+          </tr>
+          <tr>
+            <th scope="row">キャンセル条件</th>
+            <td><%= t("activerecord.enums.stay_rate_plan.cancellation_policy_type.#{@rate_plan.cancellation_policy_type}") %></td>
+          </tr>
+          <tr>
+            <th scope="row">状態</th>
+            <td>
+              <span class="stay-status stay-status--<%= @rate_plan.status %>">
+                <%= t("activerecord.enums.stay_rate_plan.status.#{@rate_plan.status}") %>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="rate-plan-cancellation-policy">
+      <h3>キャンセル料の詳細</h3>
+      <%= render "cancellation_policy_details",
+                 policy_type: @rate_plan.cancellation_policy_type %>
+    </div>
+  </section>
+
+  <section class="stay-dashboard__card">
+    <div class="stay-dashboard__card-heading">
+      <div>
+        <h2>Room Type別基本料金</h2>
+        <p><%= @room_type_rates.count(&:active?) %> / <%= @room_type_rates.size %>件が販売中です</p>
+      </div>
+    </div>
+
+    <% if @room_type_rates.any? %>
+      <div class="data-table-wrapper">
+        <table class="data-table rate-plan-prices-table">
+          <thead>
+            <tr>
+              <th scope="col">Room Type</th>
+              <th scope="col">販売単位</th>
+              <th scope="col">基本料金</th>
+              <th scope="col">状態</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @room_type_rates.each do |room_type_rate| %>
+              <% room_type = room_type_rate.stay_room_type %>
+              <tr>
+                <td><strong class="data-table__primary"><%= room_type.name %></strong></td>
+                <td><%= room_type.shared_room? ? "1 Bed・1泊" : room_type.entire_place? ? "1棟・1泊" : "1室・1泊" %></td>
+                <td><%= number_to_currency(room_type_rate.price_per_night_amount, unit: "¥", precision: 0) %></td>
+                <td><%= room_type_rate.active? ? "販売中" : "停止中" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="stay-dashboard__empty-state">
+        <div>
+          <strong>基本料金がまだ設定されていません</strong>
+          <p>編集画面からRoom Typeごとの基本料金を設定してください。</p>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @rate_plan.destroyable? %>
+      <div class="table-actions">
+        <%= button_to "料金プランを削除",
+                      tenant_stay_rate_plan_path(@listing, @rate_plan),
+                      method: :delete,
+                      class: "table-action table-action--danger",
+                      form: {
+                        data: {
+                          confirm_message: "#{@rate_plan.name}を削除します。この操作は取り消せません。"
+                        }
+                      } %>
+      </div>
+    <% end %>
+  </section>
+</section>

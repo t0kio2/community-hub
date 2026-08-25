@@ -1,0 +1,27 @@
+<div class="cancellation-policy-details cancellation-policy-details--<%= policy_type %>">
+  <% if policy_type == "standard" %>
+    <strong class="cancellation-policy-details__title">標準キャンセル</strong>
+    <p>早期キャンセルは無料です。チェックインまでの時間に応じて、以下のキャンセル料がかかります。</p>
+    <dl class="cancellation-policy-details__rules">
+      <div>
+        <dt>7日前（168時間前）以降</dt>
+        <dd>宿泊料金の20%</dd>
+      </div>
+      <div>
+        <dt>2日前（48時間前）以降</dt>
+        <dd>宿泊料金の50%</dd>
+      </div>
+      <div>
+        <dt>前日（24時間前）以降</dt>
+        <dd>宿泊料金の80%</dd>
+      </div>
+      <div>
+        <dt>当日・無断不泊</dt>
+        <dd>宿泊料金の100%</dd>
+      </div>
+    </dl>
+  <% else %>
+    <strong class="cancellation-policy-details__title">返金不可</strong>
+    <p>予約確定後に宿泊者がキャンセルした場合、時期にかかわらず宿泊料金の100%がかかります。無断不泊も100%です。</p>
+  <% end %>
+</div>

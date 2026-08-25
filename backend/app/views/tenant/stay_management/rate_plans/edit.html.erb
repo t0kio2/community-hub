@@ -1,0 +1,13 @@
+<% content_for :title, "料金プラン編集" %>
+<% content_for :page_title, "料金プラン編集" %>
+<% content_for :back_link do %>
+  <%= link_to "← 料金プラン詳細へ戻る",
+              tenant_stay_rate_plan_path(@listing, @rate_plan),
+              class: "tenant-back-link" %>
+<% end %>
+
+<%= render "form",
+           rate_plan: @rate_plan,
+           room_type_rates: @room_type_rates,
+           form_url: tenant_stay_rate_plan_path(@listing, @rate_plan),
+           submit_label: "料金プランを更新" %>
