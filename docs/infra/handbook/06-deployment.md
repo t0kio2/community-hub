@@ -2,18 +2,18 @@
 
 ## Terraformと分離する
 
-デプロイではDockerイメージを作成し、ECRへ保存し、EC2で起動する。Terraformの`remote-exec`から`docker compose up`やRails migrationを実行しない。
+デプロイではEC2上でソースコードからDockerイメージをbuildし、Docker Composeで起動する。ECRは使用しない。Terraformの`remote-exec`から`docker compose up`やRails migrationを実行しない。
 
 ```text
 開発端末またはGitHub Actions
   ├── test
-  ├── docker build
-  └── ECR push
+  └── デプロイ対象commitを指定
            │
            ▼
 EC2
   ├── SSMから環境変数を取得
-  ├── ECR pull
+  ├── Gitからソースを取得
+  ├── docker build
   ├── Rails migration
   └── docker compose up
 ```
@@ -41,7 +41,7 @@ production用では次を守る。
 - ソースコードをbind mountしない
 - PostgreSQLの`ports`を設定しない
 - RailsとNext.jsの開発サーバーを使用しない
-- イメージタグを`latest`だけにせず、Git commit SHAでも識別する
+- デプロイ前後のGit commit SHAを記録する
 - PostgreSQLのデータを`/data/postgres`へ保存する
 - コンテナを`restart: unless-stopped`などで再起動可能にする
 - ヘルスチェックを定義する
@@ -76,15 +76,16 @@ Terraformで作成したSSM Parameterへ、実際の値をTerraform外から登�
 
 1. RailsとNext.jsのテストを実行する。
 2. productionイメージをbuildする。
-3. Git commit SHA付きタグでECRへpushする。
-4. Session ManagerまたはデプロイスクリプトからEC2へ接続する。
-5. SSM Parameterを取得する。
+3. Session ManagerまたはデプロイスクリプトからEC2へ接続する。
+4. EC2上で対象のGit commitをcheckoutする。
+5. SSM Parameterまたは権限を制限した環境ファイルから秘密値を取得する。
 6. production用Composeと設定ファイルを配置する。
 7. PostgreSQLだけを起動し、health checkを待つ。
-8. RailsのDBを準備し、migrationを実行する。
-9. backend、worker、user-frontendを起動する。
-10. reverse-proxyを起動する。
-11. ヘルスチェックと主要画面を確認する。
+8. EC2上でproductionイメージをbuildする。
+9. RailsのDBを準備し、migrationを実行する。
+10. backend、worker、user-frontendを起動する。
+11. Nginxを起動し、CertbotでTLS証明書を取得する。
+12. ヘルスチェックと主要画面を確認する。
 
 Railsコマンドはproduction用Composeを介して実行する。具体的なComposeファイル名は実装時に確定し、この章へ追記する。
 
@@ -96,13 +97,13 @@ Railsコマンドはproduction用Composeを介して実行する。具体的なC
 
 ## 更新デプロイ
 
-1. 新しいイメージをECRへpushする。
+1. デプロイ対象のGit commitを決める。
 2. DBバックアップを取得する。
-3. 新しいイメージをpullする。
+3. EC2上で対象commitをcheckoutしてイメージをbuildする。
 4. migrationを実行する。
 5. コンテナを再作成する。
 6. health checkを確認する。
-7. 異常時は直前のイメージタグへ戻す。
+7. 異常時は直前のcommitへ戻して再buildする。
 
 DB migrationが後方互換でない場合、イメージだけ戻しても復旧できない。カラム削除やrenameは複数回のリリースへ分ける。
 

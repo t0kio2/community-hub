@@ -8,7 +8,7 @@
 - Rails、Next.js、workerのエラーログ
 - EBS Snapshotと`pg_dump`の最終成功時刻
 - AWS Budgetsの実績
-- ECR、S3、CloudWatch Logsの使用量
+- S3、CloudWatch Logsの使用量
 
 ## PostgreSQLバックアップ
 
@@ -53,8 +53,8 @@ PostgreSQLの論理バックアップである。production用ComposeのDBサー
 1. `docker compose ps`で状態を確認する。
 2. 対象サービスのログを確認する。
 3. ディスク容量とメモリ不足を確認する。
-4. 環境変数とECRイメージタグを確認する。
-5. 必要なら直前の正常なイメージへ戻す。
+4. 環境変数と稼働中のGit commitを確認する。
+5. 必要なら直前の正常なcommitへ戻してイメージを再buildする。
 
 ログへシークレットや個人情報を出力しない。
 
@@ -74,7 +74,7 @@ PostgreSQLの論理バックアップである。production用ComposeのDBサー
 
 ## デモ環境を停止・破棄する
 
-EC2を停止しても、EBS、Elastic IP、Snapshot、S3、ECR、CloudWatch Logsなどの費用が残る。長期間使わない場合はTerraformで破棄する。
+EC2を停止しても、EBS、Elastic IP、Snapshot、S3、CloudWatch Logsなどの費用が残る。長期間使わない場合はTerraformで破棄する。
 
 破棄前:
 
@@ -99,7 +99,6 @@ terraform destroy
 - Snapshot
 - NAT GatewayやLoad Balancer
 - S3 object
-- ECR image
 - CloudWatch Logs
 - Route 53 record
 
@@ -113,6 +112,6 @@ terraform destroy
 - Ruby、Rails、Node.js、Next.jsの更新
 - Docker base imageの再build
 - IAM権限の棚卸し
-- 不要なSSM Sessionと古いECR imageの確認
+- 不要なSSM SessionとEC2上の古いDocker imageの確認
 
 PostgreSQLのmajor versionは、イメージタグを書き換えるだけで更新しない。バックアップと公式のupgrade手順を準備し、検証環境で確認する。

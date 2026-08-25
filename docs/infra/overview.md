@@ -38,7 +38,6 @@ EC2（Public Subnet）
    │  └── EBS（DBデータ永続化）
    │
    ├── S3（Active Storage）
-   ├── ECR（Dockerイメージ）
    └── CloudWatch（ログ・監視）
 ```
 
@@ -47,7 +46,7 @@ EC2（Public Subnet）
 - 東京リージョンを使用する
 - 初期候補はARM64の`t4g.medium`とする
 - Rails、Next.js、Solid Queue、リバースプロキシをDockerコンテナとして動かす
-- デプロイ方式はDocker ComposeまたはKamalを比較して決定する
+- デプロイ方式はDocker Composeとし、EC2上でソースからイメージをbuildする
 - SSHポートは公開せず、Systems Manager Session Managerで接続する
 - EC2 Instance Profileを使用し、固定アクセスキーを配置しない
 
@@ -72,13 +71,14 @@ EC2（Public Subnet）
 
 - Listing画像などはS3へ保存する
 - S3 Bucketは非公開とし、IAM Role経由でRailsからアクセスする
-- DockerイメージはECRへ保存する
-- ECRのライフサイクルポリシーで古いイメージを削除する
+- ECRは使用せず、EC2上でGitから取得したソースをDockerイメージへbuildする
+- デプロイ前後のGit commit SHAを記録し、更新とロールバックの基準にする
 
 ### HTTPSとDNS
 
 - DNSはRoute 53で管理する
-- ALBを使わない構成では、EC2上のKamal ProxyまたはCaddyなどでTLSを終端する
+- ALBを使わず、EC2上のNginxでTLSを終端する
+- TLS証明書はLet's EncryptからCertbotで取得し、自動更新する
 - デモ環境を再作成したときは、Terraformが新しいPublic IPv4をRoute 53へ反映する
 - Elastic IPを常設するか、環境と一緒に削除するかは、公開頻度と料金を見て決定する
 
@@ -110,7 +110,6 @@ infrastructure/
 - ドメイン
 - Route 53 Hosted Zone
 - Terraform State用S3 Bucket
-- 必要に応じてECR Repository
 - 必要に応じてデータ退避用S3 Bucket
 
 Terraform State用S3 Bucketはデモ環境の`terraform destroy`対象に含めない。暗号化、バージョニング、Public Access Blockを有効にする。
@@ -135,7 +134,7 @@ terraform apply
       ↓
 ネットワーク、EC2、EBSなどを作成
       ↓
-Dockerイメージをデプロイ
+EC2上でDockerイメージをbuildして起動
       ↓
 Rails db:prepare / db:migrate
       ↓
@@ -159,7 +158,7 @@ terraform plan -destroyで対象確認
       ↓
 terraform destroy
       ↓
-残存するEBS、Elastic IP、Snapshot、Log、ECR Imageを確認
+残存するEBS、Elastic IP、Snapshot、Logを確認
 ```
 
 将来的には次のようなコマンドへまとめる。
@@ -175,8 +174,7 @@ GitHub Actionsの手動実行から次の処理を行える構成を目標とす
 - Terraform fmt、validate、plan
 - Railsテスト
 - Next.jsテストとビルド
-- Dockerイメージのビルド
-- ECRへのPush
+- EC2上でのDockerイメージのビルドとデプロイ
 - デモ環境の構築
 - DB migration
 - ヘルスチェック
@@ -205,7 +203,7 @@ GitHub Actionsの手動実行から次の処理を行える構成を目標とす
 
 EC2を停止しても、EBS、Elastic IP、ALB、NAT Gatewayなどは残存状況に応じて課金される。そのため、長期間公開しない場合はEC2の停止だけでなく、デモ環境を`terraform destroy`する。
 
-Terraformで削除しても、常設するRoute 53、State用S3、ECR、スナップショット、ログ、ドメインには少額の費用が残る。実装前と公開前にAWS Pricing Calculatorで見積もり、AWS Budgetsを設定する。
+Terraformで削除しても、常設するRoute 53、State用S3、スナップショット、ログ、ドメインには少額の費用が残る。実装前と公開前にAWS Pricing Calculatorで見積もり、AWS Budgetsを設定する。
 
 ## 本番想定との差
 
@@ -225,10 +223,9 @@ READMEや構成図では、デモ環境を本番相当と表現せず、費用�
 
 ## 実装前の未決事項
 
-- Docker ComposeとKamalのどちらを採用するか
 - Public IPv4を毎回再取得するか、Elastic IPを常設するか
 - PostgreSQL用EBSを環境と同時に削除するか、Snapshotを残すか
-- ECRとS3のどこまでを常設するか
+- S3をDBバックアップやActive Storageに使用するか
 - Next.jsとRailsのドメイン構成
 - SSM Parameter StoreとSecrets Managerのどちらを採用するか
 - デモ環境の起動時間と許容月額
