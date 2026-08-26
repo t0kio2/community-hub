@@ -2,6 +2,8 @@ class StayRoomTypeRate < ApplicationRecord
   belongs_to :stay_room_type
   belongs_to :stay_rate_plan
 
+  has_many :stay_room_type_rate_daily_prices, dependent: :destroy
+
   validates :stay_room_type_id, uniqueness: { scope: :stay_rate_plan_id }
   validates :price_per_night_amount,
             numericality: { only_integer: true, greater_than: 0 }

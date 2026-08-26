@@ -37,6 +37,12 @@ ja:
         ends_on: "利用を再開する宿泊日"
         reason: "停止理由"
         notes: "管理メモ"
+      stay_room_type_daily_sales_control:
+        stay_date: "宿泊日"
+        sales_limit: "販売上限"
+      stay_room_type_rate_daily_price:
+        stay_date: "宿泊日"
+        price_amount: "日別料金"
       stay_rate_plan:
         name: "プラン名"
         description: "説明"

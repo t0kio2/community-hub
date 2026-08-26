@@ -1,0 +1,135 @@
+<% content_for :title, "販売カレンダー" %>
+<% content_for :page_title, "販売カレンダー" %>
+
+<% rates_by_room_type = @room_type_rates.group_by(&:stay_room_type_id) %>
+
+<section class="stay-dashboard sales-calendar" aria-labelledby="tenant-page-title">
+  <header class="sales-calendar__toolbar">
+    <div>
+      <h2><%= l(@start_date, format: "%Y年%-m月") %></h2>
+      <p>基本料金、日別料金、Room Typeごとの販売上限を宿泊日単位で確認できます。</p>
+    </div>
+    <div class="sales-calendar__toolbar-actions">
+      <%= link_to "今月",
+                  tenant_stay_sales_calendar_path(@listing, month: Date.current.strftime("%Y-%m")),
+                  class: "stay-dashboard__button" %>
+      <%= link_to "← 前月",
+                  tenant_stay_sales_calendar_path(@listing, month: @start_date.prev_month.strftime("%Y-%m")),
+                  class: "stay-dashboard__button" %>
+      <%= form_with url: tenant_stay_sales_calendar_path(@listing), method: :get, local: true,
+                    class: "sales-calendar__month-form" do |form| %>
+        <%= form.label :month, "表示月", class: "visually-hidden" %>
+        <%= form.month_field :month, value: @start_date.strftime("%Y-%m"), required: true %>
+        <%= form.submit "移動", class: "stay-dashboard__button" %>
+      <% end %>
+      <%= link_to "翌月 →",
+                  tenant_stay_sales_calendar_path(@listing, month: @start_date.next_month.strftime("%Y-%m")),
+                  class: "stay-dashboard__button" %>
+      <button type="button" class="stay-dashboard__button stay-dashboard__button--primary" disabled>
+        期間一括設定
+      </button>
+    </div>
+  </header>
+
+  <div class="sales-calendar__guide" aria-label="表示内容の説明">
+    <span><i class="sales-calendar__legend sales-calendar__legend--base" aria-hidden="true"></i>基本料金</span>
+    <span><i class="sales-calendar__legend sales-calendar__legend--daily" aria-hidden="true"></i>日別料金</span>
+    <span><i class="sales-calendar__legend sales-calendar__legend--closed" aria-hidden="true"></i>販売停止</span>
+    <small>セルを選択すると、日別料金または販売上限を編集できます。</small>
+  </div>
+
+  <% if @editor_date %>
+    <%= render "editor",
+               listing: @listing,
+               start_date: @start_date,
+               editor_date: @editor_date,
+               editor_rate: @editor_rate,
+               editor_room_type: @editor_room_type,
+               daily_prices: @daily_prices,
+               daily_sales_controls: @daily_sales_controls %>
+  <% end %>
+
+  <% if @room_types.any? %>
+    <section class="stay-dashboard__card sales-calendar__card" aria-label="月別販売設定">
+      <div class="sales-calendar__table-wrapper">
+        <table class="sales-calendar__table">
+          <thead>
+            <tr>
+              <th scope="col" class="sales-calendar__product-column">Room Type／料金プラン</th>
+              <% @dates.each do |date| %>
+                <th scope="col" class="<%= "sales-calendar__date--weekend" if date.saturday? || date.sunday? %>">
+                  <span><%= date.day %></span>
+                  <small><%= %w[日 月 火 水 木 金 土][date.wday] %></small>
+                </th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% @room_types.each do |room_type| %>
+              <% room_type_rates = rates_by_room_type.fetch(room_type.id, []) %>
+              <tr class="sales-calendar__room-type-row">
+                <th scope="rowgroup"><strong><%= room_type.name %></strong><small><%= t("activerecord.enums.stay_room_type.room_kind.#{room_type.room_kind}") %></small></th>
+                <td colspan="<%= @dates.size %>"><%= room_type_rates.any? ? "#{room_type_rates.size}件の料金プラン" : "有効な基本料金がありません" %></td>
+              </tr>
+
+              <% room_type_rates.each do |rate| %>
+                <tr>
+                  <th scope="row" class="sales-calendar__product-name">
+                    <strong><%= rate.stay_rate_plan.name %></strong>
+                    <small>基本 <%= number_to_currency(rate.price_per_night_amount, unit: "¥", precision: 0) %></small>
+                  </th>
+                  <% @dates.each do |date| %>
+                    <% daily_price = @daily_prices[[rate.id, date]] %>
+                    <% selected = @editor_rate&.id == rate.id && @editor_date == date %>
+                    <td class="sales-calendar__cell <%= daily_price ? "sales-calendar__cell--daily" : "sales-calendar__cell--base" %>">
+                      <%= link_to tenant_stay_sales_calendar_path(@listing, month: @start_date.strftime("%Y-%m"),
+                                  editor: "price", target_id: rate.id, stay_date: date.iso8601,
+                                  anchor: "sales-calendar-editor"),
+                                  class: ["sales-calendar__cell-action", selected && "is-selected"],
+                                  aria: { label: "#{l(date, format: :long)} #{rate.stay_rate_plan.name}の料金",
+                                          current: ("true" if selected) } do %>
+                        <strong><%= number_to_currency(daily_price&.price_amount || rate.price_per_night_amount, unit: "¥", precision: 0) %></strong>
+                        <small><%= daily_price ? "個別" : "基本" %></small>
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+
+              <tr class="sales-calendar__sales-limit-row">
+                <th scope="row" class="sales-calendar__product-name"><strong>販売上限</strong><small>Room Type共通</small></th>
+                <% @dates.each do |date| %>
+                  <% control = @daily_sales_controls[[room_type.id, date]] %>
+                  <% closed = control&.sales_limit == 0 %>
+                  <% selected = @editor_room_type&.id == room_type.id && @editor_date == date %>
+                  <td class="sales-calendar__cell <%= "sales-calendar__cell--closed" if closed %>">
+                    <%= link_to tenant_stay_sales_calendar_path(@listing, month: @start_date.strftime("%Y-%m"),
+                                editor: "sales", target_id: room_type.id, stay_date: date.iso8601,
+                                anchor: "sales-calendar-editor"),
+                                class: ["sales-calendar__cell-action", selected && "is-selected"],
+                                aria: { label: "#{l(date, format: :long)} #{room_type.name}の販売上限",
+                                        current: ("true" if selected) } do %>
+                      <strong><%= closed ? "停止" : (control ? control.sales_limit : "—") %></strong>
+                      <small><%= control ? (closed ? "販売停止" : "上限") : "上限なし" %></small>
+                    <% end %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% else %>
+    <section class="stay-dashboard__card">
+      <div class="stay-dashboard__empty-state">
+        <span aria-hidden="true">＋</span>
+        <div>
+          <strong>客室タイプがまだ登録されていません</strong>
+          <p>販売カレンダーを利用するには、最初に客室タイプと料金プランを登録してください。</p>
+          <%= link_to "客室タイプを登録", new_tenant_stay_room_type_path(@listing), class: "stay-dashboard__button stay-dashboard__button--primary" %>
+        </div>
+      </div>
+    </section>
+  <% end %>
+</section>
