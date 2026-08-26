@@ -1,0 +1,56 @@
+<section id="sales-calendar-editor" class="stay-dashboard__card sales-calendar-editor" aria-labelledby="sales-calendar-editor-heading">
+  <% if editor_rate %>
+    <% daily_price = daily_prices[[editor_rate.id, editor_date]] %>
+    <div class="sales-calendar-editor__heading">
+      <div>
+        <p><%= l(editor_date, format: :long) %></p>
+        <h2 id="sales-calendar-editor-heading"><%= editor_rate.stay_room_type.name %>／<%= editor_rate.stay_rate_plan.name %></h2>
+        <small>基本料金 <%= number_to_currency(editor_rate.price_per_night_amount, unit: "¥", precision: 0) %></small>
+      </div>
+      <%= link_to "閉じる", tenant_stay_sales_calendar_path(listing, month: start_date.strftime("%Y-%m")), class: "stay-dashboard__button" %>
+    </div>
+    <div class="sales-calendar-editor__actions">
+      <%= form_with url: tenant_stay_sales_calendar_daily_price_path(listing), method: :patch,
+                    scope: :daily_price, local: true, class: "sales-calendar-editor__form" do |form| %>
+        <%= hidden_field_tag :stay_room_type_rate_id, editor_rate.id %>
+        <%= hidden_field_tag :stay_date, editor_date.iso8601 %>
+        <%= form.label :price_amount, "日別料金" %>
+        <%= form.number_field :price_amount, value: daily_price&.price_amount || editor_rate.price_per_night_amount,
+                              min: 1, step: 1, required: true %>
+        <span>円</span>
+        <%= form.submit "日別料金を保存", class: "stay-dashboard__button stay-dashboard__button--primary" %>
+      <% end %>
+      <%= button_to "基本料金へ戻す", tenant_stay_sales_calendar_daily_price_path(listing), method: :delete,
+                    params: { stay_room_type_rate_id: editor_rate.id, stay_date: editor_date.iso8601 },
+                    class: "stay-dashboard__button", disabled: daily_price.nil? %>
+    </div>
+  <% else %>
+    <% control = daily_sales_controls[[editor_room_type.id, editor_date]] %>
+    <div class="sales-calendar-editor__heading">
+      <div>
+        <p><%= l(editor_date, format: :long) %></p>
+        <h2 id="sales-calendar-editor-heading"><%= editor_room_type.name %>の販売上限</h2>
+        <small>Room Typeの販売在庫数を設定します。宿泊可能人数ではありません。</small>
+      </div>
+      <%= link_to "閉じる", tenant_stay_sales_calendar_path(listing, month: start_date.strftime("%Y-%m")), class: "stay-dashboard__button" %>
+    </div>
+    <div class="sales-calendar-editor__actions">
+      <%= form_with url: tenant_stay_sales_calendar_daily_sales_control_path(listing), method: :patch,
+                    scope: :daily_sales_control, local: true, class: "sales-calendar-editor__form" do |form| %>
+        <%= hidden_field_tag :stay_room_type_id, editor_room_type.id %>
+        <%= hidden_field_tag :stay_date, editor_date.iso8601 %>
+        <%= form.label :sales_limit, "販売上限" %>
+        <%= form.number_field :sales_limit, value: control&.sales_limit, min: 0, step: 1, required: true, placeholder: "3" %>
+        <span>室・床</span>
+        <%= form.submit "販売上限を保存", class: "stay-dashboard__button stay-dashboard__button--primary" %>
+      <% end %>
+      <%= button_to "販売停止にする", tenant_stay_sales_calendar_daily_sales_control_path(listing), method: :patch,
+                    params: { stay_room_type_id: editor_room_type.id, stay_date: editor_date.iso8601,
+                              daily_sales_control: { sales_limit: 0 } },
+                    class: "stay-dashboard__button" %>
+      <%= button_to "上限なしへ戻す", tenant_stay_sales_calendar_daily_sales_control_path(listing), method: :delete,
+                    params: { stay_room_type_id: editor_room_type.id, stay_date: editor_date.iso8601 },
+                    class: "stay-dashboard__button", disabled: control.nil? %>
+    </div>
+  <% end %>
+</section>

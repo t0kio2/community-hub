@@ -65,6 +65,12 @@ Rails.application.routes.draw do
         end
         resources :inventory_blocks, only: :index
         resources :rate_plans, only: %i[index show new create edit update destroy]
+
+        # URL: /tenant/stays/:stay_id/sales_calendar
+        resource :sales_calendar, only: :show do
+          resource :daily_price, only: %i[update destroy]
+          resource :daily_sales_control, only: %i[update destroy]
+        end
       end
     end
   end

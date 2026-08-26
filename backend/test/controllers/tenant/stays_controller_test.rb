@@ -84,10 +84,10 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     get tenant_stay_path(listing)
 
     assert_response :success
-    assert_select "h1#tenant-page-title", text: "宿泊施設詳細"
+    assert_select "h1#tenant-page-title", text: "宿泊施設管理"
     assert_select ".stay-facility-navigation__back[href=?]", tenant_stays_path, text: /宿泊施設一覧へ戻る/
-    assert_select ".stay-facility-navigation__item.active[href=?]", tenant_stay_path(listing), text: /施設詳細/
-    assert_select ".stay-facility-navigation__item[href=?]", edit_tenant_stay_path(listing), text: /施設設定/
+    assert_select ".stay-facility-navigation__item.active[href=?]", tenant_stay_path(listing), text: /施設情報/
+    assert_select ".stay-facility-navigation__item[href=?]", edit_tenant_stay_path(listing), count: 0
     assert_includes response.body, @location.name
   end
 
@@ -122,7 +122,7 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     get edit_tenant_stay_path(listing)
 
     assert_response :success
-    assert_select ".stay-facility-navigation__item.active[href=?]", edit_tenant_stay_path(listing), text: /施設設定/
+    assert_select ".stay-facility-navigation__item.active[href=?]", tenant_stay_path(listing), text: /施設情報/
     assert_select "select[name='listing[stay_listing][booking_confirmation_mode]'] option[value='instant'][selected]", text: "即時予約"
     assert_select "input[name='listing[stay_listing][stay_available_ends_on]'][value='2026-12-01']"
     assert_select "textarea[name='listing[stay_listing][house_rules]']", text: "館内禁煙"
@@ -139,7 +139,7 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", tenant_stay_path(listing), text: "詳細"
   end
 
-  test "宿泊施設詳細に基本情報と宿泊設定を表示する" do
+  test "宿泊施設管理画面に基本情報と宿泊設定を表示する" do
     listing = create_listing(@tenant, "stay", "湖畔ホテル")
     listing.update!(description: "湖を望む宿泊施設です", tenant_location: @location)
     StayListing.create!(
