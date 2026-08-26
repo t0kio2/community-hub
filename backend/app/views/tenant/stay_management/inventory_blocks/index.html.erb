@@ -1,0 +1,38 @@
+<% content_for :title, "ブロック一覧" %>
+<% content_for :page_title, "ブロック一覧" %>
+<% content_for :back_link do %>
+  <%= link_to "← 客室一覧へ戻る", tenant_stay_rooms_path(@listing), class: "tenant-back-link" %>
+<% end %>
+
+<section class="stay-dashboard" aria-labelledby="tenant-page-title">
+  <section class="stay-dashboard__card">
+    <div class="stay-dashboard__card-heading">
+      <div><h2>施設内のブロック</h2><p>客室とベッドの一時停止期間をまとめて確認できます。</p></div>
+    </div>
+
+    <% if @blocks.any? %>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead><tr><th scope="col">対象</th><th scope="col">客室タイプ</th><th scope="col">停止期間</th><th scope="col">理由</th><th scope="col">管理メモ</th><th scope="col"><span class="visually-hidden">操作</span></th></tr></thead>
+          <tbody>
+            <% @blocks.each do |block| %>
+              <% room = block.is_a?(StayRoomBlock) ? block.stay_room : block.stay_bed.stay_room %>
+              <% target_name = block.is_a?(StayRoomBlock) ? room.name : "#{room.name} / #{block.stay_bed.name}" %>
+              <% manage_path = block.is_a?(StayRoomBlock) ? tenant_stay_room_room_blocks_path(@listing, room) : tenant_stay_room_bed_bed_blocks_path(@listing, room, block.stay_bed) %>
+              <tr>
+                <td><strong class="data-table__primary"><%= target_name %></strong></td>
+                <td><%= room.stay_room_type&.name || "未割当て" %></td>
+                <td><%= l(block.starts_on, format: :long) %>〜<%= l(block.ends_on, format: :long) %>（再開）</td>
+                <td><%= { "maintenance" => "メンテナンス", "cleaning" => "清掃", "operator_block" => "運営都合", "other" => "その他" }.fetch(block.reason) %></td>
+                <td><%= block.notes.presence || "—" %></td>
+                <td><%= link_to "管理", manage_path, class: "table-action table-action--secondary" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="stay-dashboard__empty-state"><span aria-hidden="true">✓</span><div><strong>ブロックは登録されていません</strong><p>客室またはベッドの「ブロック管理」から登録できます。</p></div></div>
+    <% end %>
+  </section>
+</section>

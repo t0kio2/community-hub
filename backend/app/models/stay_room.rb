@@ -3,6 +3,7 @@ class StayRoom < ApplicationRecord
   belongs_to :stay_room_type, optional: true
 
   has_many :stay_beds, dependent: :restrict_with_error
+  has_many :stay_room_blocks, dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :stay_listing_id }
 

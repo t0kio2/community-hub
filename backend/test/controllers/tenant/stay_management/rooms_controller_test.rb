@@ -92,6 +92,16 @@ class Tenant::StayManagement::RoomsControllerTest < ActionDispatch::IntegrationT
     assert_not_includes response.body, other_room.name
   end
 
+  test "客室一覧から施設全体と客室別のブロック管理へ遷移できる" do
+    room = @stay_listing.stay_rooms.create!(name: "101号室", stay_room_type: @room_type)
+
+    get tenant_stay_rooms_path(@listing)
+
+    assert_response :success
+    assert_select "a[href=?]", tenant_stay_inventory_blocks_path(@listing), text: "ブロック一覧"
+    assert_select "a[href=?]", tenant_stay_room_room_blocks_path(@listing, room), text: "ブロック管理"
+  end
+
   test "客室を更新する" do
     room = @stay_listing.stay_rooms.create!(name: "101号室", stay_room_type: @room_type)
 

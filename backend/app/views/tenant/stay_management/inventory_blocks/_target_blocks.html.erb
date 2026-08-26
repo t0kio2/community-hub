@@ -1,0 +1,54 @@
+<section class="stay-dashboard" aria-labelledby="tenant-page-title">
+  <section class="stay-dashboard__card">
+    <div class="stay-dashboard__card-heading">
+      <div>
+        <h2><%= target_name %>のブロック</h2>
+        <p>日付を指定した一時的な利用停止を管理します。</p>
+      </div>
+      <%= link_to "ブロックを登録", new_path,
+                  class: "stay-dashboard__button stay-dashboard__button--primary" %>
+    </div>
+
+    <% if blocks.any? %>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">停止する宿泊日</th>
+              <th scope="col">利用再開日</th>
+              <th scope="col">理由</th>
+              <th scope="col">状態</th>
+              <th scope="col">管理メモ</th>
+              <th scope="col"><span class="visually-hidden">操作</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% blocks.each do |block| %>
+              <% status = block.starts_on > Date.current ? "予定" : (block.ends_on > Date.current ? "停止中" : "終了") %>
+              <tr>
+                <td><%= l(block.starts_on, format: :long) %></td>
+                <td><%= l(block.ends_on, format: :long) %></td>
+                <td><%= { "maintenance" => "メンテナンス", "cleaning" => "清掃", "operator_block" => "運営都合", "other" => "その他" }.fetch(block.reason) %></td>
+                <td><strong class="data-table__primary"><%= status %></strong></td>
+                <td><%= block.notes.presence || "—" %></td>
+                <td>
+                  <div class="table-actions">
+                    <%= link_to "編集", edit_path_for.call(block), class: "table-action table-action--secondary" %>
+                    <%= button_to "解除", block_path_for.call(block), method: :delete,
+                                  class: "table-action table-action--danger",
+                                  form: { data: { confirm_message: "このブロックを解除します。" } } %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="stay-dashboard__empty-state">
+        <span aria-hidden="true">✓</span>
+        <div><strong>ブロックは登録されていません</strong><p><%= target_name %>は期間指定の停止がありません。</p></div>
+      </div>
+    <% end %>
+  </section>
+</section>

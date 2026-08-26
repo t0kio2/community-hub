@@ -30,7 +30,7 @@
                 <td>
                   <span class="tenant-listing-index__identity">
                     <span class="tenant-listing-index__icon" aria-hidden="true">S</span>
-                    <strong><%= listing.title %></strong>
+                    <strong><%= link_to listing.title, tenant_stay_path(listing) %></strong>
                   </span>
                 </td>
                 <td><%= listing.tenant_location&.name.presence || "未設定" %></td>
@@ -42,7 +42,7 @@
                 <td><%= l(listing.updated_at, format: :short) %></td>
                 <td>
                   <span class="table-actions">
-                    <%= link_to "管理画面", tenant_stay_path(listing) %><%= link_to "編集", edit_tenant_stay_path(listing) %>
+                    <%= link_to "詳細", tenant_stay_path(listing) %><%= link_to "編集", edit_tenant_stay_path(listing) %>
                   </span>
                 </td>
               </tr>

@@ -8,9 +8,14 @@
         <h2>割当て客室一覧</h2>
         <p><%= @rooms.size %>件の客室が登録されています</p>
       </div>
-      <%= link_to "客室を登録",
-                  new_tenant_stay_room_path(@listing),
-                  class: "stay-dashboard__button stay-dashboard__button--primary" %>
+      <div class="stay-dashboard__header-actions">
+        <%= link_to "ブロック一覧",
+                    tenant_stay_inventory_blocks_path(@listing),
+                    class: "stay-dashboard__button" %>
+        <%= link_to "客室を登録",
+                    new_tenant_stay_room_path(@listing),
+                    class: "stay-dashboard__button stay-dashboard__button--primary" %>
+      </div>
     </div>
 
     <% if @rooms.any? %>
@@ -67,6 +72,9 @@
                 <td><%= room.notes.presence || "—" %></td>
                 <td>
                   <div class="table-actions">
+                    <%= link_to "ブロック管理",
+                                tenant_stay_room_room_blocks_path(@listing, room),
+                                class: "table-action table-action--secondary" %>
                     <%= link_to "編集",
                                 edit_tenant_stay_room_path(@listing, room),
                                 class: "table-action table-action--secondary" %>
