@@ -1,49 +1,84 @@
-<% content_for :title, "#{@listing.title} - 宿泊管理" %>
-<% content_for :page_title, "運営ダッシュボード" %>
+<% content_for :title, @listing.title %>
+<% content_for :page_title, "宿泊施設詳細" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %>
+<% end %>
 
-<% status_labels = { "published" => "公開中", "draft" => "下書き", "closed" => "公開終了", "archived" => "アーカイブ" } %>
+<%
+  status_labels = { "published" => "公開中", "draft" => "下書き", "closed" => "公開終了", "archived" => "アーカイブ" }
+  booking_confirmation_labels = { "instant" => "即時予約", "approval_required" => "承認制" }
+  display_time = ->(value) { value.present? ? value.strftime("%H:%M") : "未設定" }
+  display_date = ->(value) { value.present? ? l(value, format: :long) : "未設定" }
+%>
 
-<section class="stay-dashboard" aria-labelledby="tenant-page-title">
-  <header class="stay-dashboard__header">
-    <div>
-      <p class="stay-dashboard__eyebrow">TODAY'S OPERATIONS</p>
-      <h2><%= @listing.title %>の今日の運営</h2>
-      <p>予約対応、到着・出発、販売状況を施設単位で確認します。</p>
+<section class="tenant-listing-detail" aria-labelledby="tenant-page-title">
+  <div class="tenant-listing-detail__overview">
+    <span class="tenant-listing-detail__icon" aria-hidden="true">S</span>
+    <div class="tenant-listing-detail__identity">
+      <span class="tenant-listing-type">宿泊施設</span>
+      <h2><%= @listing.title %></h2>
     </div>
-    <div class="stay-dashboard__header-actions">
-      <span class="stay-status stay-status--<%= @listing.status %>"><%= status_labels.fetch(@listing.status, @listing.status) %></span>
-      <%= link_to "施設情報を編集", edit_tenant_stay_path(@listing), class: "stay-dashboard__button" %>
+    <div class="tenant-listing-detail__overview-actions">
+      <span class="tenant-listing-status tenant-listing-status--<%= @listing.status %>">
+        <%= status_labels.fetch(@listing.status, @listing.status) %>
+      </span>
+      <%= link_to "編集", edit_tenant_stay_path(@listing), class: "tenant-listing-button" %>
     </div>
-  </header>
-
-  <div class="stay-dashboard__metrics" aria-label="今日の状況">
-    <article><span>到着予定</span><strong>--</strong><small>予約機能の接続後に表示</small></article>
-    <article><span>出発予定</span><strong>--</strong><small>予約機能の接続後に表示</small></article>
-    <article><span>宿泊中</span><strong>--</strong><small>予約機能の接続後に表示</small></article>
-    <article><span>未処理予約</span><strong>--</strong><small>予約機能の接続後に表示</small></article>
   </div>
 
-  <div class="stay-dashboard__grid">
-    <section class="stay-dashboard__card">
-      <div class="stay-dashboard__card-heading">
-        <div><h3>要対応</h3><p>対応が必要な業務をここに表示します</p></div>
-        <span class="stay-dashboard__badge">準備中</span>
+  <section class="tenant-listing-detail__card" aria-labelledby="stay-basic-information-heading">
+    <div class="tenant-listing-card-heading">
+      <h3 id="stay-basic-information-heading">施設の基本情報</h3>
+      <p>施設名、紹介、所在地を確認できます。</p>
+    </div>
+    <dl class="tenant-listing-detail__definition-list">
+      <div class="tenant-listing-detail__wide">
+        <dt>施設紹介</dt>
+        <dd><%= @listing.description.presence || "未設定" %></dd>
       </div>
-      <div class="stay-dashboard__empty-state">
-        <span aria-hidden="true">✓</span>
-        <div><strong>予約機能はまだ接続されていません</strong><p>予約モデルと業務フローの実装後、未確定予約や在庫不足を表示します。</p></div>
+      <div class="tenant-listing-detail__wide">
+        <dt>拠点</dt>
+        <dd><%= @listing.tenant_location&.name.presence || "未設定" %></dd>
       </div>
-    </section>
+      <div class="tenant-listing-detail__wide">
+        <dt>住所</dt>
+        <dd><%= @listing.tenant_location&.full_address.presence || "未設定" %></dd>
+      </div>
+    </dl>
+  </section>
 
-    <aside class="stay-dashboard__card stay-dashboard__facility-summary">
-      <div class="stay-dashboard__card-heading"><div><h3>施設情報</h3><p>現在選択中の宿泊施設</p></div></div>
-      <dl>
-        <div><dt>施設名</dt><dd><%= @listing.title %></dd></div>
-        <div><dt>拠点</dt><dd><%= @listing.tenant_location&.name.presence || "未設定" %></dd></div>
-        <div><dt>住所</dt><dd><%= @listing.tenant_location&.full_address.presence || "未設定" %></dd></div>
-        <div><dt>公開状態</dt><dd><%= status_labels.fetch(@listing.status, @listing.status) %></dd></div>
-      </dl>
-      <%= link_to "施設情報を編集", edit_tenant_stay_path(@listing), class: "stay-dashboard__button stay-dashboard__button--wide" %>
-    </aside>
-  </div>
+  <section class="tenant-listing-detail__card" aria-labelledby="stay-time-information-heading">
+    <div class="tenant-listing-card-heading">
+      <h3 id="stay-time-information-heading">宿泊時刻</h3>
+      <p>宿泊者へ案内するチェックイン・チェックアウト時刻です。</p>
+    </div>
+    <dl class="tenant-listing-detail__definition-list tenant-listing-detail__definition-list--two-columns">
+      <div><dt>チェックイン開始</dt><dd><%= display_time.call(@stay_listing.check_in_time) %></dd></div>
+      <div><dt>最終チェックイン</dt><dd><%= display_time.call(@stay_listing.latest_check_in_time) %></dd></div>
+      <div><dt>チェックアウト</dt><dd><%= display_time.call(@stay_listing.check_out_time) %></dd></div>
+      <div><dt>タイムゾーン</dt><dd><%= @stay_listing.time_zone.presence || "未設定" %></dd></div>
+    </dl>
+  </section>
+
+  <section class="tenant-listing-detail__card" aria-labelledby="stay-booking-information-heading">
+    <div class="tenant-listing-card-heading">
+      <h3 id="stay-booking-information-heading">予約受付</h3>
+      <p>予約の確定方法と受付期間です。</p>
+    </div>
+    <dl class="tenant-listing-detail__definition-list">
+      <div>
+        <dt>予約確定方式</dt>
+        <dd><%= booking_confirmation_labels.fetch(@stay_listing.booking_confirmation_mode, @stay_listing.booking_confirmation_mode) %></dd>
+      </div>
+      <div><dt>承認期限</dt><dd><%= "#{@stay_listing.approval_deadline_hours}時間" %></dd></div>
+      <div><dt>予約受付開始</dt><dd><%= "チェックインの#{@stay_listing.booking_open_days_before}日前" %></dd></div>
+      <div><dt>予約受付終了</dt><dd><%= "チェックインの#{@stay_listing.booking_close_hours_before}時間前" %></dd></div>
+      <div><dt>宿泊可能期間の開始日</dt><dd><%= display_date.call(@stay_listing.stay_available_starts_on) %></dd></div>
+      <div><dt>宿泊可能期間の終了日</dt><dd><%= display_date.call(@stay_listing.stay_available_ends_on) %></dd></div>
+      <div class="tenant-listing-detail__wide">
+        <dt>ハウスルール</dt>
+        <dd><%= @stay_listing.house_rules.presence || "未設定" %></dd>
+      </div>
+    </dl>
+  </section>
 </section>

@@ -1,0 +1,12 @@
+<% content_for :title, "#{@bed.name}のブロック管理" %>
+<% content_for :page_title, "ベッドブロック管理" %>
+<% content_for :back_link do %>
+  <%= link_to "← #{@room.name}の編集へ戻る", edit_tenant_stay_room_path(@listing, @room, anchor: "stay-beds-section"), class: "tenant-back-link" %>
+<% end %>
+
+<%= render "tenant/stay_management/inventory_blocks/target_blocks",
+           target_name: "#{@room.name} / #{@bed.name}",
+           blocks: @blocks,
+           new_path: new_tenant_stay_room_bed_bed_block_path(@listing, @room, @bed),
+           edit_path_for: ->(block) { edit_tenant_stay_room_bed_bed_block_path(@listing, @room, @bed, block) },
+           block_path_for: ->(block) { tenant_stay_room_bed_bed_block_path(@listing, @room, @bed, block) } %>

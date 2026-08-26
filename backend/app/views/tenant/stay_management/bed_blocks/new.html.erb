@@ -1,0 +1,11 @@
+<% content_for :title, "ベッドブロック登録" %>
+<% content_for :page_title, "ベッドブロック登録" %>
+<% content_for :back_link do %>
+  <%= link_to "← #{@bed.name}のブロックへ戻る", tenant_stay_room_bed_bed_blocks_path(@listing, @room, @bed), class: "tenant-back-link" %>
+<% end %>
+
+<%= render "tenant/stay_management/inventory_blocks/form",
+           block: @block,
+           target_name: "#{@room.name} / #{@bed.name}",
+           form_url: tenant_stay_room_bed_bed_blocks_path(@listing, @room, @bed),
+           submit_label: "ブロックを登録" %>

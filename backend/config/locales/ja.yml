@@ -26,6 +26,17 @@ ja:
         active: "客室全体の運用状態"
       stay_bed:
         active: "ベッドの運用状態"
+      stay_room_block:
+        starts_on: "停止する最初の宿泊日"
+        ends_on: "利用を再開する宿泊日"
+        reason: "停止理由"
+        notes: "管理メモ"
+      stay_bed_block:
+        stay_bed: "ベッド"
+        starts_on: "停止する最初の宿泊日"
+        ends_on: "利用を再開する宿泊日"
+        reason: "停止理由"
+        notes: "管理メモ"
       stay_rate_plan:
         name: "プラン名"
         description: "説明"

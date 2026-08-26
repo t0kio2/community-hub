@@ -256,6 +256,10 @@
   background: var(--tenant-color-border);
 }
 
+.tenant-listing-detail__definition-list--two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .tenant-listing-detail__definition-list > div {
   min-width: 0;
   padding: 14px;

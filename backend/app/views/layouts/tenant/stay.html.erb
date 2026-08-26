@@ -20,7 +20,12 @@
     stay_dashboard_active = controller_path == "tenant/stays" && action_name == "show"
     stay_settings_active = controller_path == "tenant/stays" && action_name == "edit"
     room_types_active = controller_path == "tenant/stay_management/room_types"
-    rooms_active = controller_path == "tenant/stay_management/rooms"
+    rooms_active = controller_path.in?([
+      "tenant/stay_management/rooms",
+      "tenant/stay_management/room_blocks",
+      "tenant/stay_management/bed_blocks",
+      "tenant/stay_management/inventory_blocks"
+    ])
     rate_plans_active = controller_path == "tenant/stay_management/rate_plans"
   %>
   <nav class="tenant-navigation stay-facility-navigation" aria-label="<%= @listing.title %>の宿泊施設管理">
@@ -37,7 +42,7 @@
                 class: ["stay-facility-navigation__item", stay_dashboard_active && "active"],
                 aria: (stay_dashboard_active ? { current: "page" } : {}) do %>
       <span class="stay-facility-navigation__icon" aria-hidden="true">⌂</span>
-      <span><strong>運営ダッシュボード</strong><small>今日の状況と要対応</small></span>
+      <span><strong>施設詳細</strong><small>基本情報・宿泊・予約設定</small></span>
     <% end %>
 
     <span class="stay-facility-navigation__item stay-facility-navigation__item--disabled" aria-disabled="true">
