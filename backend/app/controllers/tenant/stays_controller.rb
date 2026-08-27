@@ -7,8 +7,17 @@ class Tenant::StaysController < Tenant::BaseController
 
   def index
     authorize @tenant, :index?, with: Tenant::ListingPolicy
-    @listings = @tenant.listings.where(listing_type: "stay")
-    .order(updated_at: :desc, id: :desc)
+    @listings = @tenant.listings
+                        .where(listing_type: "stay")
+                        .includes(
+                          stay_listing: [
+                            :stay_room_types,
+                            {
+                              stay_room_type_rates: %i[stay_room_type stay_rate_plan]
+                            }
+                          ]
+                        )
+                        .order(updated_at: :desc, id: :desc)
   end
 
   def show

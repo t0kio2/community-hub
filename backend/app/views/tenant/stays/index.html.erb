@@ -4,7 +4,7 @@
   <%= stylesheet_link_tag "tenant/listings", "data-turbo-track": "reload" %>
 <% end %>
 
-<% listing_status_labels = { "published" => "公開中", "draft" => "下書き", "closed" => "公開終了", "archived" => "アーカイブ" } %>
+<% listing_status_labels = { "published" => "公開中", "draft" => "下書き", "closed" => "公開終了", "archived" => "アーカイブ", "inactive" => "停止中" } %>
 
 <section class="tenant-listing-index" aria-labelledby="tenant-page-title">
   <div class="tenant-listing-index__toolbar">
@@ -17,37 +17,84 @@
         <table class="tenant-listing-index__table">
           <thead>
             <tr>
-              <th scope="col">施設</th>
-              <th scope="col">所在地</th>
+              <th scope="col">管理対象</th>
+              <th scope="col">所在地・販売条件</th>
               <th scope="col">状態</th>
+              <th scope="col">基本料金</th>
               <th scope="col">更新日</th>
               <th scope="col"><span class="visually-hidden">操作</span></th>
             </tr>
           </thead>
-          <tbody>
-            <% @listings.each do |listing| %>
-              <tr>
-                <td>
+          <% @listings.each do |listing| %>
+            <%
+              stay_detail = listing.stay_listing
+              room_types = stay_detail&.stay_room_types || []
+              sellable_rates = (stay_detail&.stay_room_type_rates || [])
+                               .select(&:active?)
+                               .sort_by { |rate| [rate.stay_room_type.name, rate.stay_rate_plan.name, rate.id] }
+            %>
+            <tbody class="tenant-listing-group">
+              <tr class="tenant-listing-group__facility">
+                <th scope="rowgroup">
                   <span class="tenant-listing-index__identity">
                     <span class="tenant-listing-index__icon" aria-hidden="true">S</span>
-                    <strong><%= link_to listing.title, tenant_stay_path(listing) %></strong>
+                    <span>
+                      <strong><%= link_to listing.title, tenant_stay_path(listing) %></strong>
+                      <small>客室タイプ <%= room_types.size %>件／販売設定 <%= sellable_rates.size %>件</small>
+                    </span>
                   </span>
-                </td>
+                </th>
                 <td><%= listing.tenant_location&.name.presence || "未設定" %></td>
                 <td>
                   <span class="tenant-listing-status tenant-listing-status--<%= listing.status %>">
                     <%= listing_status_labels.fetch(listing.status, listing.status) %>
                   </span>
                 </td>
+                <td>—</td>
                 <td><%= l(listing.updated_at, format: :short) %></td>
                 <td>
                   <span class="table-actions">
-                    <%= link_to "詳細", tenant_stay_path(listing) %><%= link_to "編集", edit_tenant_stay_path(listing) %>
+                    <%= link_to "管理", tenant_stay_path(listing) %><%= link_to "編集", edit_tenant_stay_path(listing) %>
                   </span>
                 </td>
               </tr>
-            <% end %>
-          </tbody>
+
+              <% if sellable_rates.any? %>
+                <% sellable_rates.each do |rate| %>
+                  <tr class="tenant-listing-group__product">
+                    <td>
+                      <span class="tenant-listing-group__branch" aria-hidden="true">↳</span>
+                      <%= link_to "#{rate.stay_room_type.name}／#{rate.stay_rate_plan.name}",
+                                  tenant_stay_rate_plan_path(listing, rate.stay_rate_plan),
+                                  class: "tenant-listing-group__product-link" %>
+                    </td>
+                    <td>
+                      <%= t("activerecord.enums.stay_rate_plan.meal_type.#{rate.stay_rate_plan.meal_type}") %>
+                      <span class="tenant-listing-group__separator" aria-hidden="true">／</span>
+                      <%= t("activerecord.enums.stay_rate_plan.cancellation_policy_type.#{rate.stay_rate_plan.cancellation_policy_type}") %>
+                    </td>
+                    <td>
+                      <span class="tenant-listing-status tenant-listing-status--<%= rate.stay_rate_plan.status %>">
+                        <%= listing_status_labels.fetch(rate.stay_rate_plan.status, rate.stay_rate_plan.status) %>
+                      </span>
+                    </td>
+                    <td><strong><%= number_to_currency(rate.price_per_night_amount, unit: "¥", precision: 0) %></strong></td>
+                    <td><%= l([rate.updated_at, rate.stay_rate_plan.updated_at].max, format: :short) %></td>
+                    <td><%= link_to "料金プラン管理", tenant_stay_rate_plan_path(listing, rate.stay_rate_plan) %></td>
+                  </tr>
+                <% end %>
+              <% else %>
+                <tr class="tenant-listing-group__product tenant-listing-group__product--empty">
+                  <td><span class="tenant-listing-group__branch" aria-hidden="true">↳</span><strong>販売設定なし</strong></td>
+                  <td>料金プランと基本料金を設定してください</td>
+                  <td>—</td>
+                  <td>—</td>
+                  <td>—</td>
+                  <td><%= link_to "料金プランを設定", tenant_stay_rate_plans_path(listing) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          <% end %>
         </table>
       </div>
     <% else %>

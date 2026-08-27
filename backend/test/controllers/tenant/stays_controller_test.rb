@@ -136,7 +136,47 @@ class Tenant::StaysControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", tenant_stay_path(listing), text: "管理対象施設"
-    assert_select "a[href=?]", tenant_stay_path(listing), text: "詳細"
+    assert_select "a[href=?]", tenant_stay_path(listing), text: "管理"
+  end
+
+  test "宿泊施設一覧に管理用のお部屋と宿泊プランの設定状況を表示する" do
+    listing = create_listing(@tenant, "stay", "販売設定済み施設")
+    stay_listing = StayListing.create!(listing: listing)
+    room_type = stay_listing.stay_room_types.create!(name: "スタンダードツイン", room_kind: "private_room")
+    rate_plan = stay_listing.stay_rate_plans.create!(name: "朝食付き", status: "published")
+    StayRoomTypeRate.create!(
+      stay_room_type: room_type,
+      stay_rate_plan: rate_plan,
+      price_per_night_amount: 12_000,
+      active: true
+    )
+
+    get tenant_stays_path
+
+    assert_response :success
+    assert_includes response.body, "客室タイプ"
+    assert_includes response.body, "販売設定"
+    assert_includes response.body, "スタンダードツイン／朝食付き"
+    assert_includes response.body, "¥12,000"
+    assert_includes response.body, "公開中"
+    assert_select "tbody" do
+      assert_select "th[scope='rowgroup']", text: /販売設定済み施設/
+      assert_select "tr + tr a[href=?]", tenant_stay_rate_plan_path(listing, rate_plan), text: /スタンダードツイン／朝食付き/
+    end
+    assert_select "a[href=?]", tenant_stay_rate_plan_path(listing, rate_plan), text: /スタンダードツイン／朝食付き/
+  end
+
+  test "販売設定がない宿泊施設には料金プラン設定への導線を表示する" do
+    listing = create_listing(@tenant, "stay", "未設定施設")
+    StayListing.create!(listing: listing)
+
+    get tenant_stays_path
+
+    assert_response :success
+    assert_includes response.body, "販売設定なし"
+    assert_select "tbody th[scope='rowgroup']", text: /未設定施設/
+    assert_select "tbody tr + tr", text: /販売設定なし/
+    assert_select "a[href=?]", tenant_stay_rate_plans_path(listing), text: "料金プランを設定"
   end
 
   test "宿泊施設管理画面に基本情報と宿泊設定を表示する" do
