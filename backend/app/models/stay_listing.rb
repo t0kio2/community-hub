@@ -4,6 +4,7 @@ class StayListing < ApplicationRecord
   has_many :stay_room_types
   has_many :stay_rooms
   has_many :stay_rate_plans
+  has_many :stay_room_type_rates, through: :stay_room_types
 
   belongs_to :listing
 
