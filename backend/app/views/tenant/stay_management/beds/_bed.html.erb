@@ -8,6 +8,10 @@
   <td><%= bed.notes.presence || "—" %></td>
   <td>
     <div class="table-actions">
+      <%= link_to "ブロック管理",
+                  tenant_stay_room_bed_bed_blocks_path(listing, room, bed),
+                  class: "table-action table-action--secondary",
+                  data: { turbo_frame: "_top" } %>
       <%= link_to "編集",
                   edit_tenant_stay_room_bed_path(listing, room, bed),
                   class: "table-action table-action--secondary",

@@ -1,0 +1,11 @@
+<% content_for :title, "客室ブロック編集" %>
+<% content_for :page_title, "客室ブロック編集" %>
+<% content_for :back_link do %>
+  <%= link_to "← #{@room.name}のブロックへ戻る", tenant_stay_room_room_blocks_path(@listing, @room), class: "tenant-back-link" %>
+<% end %>
+
+<%= render "tenant/stay_management/inventory_blocks/form",
+           block: @block,
+           target_name: @room.name,
+           form_url: tenant_stay_room_room_block_path(@listing, @room, @block),
+           submit_label: "ブロックを更新" %>

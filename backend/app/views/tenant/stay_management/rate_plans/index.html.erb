@@ -1,0 +1,104 @@
+<% content_for :title, "料金プラン管理" %>
+<% content_for :page_title, "料金プラン" %>
+
+<section class="stay-dashboard" aria-labelledby="tenant-page-title">
+  <section class="stay-dashboard__card">
+    <div class="stay-dashboard__card-heading">
+      <div>
+        <h2>料金プラン一覧</h2>
+        <p><%= @rate_plans.size %>件の料金プランが登録されています</p>
+      </div>
+      <%= link_to "料金プランを登録",
+                  new_tenant_stay_rate_plan_path(@listing),
+                  class: "stay-dashboard__button stay-dashboard__button--primary" %>
+    </div>
+
+    <% if @rate_plans.any? %>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">プラン名</th>
+              <th scope="col">食事条件</th>
+              <th scope="col">キャンセル条件</th>
+              <th scope="col">Room Type別基本料金</th>
+              <th scope="col">状態</th>
+              <th scope="col"><span class="visually-hidden">操作</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @rate_plans.each do |rate_plan| %>
+              <tr>
+                <td>
+                  <%= link_to tenant_stay_rate_plan_path(@listing, rate_plan), class: "data-table__link" do %>
+                    <strong class="data-table__primary"><%= rate_plan.name %></strong>
+                  <% end %>
+                  <% if rate_plan.description.present? %>
+                    <small class="data-table__secondary">
+                      <%= truncate(rate_plan.description, length: 80) %>
+                    </small>
+                  <% end %>
+                </td>
+                <td>
+                  <%= I18n.t("activerecord.enums.stay_rate_plan.meal_type.#{rate_plan.meal_type}") %>
+                </td>
+                <td>
+                  <%= I18n.t("activerecord.enums.stay_rate_plan.cancellation_policy_type.#{rate_plan.cancellation_policy_type}") %>
+                </td>
+                <td>
+                  <% if rate_plan.stay_room_type_rates.any? %>
+                    <strong class="data-table__primary">
+                      <%= rate_plan.stay_room_type_rates.count(&:active?) %> / <%= rate_plan.stay_room_type_rates.size %>件 販売中
+                    </strong>
+                    <% rate_plan.stay_room_type_rates.each do |room_type_rate| %>
+                      <small class="data-table__secondary">
+                        <%= room_type_rate.stay_room_type.name %>：<%= number_to_currency(room_type_rate.price_per_night_amount, unit: "¥", precision: 0) %>
+                        <%= "（停止中）" unless room_type_rate.active? %>
+                      </small>
+                    <% end %>
+                  <% else %>
+                    <strong class="data-table__primary">未設定</strong>
+                    <small class="data-table__secondary">Room Type別に基本料金を設定してください</small>
+                  <% end %>
+                </td>
+                <td>
+                  <span class="stay-status stay-status--<%= rate_plan.status %>">
+                    <%= I18n.t("activerecord.enums.stay_rate_plan.status.#{rate_plan.status}") %>
+                  </span>
+                </td>
+                <td>
+                  <div class="table-actions">
+                    <%= link_to "編集",
+                                edit_tenant_stay_rate_plan_path(@listing, rate_plan),
+                                class: "table-action table-action--secondary" %>
+                    <% if rate_plan.destroyable? %>
+                      <%= button_to "削除",
+                                    tenant_stay_rate_plan_path(@listing, rate_plan),
+                                    method: :delete,
+                                    class: "table-action table-action--danger",
+                                    form: {
+                                      data: {
+                                        confirm_message: "#{rate_plan.name}を削除します。この操作は取り消せません。"
+                                      }
+                                    } %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <%= link_to new_tenant_stay_rate_plan_path(@listing), class: "text-decoration-none" do %>
+        <div class="stay-dashboard__empty-state">
+          <span aria-hidden="true">＋</span>
+          <div>
+            <strong>料金プランがまだ登録されていません</strong>
+            <p>食事やキャンセル条件をまとめ、Room Typeごとの1泊基本料金を設定してください。</p>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+</section>

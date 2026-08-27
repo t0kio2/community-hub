@@ -7,8 +7,17 @@ class Tenant::StaysController < Tenant::BaseController
 
   def index
     authorize @tenant, :index?, with: Tenant::ListingPolicy
-    @listings = @tenant.listings.where(listing_type: "stay")
-    .order(updated_at: :desc, id: :desc)
+    @listings = @tenant.listings
+                        .where(listing_type: "stay")
+                        .includes(
+                          stay_listing: [
+                            :stay_room_types,
+                            {
+                              stay_room_type_rates: %i[stay_room_type stay_rate_plan]
+                            }
+                          ]
+                        )
+                        .order(updated_at: :desc, id: :desc)
   end
 
   def show
@@ -26,6 +35,7 @@ class Tenant::StaysController < Tenant::BaseController
     authorize @listing, :create?, with: Tenant::ListingPolicy
     set_audit_members
     set_or_build_stay_detail
+    @stay_listing.assign_attributes(stay_listing_params)
 
     if save_with_stay_detail
       redirect_to tenant_stay_path(@listing), notice: "宿泊施設を登録しました"
@@ -42,6 +52,7 @@ class Tenant::StaysController < Tenant::BaseController
     @listing.assign_attributes(listing_params)
     @listing.updated_by_tenant_member = current_tenant_member
     set_or_build_stay_detail
+    @stay_listing.assign_attributes(stay_listing_params)
 
     if save_with_stay_detail
       redirect_to tenant_stay_path(@listing), notice: "宿泊施設を更新しました"
@@ -97,5 +108,21 @@ class Tenant::StaysController < Tenant::BaseController
 
   def listing_params
     params.require(:listing).permit(:title, :description, :tenant_location_id)
+  end
+
+  def stay_listing_params
+    params.require(:listing).fetch(:stay_listing, {}).permit(
+      :check_in_time,
+      :latest_check_in_time,
+      :check_out_time,
+      :time_zone,
+      :booking_confirmation_mode,
+      :approval_deadline_hours,
+      :booking_open_days_before,
+      :booking_close_hours_before,
+      :stay_available_starts_on,
+      :stay_available_ends_on,
+      :house_rules
+    )
   end
 end

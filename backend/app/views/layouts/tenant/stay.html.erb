@@ -17,10 +17,16 @@
 
 <% content_for :tenant_sidebar_navigation do %>
   <%
-    stay_dashboard_active = controller_path == "tenant/stays" && action_name == "show"
-    stay_settings_active = controller_path == "tenant/stays" && action_name == "edit"
+    facility_information_active = controller_path == "tenant/stays" && action_name.in?(%w[show edit update])
     room_types_active = controller_path == "tenant/stay_management/room_types"
-    rooms_active = controller_path == "tenant/stay_management/rooms"
+    rooms_active = controller_path.in?([
+      "tenant/stay_management/rooms",
+      "tenant/stay_management/room_blocks",
+      "tenant/stay_management/bed_blocks",
+      "tenant/stay_management/inventory_blocks"
+    ])
+    rate_plans_active = controller_path == "tenant/stay_management/rate_plans"
+    sales_calendar_active = controller_path == "tenant/stay_management/sales_calendars"
   %>
   <nav class="tenant-navigation stay-facility-navigation" aria-label="<%= @listing.title %>の宿泊施設管理">
     <%= link_to tenant_stays_path, class: "stay-facility-navigation__back" do %>
@@ -32,13 +38,6 @@
 
     <p class="stay-facility-navigation__section-label">運営</p>
 
-    <%= link_to tenant_stay_path(@listing),
-                class: ["stay-facility-navigation__item", stay_dashboard_active && "active"],
-                aria: (stay_dashboard_active ? { current: "page" } : {}) do %>
-      <span class="stay-facility-navigation__icon" aria-hidden="true">⌂</span>
-      <span><strong>運営ダッシュボード</strong><small>今日の状況と要対応</small></span>
-    <% end %>
-
     <span class="stay-facility-navigation__item stay-facility-navigation__item--disabled" aria-disabled="true">
       <span class="stay-facility-navigation__icon" aria-hidden="true">≡</span>
       <span><strong>予約管理</strong><small>予約の検索と確認</small></span>
@@ -47,11 +46,11 @@
 
     <p class="stay-facility-navigation__section-label">施設管理</p>
 
-    <%= link_to edit_tenant_stay_path(@listing),
-                class: ["stay-facility-navigation__item", stay_settings_active && "active"],
-                aria: (stay_settings_active ? { current: "page" } : {}) do %>
+    <%= link_to tenant_stay_path(@listing),
+                class: ["stay-facility-navigation__item", facility_information_active && "active"],
+                aria: (facility_information_active ? { current: "page" } : {}) do %>
       <span class="stay-facility-navigation__icon" aria-hidden="true">⚙</span>
-      <span><strong>施設設定</strong><small>基本情報・宿泊・予約設定</small></span>
+      <span><strong>施設情報</strong><small>基本情報・宿泊・予約設定</small></span>
     <% end %>
 
     <%= link_to tenant_stay_room_types_path(@listing),
@@ -68,11 +67,23 @@
       <span><strong>割り当て客室管理</strong><small>物理客室と販売在庫</small></span>
     <% end %>
 
+    <%= link_to tenant_stay_rate_plans_path(@listing),
+                class: ["stay-facility-navigation__item", rate_plans_active && "active"],
+                aria: (rate_plans_active ? { current: "page" } : {}) do %>
+      <span class="stay-facility-navigation__icon" aria-hidden="true">¥</span>
+      <span><strong>料金プラン</strong><small>販売条件と基本料金</small></span>
+    <% end %>
+
+    <%= link_to tenant_stay_sales_calendar_path(@listing),
+                class: ["stay-facility-navigation__item", sales_calendar_active && "active"],
+                aria: (sales_calendar_active ? { current: "page" } : {}) do %>
+      <span class="stay-facility-navigation__icon" aria-hidden="true">▥</span>
+      <span><strong>販売カレンダー</strong><small>日別料金と販売上限</small></span>
+    <% end %>
+
 
     <!-- TODO: ActiveDecoratorを導入しそこに定義する -->
     <% [
-      ["料金プラン", "販売条件と基本料金", "¥"],
-      ["販売カレンダー", "日別料金と販売上限", "▥"],
       ["公開設定", "公開条件と受付状態", "✓"]
     ].each do |label, description, icon| %>
       <span class="stay-facility-navigation__item stay-facility-navigation__item--disabled" aria-disabled="true">

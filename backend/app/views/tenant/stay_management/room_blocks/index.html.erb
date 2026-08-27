@@ -1,0 +1,12 @@
+<% content_for :title, "#{@room.name}のブロック管理" %>
+<% content_for :page_title, "客室ブロック管理" %>
+<% content_for :back_link do %>
+  <%= link_to "← 客室一覧へ戻る", tenant_stay_rooms_path(@listing), class: "tenant-back-link" %>
+<% end %>
+
+<%= render "tenant/stay_management/inventory_blocks/target_blocks",
+           target_name: @room.name,
+           blocks: @blocks,
+           new_path: new_tenant_stay_room_room_block_path(@listing, @room),
+           edit_path_for: ->(block) { edit_tenant_stay_room_room_block_path(@listing, @room, block) },
+           block_path_for: ->(block) { tenant_stay_room_room_block_path(@listing, @room, block) } %>

@@ -41,6 +41,15 @@ class Tenant::StayManagement::BedsControllerTest < ActionDispatch::IntegrationTe
                   text: "ベッドを管理"
   end
 
+  test "ベッド一覧からベッド別のブロック管理へ遷移できる" do
+    bed = @room.stay_beds.create!(name: "ベッド1")
+
+    get edit_tenant_stay_room_path(@listing, @room)
+
+    assert_response :success
+    assert_select "a[href=?]", tenant_stay_room_bed_bed_blocks_path(@listing, @room, bed), text: "ブロック管理"
+  end
+
   test "ベッドを客室へ登録する" do
     assert_difference "@room.stay_beds.count", 1 do
       post tenant_stay_room_beds_path(@listing, @room, format: :turbo_stream), params: {

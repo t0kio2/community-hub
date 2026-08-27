@@ -1,0 +1,143 @@
+<div class="management-form-page">
+  <%= render "tenant/shared/forms/errors", records: [rate_plan] %>
+
+  <%= form_with model: rate_plan,
+                url: form_url,
+                local: true,
+                class: "management-form" do |form| %>
+    <section class="form-section" aria-labelledby="rate-plan-basic-heading">
+      <%= render "tenant/shared/forms/section_heading",
+                 id: "rate-plan-basic-heading",
+                 title: "料金プランの基本情報",
+                 description: "宿泊者へ提示するプラン名と販売条件を設定します。" %>
+
+      <div class="field field-wide">
+        <%= form.label :name, "プラン名", class: "form-label--required" %>
+        <%= form.text_field :name,
+                            placeholder: "朝食付き・キャンセル可",
+                            maxlength: 100,
+                            required: true %>
+      </div>
+
+      <div class="field field-wide">
+        <%= form.label :description, "説明" %>
+        <%= form.text_area :description,
+                           rows: 4,
+                           maxlength: 2_000,
+                           placeholder: "食事内容やプランの特徴を入力してください" %>
+      </div>
+
+      <div class="field">
+        <%= form.label :meal_type, "食事条件", class: "form-label--required" %>
+        <%= form.select :meal_type,
+                        StayRatePlan.meal_types.keys.map { |meal_type|
+                          [t("activerecord.enums.stay_rate_plan.meal_type.#{meal_type}"), meal_type]
+                        },
+                        {},
+                        required: true %>
+      </div>
+
+      <div class="field field-wide" data-controller="cancellation-policy">
+        <%= form.label :cancellation_policy_type, "キャンセル条件", class: "form-label--required" %>
+        <%= form.select :cancellation_policy_type,
+                        StayRatePlan.cancellation_policy_types.keys.map { |policy_type|
+                          [t("activerecord.enums.stay_rate_plan.cancellation_policy_type.#{policy_type}"), policy_type]
+                        },
+                        {},
+                        required: true,
+                        data: {
+                          cancellation_policy_target: "policy",
+                          action: "change->cancellation-policy#update"
+                        } %>
+        <div class="cancellation-policy-details-list">
+          <% StayRatePlan.cancellation_policy_types.keys.each do |policy_type| %>
+            <div data-cancellation-policy-target="detail"
+                 data-policy-type="<%= policy_type %>"
+                 <%= "hidden" unless rate_plan.cancellation_policy_type == policy_type %>>
+              <%= render "cancellation_policy_details", policy_type: policy_type %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="field">
+        <%= form.label :status, "状態" %>
+        <%= form.select :status,
+                        StayRatePlan.statuses.keys.map { |status|
+                          [t("activerecord.enums.stay_rate_plan.status.#{status}"), status]
+                        } %>
+      </div>
+    </section>
+
+    <section class="form-section" aria-labelledby="room-type-rate-heading">
+      <%= render "tenant/shared/forms/section_heading",
+                 id: "room-type-rate-heading",
+                 title: "Room Type別基本料金",
+                 description: "販売するRoom Typeを選び、1在庫単位・1泊の基本料金を入力します。" %>
+
+      <div class="field field-wide">
+        <% if room_type_rates.any? %>
+          <div class="data-table-wrapper">
+            <table class="data-table rate-plan-rates-table">
+              <colgroup>
+                <col class="rate-plan-rates-table__room-type-column">
+                <col class="rate-plan-rates-table__unit-column">
+                <col class="rate-plan-rates-table__sales-column">
+                <col class="rate-plan-rates-table__price-column">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">Room Type</th>
+                  <th scope="col">販売単位</th>
+                  <th scope="col">販売</th>
+                  <th scope="col">基本料金</th>
+                </tr>
+              </thead>
+              <tbody>
+                <%= form.fields_for :stay_room_type_rates, room_type_rates do |rate_fields| %>
+                  <% room_type_rate = rate_fields.object %>
+                  <% room_type = room_type_rate.stay_room_type %>
+                  <tr>
+                    <td>
+                      <strong class="data-table__primary"><%= room_type.name %></strong>
+                      <%= rate_fields.hidden_field :id if room_type_rate.persisted? %>
+                      <%= rate_fields.hidden_field :stay_room_type_id, value: room_type.id %>
+                    </td>
+                    <td>
+                      <%= room_type.shared_room? ? "1 Bed・1泊" : room_type.entire_place? ? "1棟・1泊" : "1室・1泊" %>
+                    </td>
+                    <td>
+                      <span class="rate-plan-rates-table__toggle">
+                        <%= rate_fields.check_box :active %>
+                        <%= rate_fields.label :active, "販売する" %>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="rate-plan-rates-table__price">
+                        <%= rate_fields.number_field :price_per_night_amount,
+                                                     min: 1,
+                                                     step: 1,
+                                                     placeholder: "10000",
+                                                     aria: { label: "#{room_type.name}の1泊基本料金" } %>
+                        <span>円</span>
+                      </span>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="stay-dashboard__empty-state">
+            <div>
+              <strong>設定できるRoom Typeがありません</strong>
+              <p>先に客室タイプを登録すると、ここで基本料金を設定できます。</p>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <%= render "tenant/shared/forms/actions", form: form, submit_label: submit_label %>
+  <% end %>
+</div>

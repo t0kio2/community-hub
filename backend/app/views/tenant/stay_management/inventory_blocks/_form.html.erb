@@ -1,0 +1,40 @@
+<div class="management-form-page">
+  <%= render "tenant/shared/forms/errors", records: [block] %>
+
+  <%= form_with model: block, url: form_url, local: true, class: "management-form" do |form| %>
+    <section class="form-section" aria-labelledby="inventory-block-heading">
+      <%= render "tenant/shared/forms/section_heading",
+                 id: "inventory-block-heading",
+                 title: "#{target_name}の停止期間",
+                 description: "停止する宿泊日と、利用を再開する宿泊日を設定します。" %>
+
+      <div class="field">
+        <%= form.label :starts_on, "停止する最初の宿泊日", class: "form-label--required" %>
+        <%= form.date_field :starts_on, required: true %>
+      </div>
+
+      <div class="field">
+        <%= form.label :ends_on, "利用を再開する宿泊日", class: "form-label--required" %>
+        <%= form.date_field :ends_on, required: true %>
+        <small class="form-field-hint">この日は停止期間に含まれません。</small>
+      </div>
+
+      <div class="field field-wide">
+        <%= form.label :reason, "停止理由", class: "form-label--required" %>
+        <%= form.select :reason,
+                        [["メンテナンス", "maintenance"], ["清掃", "cleaning"],
+                         ["運営都合", "operator_block"], ["その他", "other"]],
+                        { include_blank: "停止理由を選択してください" },
+                        required: true %>
+      </div>
+
+      <div class="field field-wide">
+        <%= form.label :notes, "管理メモ" %>
+        <%= form.text_area :notes, rows: 4, placeholder: "停止内容や対応予定を入力してください" %>
+        <small class="form-field-hint">宿泊者には公開されない施設内の管理情報です。</small>
+      </div>
+    </section>
+
+    <%= render "tenant/shared/forms/actions", form: form, submit_label: submit_label %>
+  <% end %>
+</div>

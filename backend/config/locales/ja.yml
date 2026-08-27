@@ -12,6 +12,9 @@ ja:
       blank: "can't be blank"
       inclusion: "is not included in the list"
       required: "must exist"
+      not_a_number: "は数値で入力してください"
+      not_an_integer: "は整数で入力してください"
+      greater_than: "は%{count}より大きい値にしてください"
   activerecord:
     attributes:
       stay_room_type:
@@ -23,12 +26,53 @@ ja:
         active: "客室全体の運用状態"
       stay_bed:
         active: "ベッドの運用状態"
+      stay_room_block:
+        starts_on: "停止する最初の宿泊日"
+        ends_on: "利用を再開する宿泊日"
+        reason: "停止理由"
+        notes: "管理メモ"
+      stay_bed_block:
+        stay_bed: "ベッド"
+        starts_on: "停止する最初の宿泊日"
+        ends_on: "利用を再開する宿泊日"
+        reason: "停止理由"
+        notes: "管理メモ"
+      stay_room_type_daily_sales_control:
+        stay_date: "宿泊日"
+        sales_limit: "販売上限"
+      stay_room_type_rate_daily_price:
+        stay_date: "宿泊日"
+        price_amount: "日別料金"
+      stay_rate_plan:
+        name: "プラン名"
+        description: "説明"
+        meal_type: "食事条件"
+        cancellation_policy_type: "キャンセル条件"
+        status: "状態"
+      "stay_rate_plan/stay_room_type_rates":
+        price_per_night_amount: "Room Type別基本料金"
+      stay_room_type_rate:
+        price_per_night_amount: "基本料金"
     enums:
       stay_room_type:
         room_kind:
           private_room: "個室"
           shared_room: "共用客室（ドミトリー）"
           entire_place: "一棟貸切"
+        status:
+          draft: "下書き"
+          published: "公開中"
+          inactive: "停止中"
+      stay_rate_plan:
+        meal_type:
+          room_only: "食事なし"
+          breakfast: "朝食付き"
+          dinner: "夕食付き"
+          breakfast_and_dinner: "朝食・夕食付き"
+          other: "その他"
+        cancellation_policy_type:
+          standard: "標準キャンセル"
+          non_refundable: "返金不可"
         status:
           draft: "下書き"
           published: "公開中"

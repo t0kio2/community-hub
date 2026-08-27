@@ -58,9 +58,19 @@ Rails.application.routes.draw do
       scope module: :stay_management do
         resources :room_types, only: %i[index new create edit update destroy]
         resources :rooms, only: %i[index new create edit update destroy] do
-          resources :beds, only: %i[new create edit update destroy]
+          resources :room_blocks, path: "blocks", only: %i[index new create edit update destroy]
+          resources :beds, only: %i[new create edit update destroy] do
+            resources :bed_blocks, path: "blocks", only: %i[index new create edit update destroy]
+          end
         end
+        resources :inventory_blocks, only: :index
         resources :rate_plans, only: %i[index show new create edit update destroy]
+
+        # URL: /tenant/stays/:stay_id/sales_calendar
+        resource :sales_calendar, only: :show do
+          resource :daily_price, only: %i[update destroy]
+          resource :daily_sales_control, only: %i[update destroy]
+        end
       end
     end
   end
