@@ -1,44 +1,60 @@
-現状は「宿泊施設の基本構成」はかなり揃っていますが、完成とはまだ言えません。
+## 本番Composeのイメージ
 
-  揃っている機能：
+  services:
+    nginx:
+      image: nginx:1.27-alpine
+      ports:
+        - "80:80"
+        - "443:443"
+      volumes:
+        - ./infrastructure/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+        - letsencrypt:/etc/letsencrypt:ro
+      depends_on:
+        - backend
+      restart: unless-stopped
 
-  - Stay Listingの新規作成・編集
-  - Room Type
-  - Room
-  - Bed
-  - Rate Plan
-  - Room Type別基本料金
-  - キャンセル条件の表示
+    backend:
+      build:
+        context: ./backend
+        target: production
+      env_file:
+        - .env.production
+      environment:
+        RAILS_ENV: production
+        RAILS_LOG_TO_STDOUT: "1"
+      expose:
+        - "3000"
+      depends_on:
+        db:
+          condition: service_healthy
+      volumes:
+        - rails_storage:/app/storage
+      restart: unless-stopped
 
-  その次の実装候補は、認識どおり次の機能です。
+    db:
+      image: postgres:16
+      env_file:
+        - .env.production
+      volumes:
+        - pgdata:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+      restart: unless-stopped
 
-  1. 部屋・ベッドのブロック
-      - stay_room_blocks
-      - stay_bed_blocks
-      - 故障、清掃、メンテナンスなどで販売対象外にする期間
+  volumes:
+    pgdata:
+    rails_storage:
+    letsencrypt:
 
-  2. 販売カレンダー
-      - stay_room_type_daily_sales_controls
-      - 日ごとの販売数や販売停止
-      - stay_room_type_rate_daily_prices
-      - 基本料金を日付別に上書きする特別料金
+  重要なのは次の点です。
 
-  この2種類は意味が異なります。
-
-  - Block：特定の物理的な部屋・ベッドを利用不可にする
-  - Daily sales control：Room Type単位で、その日に販売する在庫数を制御する
-  - Daily price：Rate Plan × Room Type × 日付単位で価格を上書きする
-
-  そのほか、まだ見当たらないものとしては以下があります。
-
-  - 設備・アメニティ設定
-  - Room Type画像
-  - 公開設定・公開前チェック
-  - Stay Listingの削除機能（必要なら）
-  - 予約管理機能
-
-  実装順としては、
-
-  StayListingの保存修正 → Block → 販売カレンダー（日別在庫・日別料金）→ 公開設定
-
-  がよさそうです。特に日別在庫と特別料金は同じ「販売カレンダー」画面にまとめると運用しやすいです。
+  - Next.jsは本番Composeに含めない
+  - 外部公開するのはNginxの80/443だけ
+  - Railsの3000番はDockerネットワーク内だけ
+  - PostgreSQLの5432番はEC2外部に公開しない
+  - PostgreSQLとRailsは同一EC2でも別コンテナにする
+  - DBデータと画像データには永続ボリュームを使う
+  - .env.production はGit管理しない
