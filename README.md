@@ -24,17 +24,36 @@ PASSWORD=app
 DATABASE=app_development
 ```
 
-### 起動手順
+### ローカルで起動
 
-1. 初回ビルド＆起動（Rails backend プロジェクトは初回起動時に自動生成されます）
+初回または再ビルド時:
 
 ```
 docker compose up --build
 ```
 
-2. ブラウザで http://localhost:3000 にアクセス
+通常の起動:
 
-backend の MVC 画面は http://localhost:3001 で確認する。
+```
+docker compose up
+```
+
+- user-frontend: http://localhost:3000
+- backend: http://localhost:3001
+
+### サーバーで起動
+
+`.env.server.example`を`.env.server`へコピーして値を設定する。
+
+```
+docker compose --env-file .env.server -f docker-compose.server.yml up -d --build
+```
+
+停止:
+
+```
+docker compose --env-file .env.server -f docker-compose.server.yml down
+```
 
 メモ:
 - backend コンテナは `backend/Dockerfile` と `backend/docker/entrypoint.sh` を使用します。
