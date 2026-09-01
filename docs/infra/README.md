@@ -6,6 +6,8 @@
 
 AWSリソースはTerraformで再現可能にし、EC2上のアプリケーションはDocker Composeで管理する。デモ環境では費用を抑えるため、Rails、Next.js、PostgreSQLを1台のEC2で動かす。現在採用している詳細構成は[単一EC2での低コストデプロイ構成](single-ec2-deployment.md)を参照する。
 
+現在リポジトリに実装されているローカル環境とAWSサーバー環境は、[インフラアーキテクチャ](architecture.md)のMermaid図を参照する。
+
 ## 最終的に作るもの
 
 ```text
