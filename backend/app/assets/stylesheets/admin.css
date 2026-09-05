@@ -177,6 +177,30 @@
   font-size: var(--admin-font-size-body);
 }
 
+.admin-navigation .admin-home-link {
+  min-height: 48px;
+  padding: 11px 13px;
+  font-weight: 700;
+}
+
+.admin-navigation a > .admin-nav-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.admin-nav-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .admin-navigation a:hover,
 .admin-navigation a.active {
   color: #ffffff;
@@ -405,6 +429,18 @@
 .admin-content :is(a.button, button):hover {
   border-color: #a99cec;
   box-shadow: 0 4px 12px rgb(50 42 100 / 8%);
+}
+
+.admin-content .button-primary {
+  color: #ffffff;
+  border-color: var(--admin-color-primary);
+  background: var(--admin-color-primary);
+}
+
+.admin-content .button-primary:hover {
+  color: #ffffff;
+  border-color: #5744bf;
+  background: #5744bf;
 }
 
 .admin-content table {

@@ -1,1 +1,23 @@
-Hello
+<% content_for :title, "ホーム" %>
+<% content_for :page_title, "ホーム" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "admin/home", "data-turbo-track": "reload" %>
+<% end %>
+
+<section class="admin-home" aria-labelledby="admin-home-account-title">
+  <h2 id="admin-home-account-title">ログイン中のユーザー情報</h2>
+  <dl class="admin-home__summary">
+    <div>
+      <dt>メールアドレス</dt>
+      <dd><%= current_admin_account.email %></dd>
+    </div>
+    <div>
+      <dt>ロール</dt>
+      <dd><%= current_admin.role %></dd>
+    </div>
+    <div>
+      <dt>状態</dt>
+      <dd><%= current_admin.status == "active" ? "有効" : current_admin.status %></dd>
+    </div>
+  </dl>
+</section>

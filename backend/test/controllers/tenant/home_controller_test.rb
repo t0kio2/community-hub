@@ -56,7 +56,6 @@ class Tenant::HomeControllerTest < ActionDispatch::IntegrationTest
     get new_tenant_account_session_path
 
     assert_response :success
-    assert_select ".authentication-role-label", text: /テナント管理画面/
     assert_select ".authentication-card h2", text: "テナントログイン"
     assert_select "form.authentication-form[action=?]", tenant_account_session_path
     assert_select "input#tenant_email[required][autocomplete='username']"

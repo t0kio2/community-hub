@@ -1,4 +1,39 @@
 ja:
+  devise:
+    sessions:
+      common: &common
+        signed_in: 'ログインしました。'
+        signed_out: 'ログアウトしました。'
+        already_signed_out: 'すでにログアウトしています。'
+        locked: 'アカウントがロックされています。'
+      admin_account:
+        <<: *common
+      user_account:
+        <<: *common
+      tenant_account:
+        <<: *common
+      
+    failure:
+      common: &common
+        already_authenticated: 'すでにログインしています。'
+        inactive: 'アカウントが有効ではありません。'
+        invalid: '無効な認証情報です。'
+        last_attempt: '最後のログイン試行に失敗しました。'
+        locked: 'アカウントがロックされています。'
+        not_found_in_database: '無効な認証情報です。'
+        timeout: 'セッションがタイムアウトしました。もう一度ログインしてください。'
+        unauthenticated: 'このページを表示するためにはログインが必要です。'
+        unconfirmed: '確認メールを確認してください。'
+        unknown_format: '無効なリクエストフォーマットです。'
+        unverified: 'アカウントが確認されていません。'
+        user_locked: 'アカウントがロックされています。'
+      admin_account:
+        <<: *common
+      user_account:
+        <<: *common
+      tenant_account:
+        <<: *common
+
   date:
     formats:
       long: "%Y年%m月%d日"
