@@ -1,4 +1,4 @@
-<% content_for :title, "テナント" %>
+<% content_for :title, "テナント管理" %>
 <% content_for :page_title, "テナント管理" %>
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "admin/tenants", "data-turbo-track": "reload" %>
@@ -28,7 +28,7 @@
     <span class="tenant-index__filter-note">検索・絞り込みは準備中</span>
   </div>
   <div class="tenant-index__toolbar">
-    <button class="button button-primary" type="button" disabled>＋ テナントを作成</button>
+    <%= link_to "＋ テナントを作成", new_admin_tenant_account_path, class: "button button-primary" %>
   </div>
 
   <div class="tenant-index__table-card">

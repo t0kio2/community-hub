@@ -25,7 +25,7 @@ class Admin::TenantAccountsController < Admin::BaseController
     @organization = service.tenant
     service.call
 
-    redirect_to admin_tenant_accounts_path, notice: "テナントアカウントを作成しました"
+    redirect_to admin_tenants_path, notice: "テナントを作成しました"
   rescue ActiveRecord::RecordInvalid
     flash.now[:alert] = "作成に失敗しました"
     render :new, status: :unprocessable_entity

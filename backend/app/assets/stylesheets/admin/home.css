@@ -1,0 +1,41 @@
+.admin-home h2 {
+  margin: 0 0 20px;
+  font-size: var(--admin-font-size-subheading);
+}
+
+.admin-home__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--admin-color-border);
+  border-radius: var(--admin-radius-medium);
+  background: var(--admin-color-border);
+}
+
+.admin-home__summary > div {
+  min-width: 0;
+  padding: 20px;
+  background: var(--admin-color-surface);
+}
+
+.admin-home__summary dt {
+  margin-bottom: 8px;
+  color: var(--admin-color-muted);
+  font-size: var(--admin-font-size-body);
+}
+
+.admin-home__summary dd {
+  margin: 0;
+  font-size: var(--admin-font-size-body);
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 820px) {
+  .admin-home__summary {
+    grid-template-columns: 1fr;
+  }
+}

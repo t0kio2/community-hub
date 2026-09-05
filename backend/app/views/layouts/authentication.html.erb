@@ -27,9 +27,8 @@
         </a>
 
         <div class="authentication-introduction__copy">
-          <span class="authentication-role-label"><i></i><%= admin_authentication ? "運営管理画面" : "テナント管理画面" %></span>
-          <h1><%= admin_authentication ? "サービス運営を、ひとつの場所から。" : "地域での仕事と滞在を、育てていく。" %></h1>
-          <p><%= admin_authentication ? "テナントとプラットフォーム全体の状態を、安全に管理します。" : "求人・宿泊施設・組織情報を、あなたのワークスペースで管理できます。" %></p>
+          <h1><span class="authentication-heading-part">Community Hub</span> <span class="authentication-heading-part"><%= admin_authentication ? "運用管理" : "テナント管理" %></span></h1>
+          <p><%= admin_authentication ? "テナント情報の確認・管理を行う、運営管理者専用の画面です。" : "求人・宿泊施設・組織情報の確認・管理を行う、テナント専用の画面です。" %></p>
         </div>
 
         <p class="authentication-introduction__footer">Community Hub management workspace</p>

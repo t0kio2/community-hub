@@ -4,12 +4,12 @@
   <%= stylesheet_link_tag "admin/tenant_accounts", "data-turbo-track": "reload" %>
 <% end %>
 <% content_for :back_link do %>
-  <%= link_to "← テナントアカウント一覧へ戻る", admin_tenant_accounts_path, class: "admin-back-link" %>
+  <%= link_to "← テナント一覧へ戻る", admin_tenants_path, class: "admin-back-link" %>
 <% end %>
 
-<section class="tenant-account-create" aria-labelledby="admin-page-title">
+<section class="tenant-account-create management-form-page" aria-labelledby="admin-page-title">
   <% if @tenant.errors.any? || @organization&.errors&.any? %>
-    <div class="tenant-account-create__errors" role="alert" aria-labelledby="tenant-account-error-heading">
+    <div class="form-errors" role="alert" aria-labelledby="tenant-account-error-heading">
       <strong id="tenant-account-error-heading">入力内容を確認してください</strong>
       <ul>
         <% @tenant.errors.full_messages.each do |message| %>
@@ -22,22 +22,22 @@
     </div>
   <% end %>
 
-  <%= form_with model: @tenant, url: admin_tenant_accounts_path, method: :post, local: true, html: { class: "tenant-account-create__form" } do |form| %>
+  <%= form_with model: @tenant, url: admin_tenant_accounts_path, method: :post, local: true, html: { class: "management-form" } do |form| %>
     <div class="tenant-account-create__form-grid">
-      <fieldset class="tenant-account-create__card">
+      <fieldset class="form-section tenant-account-create__card">
         <legend class="visually-hidden">アカウント情報</legend>
-        <div class="tenant-account-create__card-heading">
+        <div class="form-section-heading">
           <h2>アカウント情報</h2>
           <p>テナントへログインするownerアカウントを設定します。</p>
         </div>
 
         <div class="field">
-          <label for="tenant_email">メールアドレス <span class="tenant-account-create__required">必須</span></label>
+          <label for="tenant_email" class="form-label--required">メールアドレス</label>
           <%= form.email_field :email, id: "tenant_email", required: true, autocomplete: "username", placeholder: "owner@example.com" %>
         </div>
 
         <div class="field">
-          <label for="tenant_password">パスワード <span class="tenant-account-create__required">必須</span></label>
+          <label for="tenant_password" class="form-label--required">パスワード</label>
           <div class="tenant-account-create__password-field">
             <%= form.password_field :password, id: "tenant_password", required: true, autocomplete: "new-password" %>
             <button type="button" class="tenant-account-create__visibility-button" data-target="tenant_password" aria-pressed="false" aria-label="パスワードを表示">表示</button>
@@ -45,7 +45,7 @@
         </div>
 
         <div class="field">
-          <label for="tenant_password_confirmation">パスワード確認 <span class="tenant-account-create__required">必須</span></label>
+          <label for="tenant_password_confirmation" class="form-label--required">パスワード確認</label>
           <div class="tenant-account-create__password-field">
             <%= form.password_field :password_confirmation, id: "tenant_password_confirmation", required: true, autocomplete: "new-password" %>
             <button type="button" class="tenant-account-create__visibility-button" data-target="tenant_password_confirmation" aria-pressed="false" aria-label="パスワード確認を表示">表示</button>
@@ -59,15 +59,15 @@
         </div>
       </fieldset>
 
-      <fieldset class="tenant-account-create__card">
+      <fieldset class="form-section tenant-account-create__card">
         <legend class="visually-hidden">組織情報</legend>
-        <div class="tenant-account-create__card-heading">
+        <div class="form-section-heading">
           <h2>組織情報</h2>
           <p>管理対象となるテナントの基本情報を登録します。</p>
         </div>
 
         <div class="field">
-          <label for="organization_name">組織名 <span class="tenant-account-create__required">必須</span></label>
+          <label for="organization_name" class="form-label--required">組織名</label>
           <%= text_field_tag "tenant[name]", params.dig(:tenant, :name), id: "organization_name", required: true, autocomplete: "organization", placeholder: "株式会社コミュニティハブ" %>
         </div>
 
@@ -83,9 +83,9 @@
       </fieldset>
     </div>
 
-    <div class="tenant-account-create__actions">
-      <%= link_to "キャンセル", admin_tenant_accounts_path, class: "button" %>
-      <button type="submit" class="tenant-account-create__submit">テナントを作成</button>
+    <div class="form-actions">
+      <%= link_to "キャンセル", admin_tenants_path, class: "button" %>
+      <button type="submit" class="form-submit">テナントを作成</button>
     </div>
   <% end %>
 </section>
